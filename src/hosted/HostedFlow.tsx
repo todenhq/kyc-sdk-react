@@ -135,6 +135,7 @@ export function HostedFlow({
         livenessMode={leg.livenessMode as 'gestures' | 'flash' | 'both' | 'passive' | undefined}
         flashSequenceLength={leg.flashSequenceLength as number | undefined}
         livenessBrightScreen={leg.livenessBrightScreen as boolean | undefined}
+        selfieReview={leg.selfieReview as boolean | undefined}
         deviceIntelligence={snap.deviceIntelligence}
         deviceHandoff={snap.deviceHandoff}
         // The consent screen switch: off, the hosted flow opens on its first

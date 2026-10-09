@@ -170,6 +170,7 @@ function KYCInner({
   livenessMode,
   flashSequenceLength,
   livenessBrightScreen,
+  selfieReview,
   deviceIntelligence,
   voiceGuidance,
   showThemeToggle,
@@ -233,6 +234,7 @@ function KYCInner({
     ...(livenessMode !== undefined ? { livenessMode } : {}),
     ...(flashSequenceLength !== undefined ? { flashSequenceLength } : {}),
     ...(livenessBrightScreen !== undefined ? { livenessBrightScreen } : {}),
+    ...(selfieReview !== undefined ? { selfieReview } : {}),
     ...(deviceIntelligence !== undefined ? { deviceIntelligence } : {}),
     ...(deviceHandoff !== undefined ? { deviceHandoff } : {}),
     ...(consentStep !== undefined ? { consentStep } : {}),
@@ -260,7 +262,7 @@ function KYCInner({
     ...(userData ? { userData } : {}),
     ...(businessPrefill ? { businessPrefill } : {}),
     ...(assetsBasePath ? { assetsBasePath } : {}),
-  }), [country, workflowId, idTypes, countries, multiId, enableSelfie, enableDocumentCapture, allowDocumentUpload, allowDocumentScan, enableLiveness, livenessMode, flashSequenceLength, livenessBrightScreen, deviceIntelligence, deviceHandoff, consentStep, silentCapture, biometric, requireMobileDevice, voiceGuidance, showThemeToggle, progressStyle, fullScreen, disableClose, appearance, consent, success, texts, emailVerification, phoneVerification, questionnaire, proofOfAddress, supportingDocuments, addressCollection, nfc, metadata, userId, userData, businessPrefill, assetsBasePath]);
+  }), [country, workflowId, idTypes, countries, multiId, enableSelfie, enableDocumentCapture, allowDocumentUpload, allowDocumentScan, enableLiveness, livenessMode, flashSequenceLength, livenessBrightScreen, selfieReview, deviceIntelligence, deviceHandoff, consentStep, silentCapture, biometric, requireMobileDevice, voiceGuidance, showThemeToggle, progressStyle, fullScreen, disableClose, appearance, consent, success, texts, emailVerification, phoneVerification, questionnaire, proofOfAddress, supportingDocuments, addressCollection, nfc, metadata, userId, userData, businessPrefill, assetsBasePath]);
 
   // Pre-load MediaPipe Face Mesh model as soon as the SDK mounts and apply the
   // voice-guidance config (enabled + language) for the spoken liveness prompts.
@@ -272,7 +274,15 @@ function KYCInner({
     const businessNeedsCapture =
       subjectType === 'business' && business?.applicant?.verification === true;
     if (enableLiveness !== false && !previewMode && (subjectType !== 'business' || businessNeedsCapture)) {
-      primeFaceMesh();
+      // From the server this mount talks to, with the public CDN behind it.
+      // An invalid key resolves no server (the flow reports that itself).
+      let serverUrl: string | undefined;
+      try {
+        serverUrl = resolveBaseUrl(apiKey, devUrl);
+      } catch {
+        serverUrl = undefined;
+      }
+      primeFaceMesh({ serverUrl, assetsBasePath });
     }
     configureSpeech(voiceGuidance);
   }, [voiceGuidance]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -497,6 +507,7 @@ function KYCInner({
       livenessMode={livenessMode}
       flashSequenceLength={flashSequenceLength}
       livenessBrightScreen={livenessBrightScreen}
+      selfieReview={selfieReview}
       deviceIntelligence={deviceIntelligence}
       deviceHandoff={deviceHandoff}
       consentStep={consentStep}

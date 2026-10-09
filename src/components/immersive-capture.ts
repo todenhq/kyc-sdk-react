@@ -27,3 +27,14 @@ export const ImmersiveCaptureContext = createContext<(immersive: boolean) => voi
 export function useSetImmersiveCapture(): (immersive: boolean) => void {
   return useContext(ImmersiveCaptureContext);
 }
+
+/**
+ * How a step that has taken the surface closes the flow, or null when closing
+ * is not offered (`disableClose`, or outside the modal). The header normally
+ * holds the close button; a step that hides the header has to offer its own.
+ */
+export const ImmersiveCloseContext = createContext<(() => void) | null>(null);
+
+export function useImmersiveClose(): (() => void) | null {
+  return useContext(ImmersiveCloseContext);
+}

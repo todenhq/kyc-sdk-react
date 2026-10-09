@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import type { FaceWindow } from '../lib/liveness-cutout';
 import { createFaceMesh, type FaceMeshHandle } from '../liveness/face-mesh';
 import { pickChallenges, pickFallbackGestures, ChallengeTracker, type ChallengeEntry } from '../liveness/challenge-manager';
 import { flashOutcome, FLASH_RETRY_GUIDANCE } from '../liveness/flash-outcome';
@@ -22,6 +23,7 @@ import {
 } from '../liveness/types';
 import { useText, type TextFn } from '../i18n';
 import { generateFlashSequence, runFlashSequence } from '../liveness/flash-detector';
+import { holdCameraSteady } from '../lib/camera-lock';
 import { recordLivenessSignals } from '../lib/integrity-signals';
 import { speak, stopSpeaking } from '../liveness/speech';
 import type { LightLevel } from './useLightLevel';
@@ -115,6 +117,12 @@ export interface UseLivenessOptions {
    * lighting guidance instead. Defaults to `'ok'` when omitted.
    */
   lightLevel?: LightLevel;
+  /**
+   * Full screen only: how much of the camera frame the face window shows
+   * (lib/liveness-cutout). With one set, the face is judged against the window
+   * rather than the frame. A ref: it changes with layout, never with a frame.
+   */
+  faceWindowRef?: React.RefObject<FaceWindow | null>;
 }
 
 // ---------------------------------------------------------------------------
@@ -148,6 +156,7 @@ export function useLiveness({
   captureFrame,
   compressImage,
   lightLevel = 'ok',
+  faceWindowRef,
 }: UseLivenessOptions): UseLivenessReturn {
   const [state, setState] = useState<LivenessState>({ phase: 'loading' });
   // The workflow's copy, read through a ref: the detector loop and setPhase are
@@ -249,6 +258,16 @@ export function useLiveness({
     if (!video || !video.videoWidth || !video.videoHeight) return 1;
     return video.videoWidth / video.videoHeight;
   }, [videoRef]);
+
+  // What the face is judged against: the full-screen window when the step
+  // reported one, otherwise (undefined) the whole frame.
+  const positionFrame = useCallback(
+    (moving = false) => {
+      const window = faceWindowRef?.current;
+      return window ? { window, moving } : undefined;
+    },
+    [faceWindowRef],
+  );
 
   // -----------------------------------------------------------------------
   // Helper: update state and phase ref together
@@ -489,12 +508,15 @@ export function useLiveness({
     const isActive = () =>
       mountedRef.current && flashSessionRef.current === session && phaseRef.current === 'challenge';
 
-    runFlashSequence(
-      video,
-      setFlashColor,
-      isActive,
-      generateFlashSequence(config?.flashSequenceLength),
-    )
+    // Exposure and white balance are held still for the sequence, where the
+    // browser allows it (lib/camera-lock.ts), and handed back however it ends.
+    let release = () => {};
+    holdCameraSteady(video)
+      .then((handBack) => {
+        release = handBack;
+        return runFlashSequence(video, setFlashColor, isActive, generateFlashSequence(config?.flashSequenceLength));
+      })
+      .finally(() => release())
       .then((result) => {
         flashRunningRef.current = false;
         setFlashing(false);
@@ -510,6 +532,7 @@ export function useLiveness({
             total: result.total,
             inconclusive: result.inconclusive,
             sequence: result.sequence,
+            ...(result.onsets ? { onsets: result.onsets } : {}),
           },
         });
         if (!isActive()) return;
@@ -689,7 +712,7 @@ export function useLiveness({
         return;
       }
 
-      const pos = checkFacePosition(landmarks, tRef.current);
+      const pos = checkFacePosition(landmarks, tRef.current, positionFrame());
 
       if (pos.isCentered && pos.isCorrectDistance) {
         positionStableRef.current++;
@@ -767,7 +790,11 @@ export function useLiveness({
       }
 
       // Check if user has moved out of position
-      const pos = checkFacePosition(landmarks, tRef.current);
+      const pos = checkFacePosition(
+        landmarks,
+        tRef.current,
+        positionFrame(current.config.type === 'turn' || current.config.type === 'nod'),
+      );
       if (!pos.isCentered || !pos.isCorrectDistance) {
         holdFramesRef.current = 0; // the hold restarts once the face is back
         setPhase({
@@ -855,7 +882,7 @@ export function useLiveness({
         setPhase({ phase: 'capturing', guidance: light });
         return;
       }
-      const pos = checkFacePosition(landmarks, tRef.current);
+      const pos = checkFacePosition(landmarks, tRef.current, positionFrame());
       if (pos.isCentered && pos.isCorrectDistance) {
         positionStableRef.current++;
         // Need ~15 stable frames (~0.5s) for a clear photo

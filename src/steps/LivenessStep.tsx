@@ -3,7 +3,6 @@
 import React, { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Loader2, RotateCcw } from '../components/icons';
-import { cn } from '../lib/utils';
 import { StepHeader } from '../components/StepHeader';
 import { useSetCaptureLight } from '../components/capture-light';
 import { useReportLivenessCamera } from '../components/liveness-camera';
@@ -12,7 +11,6 @@ import { Button } from '../components/ui/button';
 import { CameraPermissionPrimer } from '../components/CameraPermissionPrimer';
 import { ReadyPrimer } from '../components/ReadyPrimer';
 import { READY_LIVENESS, READY_LIVENESS_PASSIVE } from '../components/ready-primer-content';
-import { LivenessAvatar } from './LivenessAvatar';
 import { useKYCContext } from '../context/KYCContext';
 import { useKYCConfig } from '../context/KYCConfigContext';
 import { multiIdEvidenceStep } from '../lib/multi-id';
@@ -26,6 +24,7 @@ import { useLiveness } from '../hooks/useLiveness';
 import { useLightLevel } from '../hooks/useLightLevel';
 import { primeSpeech } from '../liveness/speech';
 import { recordLivenessSignals, recordRecorderFailure } from '../lib/integrity-signals';
+import { markRecordingStart } from '../liveness/flash-timeline';
 import { withRetry } from '../lib/retry';
 import { mapToKycError, safeReportError } from '../lib/errors';
 import { KYCError } from '../types/verification';
@@ -35,15 +34,29 @@ import {
   pickVideoMimeType,
   logCaptureSize,
 } from '../lib/capture-settings';
-import type { ChallengeEntry } from '../liveness/challenge-manager';
 import { challengeInstruction } from '../liveness/types';
 import { useText, type TextFn } from '../i18n';
 import { usePortalHost } from '../lib/sdk-frame-context';
-import { CaptureRing } from '../components/CaptureRing';
 import { LivenessHandover, useSelfieAutoAdvance } from './liveness-handover';
 import { showsSelfieReview } from '../lib/biometric-options';
 import { isSelfieBlurry, measureSelfieSharpness } from '../lib/selfie-sharpness';
 import { verifiedIdsFromState } from '../lib/supporting-documents';
+import { useSetImmersiveCapture } from '../components/immersive-capture';
+import {
+  faceWindowFor,
+  livenessCutout,
+  surroundPath,
+  windowDrop,
+  type FaceWindow,
+  type Size,
+} from '../lib/liveness-cutout';
+import { LiveView } from './liveness/LiveView';
+import { ReviewView } from './liveness/ReviewView';
+import { useBlurBudget } from './liveness/use-blur-budget';
+
+/** How long the full-screen camera is held after the photo: the shutter, then
+ *  the scan down the window (globals.css `liveness-scan`), then a breath. */
+const SCAN_HOLD_MS = 800;
 
 // ---------------------------------------------------------------------------
 // LivenessStep — active liveness check with gesture challenges
@@ -72,6 +85,10 @@ export function LivenessStep() {
   // its presence means "already captured" exactly as it does for documents —
   // the step opens on review, never on a fresh gesture run.
   const restoredSelfie = !preview && Boolean(kycState.mediaIds.selfie);
+  // The step was OPENED with its selfie already taken: the person came back
+  // to it, or resumed a session past it. It then says so and offers Continue;
+  // it never hands forward by itself and never runs the check again.
+  const arrivedDone = useRef(Boolean(preview) || restoredSelfie).current;
   // "Here's what happens next" gate — the selfie camera never opens
   // unannounced. A returning user with a captured selfie skips it.
   const [ready, setReady] = useState(false);
@@ -81,7 +98,18 @@ export function LivenessStep() {
   // Where the preview circle sits in the VIEWPORT, so the flash overlay can
   // punch a hole for it. Only tracked while a flash is on screen.
   const previewRef = useRef<HTMLDivElement>(null);
-  const [flashHole, setFlashHole] = useState<{ cx: number; cy: number; r: number } | null>(null);
+  const [flashHole, setFlashHole] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    viewport: Size;
+  } | null>(null);
+
+  // How much of the camera frame the full-screen window shows, for the hook to
+  // judge the face against (see steps/liveness). Null until it is laid out.
+  const faceWindowRef = useRef<FaceWindow | null>(null);
+  const frameSizeRef = useRef<Size | null>(null);
 
   const camera = useCamera({
     facingMode: 'user',
@@ -111,7 +139,41 @@ export function LivenessStep() {
     compressImage: compress,
     lightLevel,
     config: { mode: livenessMode, flashSequenceLength: config.flashSequenceLength },
+    faceWindowRef,
   });
+
+  const syncFaceWindow = useCallback(() => {
+    const frame = frameSizeRef.current;
+    const video = camera.videoRef.current;
+    faceWindowRef.current =
+      frame && frame.width > 0 && video && video.videoWidth > 0 && video.videoHeight > 0
+        ? faceWindowFor({
+            frame,
+            window: livenessCutout(frame),
+            frameAspect: video.videoWidth / video.videoHeight,
+            drop: windowDrop(frame, livenessCutout(frame)),
+          })
+        : null;
+  }, [camera.videoRef]);
+  const onFrameSize = useCallback(
+    (size: Size) => {
+      frameSizeRef.current = size;
+      syncFaceWindow();
+    },
+    [syncFaceWindow],
+  );
+  // The video's own shape arrives with the stream, after the first layout.
+  useEffect(() => {
+    syncFaceWindow();
+  }, [camera.isReady, syncFaceWindow]);
+
+  // The room has read as dark since the camera opened. Latched: more of the
+  // screen is then given to the light background, which brightens the face,
+  // and a tint that followed the reading would drop again and flicker.
+  const [dimRoom, setDimRoom] = useState(false);
+  useEffect(() => {
+    if (isDim) setDimRoom(true);
+  }, [isDim]);
 
   // Flash mode: ask the modal for a bright backdrop ONLY while the sequence is
   // emitting. The rest of the step needs no extra light (the sequence supplies
@@ -144,7 +206,13 @@ export function LivenessStep() {
     const el = previewRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setFlashHole({ cx: r.left + r.width / 2, cy: r.top + r.height / 2, r: r.width / 2 });
+    setFlashHole({
+      left: r.left,
+      top: r.top,
+      width: r.width,
+      height: r.height,
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+    });
   }, []);
 
   const overlayShown = overlayColor !== null;
@@ -206,6 +274,8 @@ export function LivenessStep() {
       recordRecorderFailure('recorder_start_failed');
       return;
     }
+    // The flash reports its colours' times from this moment (flash-timeline.ts).
+    markRecordingStart(performance.now());
     livenessRecorderRef.current = recorder;
 
     return () => {
@@ -216,6 +286,7 @@ export function LivenessStep() {
         return;
       }
       // Still recording: user navigated away or camera changed. Discard.
+      markRecordingStart(null);
       livenessChunksRef.current = [];
       recorder.onstop = null;
       try { recorder.stop(); } catch { /* already stopped */ }
@@ -253,6 +324,10 @@ export function LivenessStep() {
           }
         });
       }
+
+      // The frame is held for the shutter and the scan that follows it; the
+      // review would otherwise replace them unseen.
+      await new Promise<void>((resolve) => setTimeout(resolve, SCAN_HOLD_MS));
 
       if (cancelled) return;
 
@@ -387,11 +462,6 @@ export function LivenessStep() {
   // selfie (media id, no bytes) is ready at once; an upload that already
   // failed keeps the review, whose Retry Upload is the recovery.
   const selfieReview = showsSelfieReview(config);
-  useSelfieAutoAdvance({
-    enabled: !selfieReview,
-    ready: (!!preview || restoredSelfie) && !uploadError,
-    onAdvance: handleContinue,
-  });
 
   const handleBack = () => {
     camera.stop();
@@ -416,6 +486,50 @@ export function LivenessStep() {
     });
   };
 
+  // Hands forward once, the moment the selfie is taken. A step opened on a
+  // selfie that already exists stays put (see `arrivedDone`).
+  useSelfieAutoAdvance({
+    enabled: !selfieReview && !arrivedDone,
+    ready: (!!preview || restoredSelfie) && !uploadError,
+    onAdvance: handleContinue,
+  });
+
+  // A tap in the hand for each step that lands and for the photo, where the
+  // browser offers one: the screen is being looked at, not read.
+  useEffect(() => {
+    if (phase !== 'challenge_passed' && phase !== 'complete') return;
+    try {
+      navigator.vibrate?.(phase === 'complete' ? 20 : 10);
+    } catch {
+      /* not offered, or refused without a gesture: nothing to do */
+    }
+  }, [phase]);
+
+  // ── Taking the whole surface ───────────────────────────────────────────────
+  // On every device: a phone's screen, and the whole modal on a desktop. The
+  // live camera has it, and so does the review that follows while there is a
+  // photo to show. The primers, the permission screens, the hand-over and a
+  // restored selfie with no photo stay ordinary modal screens.
+  const cameraScreen =
+    !preview && !restoredSelfie && !camera.permissionDenied && !showReadyPrimer && !needsPrimer;
+  const handingOver = (!!preview || restoredSelfie) && !selfieReview && !uploadError && !arrivedDone;
+  const immersive = cameraScreen || (!!preview && !handingOver);
+  const setImmersiveCapture = useSetImmersiveCapture();
+  // A LAYOUT effect, so the modal has dropped its header and padding before
+  // the browser paints: the full-screen layout never shows inside the padded
+  // body. The view itself is not held back for it, deliberately. The camera
+  // hook hands the stream to the <video> element the moment the stream
+  // arrives, and marks the camera ready only if the element was there to take
+  // it, so a view mounted a render late could miss its own stream.
+  useLayoutEffect(() => {
+    setImmersiveCapture(immersive);
+    return () => setImmersiveCapture(false);
+  }, [immersive, setImmersiveCapture]);
+  useEffect(() => {
+    if (!(immersive && cameraScreen)) faceWindowRef.current = null;
+  }, [immersive, cameraScreen]);
+  const blurs = useBlurBudget(immersive && cameraScreen);
+
   // ---------------------------------------------------------------------------
   // Preview mode (after selfie is captured)
   // ---------------------------------------------------------------------------
@@ -424,17 +538,51 @@ export function LivenessStep() {
     // Review hidden: the hook above advances on this render; the view is the
     // submitted step's own loading screen, so the hand-over is invisible. A
     // FAILED upload still gets the review, for its retry.
-    if (!selfieReview && !uploadError) {
+    if (!selfieReview && !uploadError && !arrivedDone) {
       return <LivenessHandover />;
+    }
+    // Finished on an earlier visit and no review to show: no Retake, so the
+    // check runs once per session.
+    const done = arrivedDone && !selfieReview;
+    if (immersive && preview) {
+      return (
+        <ReviewView
+          preview={preview}
+          title={
+            isUploading
+              ? t('presence.review.saving')
+              : done
+                ? t('presence.review.doneTitle')
+                : t('presence.review.captured')
+          }
+          note={done ? t('presence.review.doneDescription') : selfieSoft ? t('presence.review.blurry') : null}
+          noteIsWarning={!done && selfieSoft}
+          retrying={
+            retryInfo && isUploading
+              ? t('presence.review.retrying', { attempt: retryInfo.attempt, total: retryInfo.total })
+              : null
+          }
+          uploadError={uploadError}
+          busy={isCompressing || isUploading}
+          onRetake={done ? null : handleRetake}
+          retakeLabel={t('common.retake')}
+          onContinue={uploadError ? () => uploadSelfie(preview) : handleContinue}
+          continueLabel={uploadError ? t('presence.review.retryUpload') : t('common.continue')}
+          blurs={blurs}
+          onBack={handleBack}
+        />
+      );
     }
     return (
       <div className="space-y-5 animate-slide-up">
         <StepHeader
-          title={t('presence.review.title')}
+          title={done ? t('presence.review.doneTitle') : t('presence.review.title')}
           description={
-            preview
-              ? t('presence.review.description')
-              : t('presence.review.restoredDescription')
+            done
+              ? t('presence.review.doneDescription')
+              : preview
+                ? t('presence.review.description')
+                : t('presence.review.restoredDescription')
           }
           onBack={handleBack}
         />
@@ -466,7 +614,7 @@ export function LivenessStep() {
 
         {/* Blurry selfie: the same amber notice the lighting warning uses.
             Advice, not a block. Retake and Continue both stay enabled. */}
-        {selfieSoft && preview && (
+        {selfieSoft && preview && !done && (
           <div className="flex w-full items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800 animate-lighting-in dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden>
               <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
@@ -478,10 +626,12 @@ export function LivenessStep() {
         )}
 
         <div className="flex gap-3">
-          <Button variant="outline" className="flex-1 gap-2" onClick={handleRetake} disabled={isCompressing || isUploading}>
-            <RotateCcw className="h-4 w-4" />
-            {t('common.retake')}
-          </Button>
+          {!done && (
+            <Button variant="outline" className="flex-1 gap-2" onClick={handleRetake} disabled={isCompressing || isUploading}>
+              <RotateCcw className="h-4 w-4" />
+              {t('common.retake')}
+            </Button>
+          )}
           <Button
             className="flex-1 gap-2"
             onClick={uploadError && preview ? () => uploadSelfie(preview) : handleContinue}
@@ -597,48 +747,29 @@ export function LivenessStep() {
       ? warningText
       : getInstructionText(liveness.state, t);
 
-  // The ring is on the frame from positioning to the shutter, so for that whole
-  // stretch the border is its TRACK — the same faint primary the review screen's
-  // frame already wears, so the two screens share one line. The phase colours
-  // that used to live on the border (warning while a gesture is pending,
-  // success when it lands) still live on the instruction text and the passed
-  // flash; a warning still turns the track red under the arc, which is the
-  // one message that must not wait for progress.
-  const ringOnFrame =
-    !isLoading && !isFaceMeshLoading && phase !== 'loading' && phase !== 'failed';
-  const ringColor = isLoading || isFaceMeshLoading
-    ? 'border-gray-300'
-    : hasWrongGesture || hasPositionWarning || phase === 'failed'
-      ? 'border-destructive'
-      : ringOnFrame
-        ? 'border-primary/20'
-        : 'border-gray-300';
-
-  return (
-    <div className="space-y-5 animate-slide-up">
-      {/* Screen-reflection flash: the display has to emit real light for the
-          face to reflect it, so this covers the WHOLE viewport.
-      
-          PORTALED to document.body, which is the whole trick. `fixed inset-0`
-          alone does not span the viewport here: on desktop the dialog carries
-          `xl:translate-x-[-50%]`, and a transformed ancestor becomes the
-          containing block for fixed descendants — so the overlay was confined
-          to the modal, leaving the rest of the screen dark and emitting far
-          less light than the check assumes. Portaling removes the transformed
-          ancestor entirely.
-      
-          That also makes the circular hole work. It was previously abandoned as
-          unreliable, correctly, because viewport coordinates could not line up
-          inside that transformed container — the same containment. Out here
-          `getBoundingClientRect()` is directly usable, so the face stays
-          visible through a masked hole rather than by z-index (which no longer
-          works: at body level the whole modal sits below this overlay).
-
-          Under SdkFrame the same reasoning routes it to the shadow portal
-          frame instead: also untransformed, directly under the body, and —
-          unlike the raw body — styled by the SDK's own sheet. */}
-      {overlayColor && typeof document !== 'undefined' &&
-        createPortal(
+  // Screen-reflection flash: the display has to emit real light for the face
+  // to reflect it, so this covers the WHOLE viewport.
+  //
+  // PORTALED to document.body, which is the whole trick. `fixed inset-0` alone
+  // does not span the viewport here: on desktop the dialog carries a
+  // translate, and a transformed ancestor becomes the containing block for
+  // fixed descendants, so the overlay was confined to the modal and emitted
+  // far less light than the check assumes. Out here getBoundingClientRect() is
+  // directly usable, so the face stays visible through a hole cut at the
+  // window's own position. Under SdkFrame the same reasoning routes it to the
+  // shadow portal frame instead: also untransformed, and styled by the SDK's
+  // own sheet.
+  //
+  // The hole is the window's own shape (tall, round-ended); a box that is not
+  // taller than wide falls back to a circle.
+  const tallHole = flashHole != null && flashHole.height > flashHole.width * 1.15;
+  const holeRadius = flashHole ? flashHole.width / 2 : 0;
+  const holeMask = flashHole
+    ? `radial-gradient(circle ${holeRadius}px at ${flashHole.left + holeRadius}px ${flashHole.top + holeRadius}px, transparent 0 ${holeRadius}px, #000 ${holeRadius + 1}px)`
+    : undefined;
+  const flashOverlay =
+    overlayColor && typeof document !== 'undefined'
+      ? createPortal(
           <div
             aria-hidden
             className="pointer-events-none fixed inset-0 z-[100]"
@@ -649,208 +780,70 @@ export function LivenessStep() {
               // Punch out the preview so the user still sees their face. The
               // hole is a hard edge, not a gradient: a soft falloff would tint
               // the face itself and skew the reflection the detector measures.
-              ...(flashHole
+              ...(flashHole && tallHole
                 ? {
-                    WebkitMaskImage: `radial-gradient(circle ${flashHole.r}px at ${flashHole.cx}px ${flashHole.cy}px, transparent 0 ${flashHole.r}px, #000 ${flashHole.r + 1}px)`,
-                    maskImage: `radial-gradient(circle ${flashHole.r}px at ${flashHole.cx}px ${flashHole.cy}px, transparent 0 ${flashHole.r}px, #000 ${flashHole.r + 1}px)`,
+                    clipPath: `path(evenodd, "${surroundPath(flashHole.viewport, flashHole.left, flashHole.top, flashHole)}")`,
                   }
-                : null),
+                : flashHole
+                  ? { WebkitMaskImage: holeMask, maskImage: holeMask }
+                  : null),
             }}
           />,
           portalHost ?? document.body,
-        )}
+        )
+      : null;
 
-      <StepHeader
-        title={t('presence.title')}
-        description={isLoading ? t('presence.camera.preparingDescription') : t('presence.camera.description')}
-        onBack={handleBack}
-      />
-
-      <div className="flex flex-col items-center gap-5">
-        {/* Instruction text */}
-        <p className={cn(
-          'text-base font-semibold min-h-6 text-center transition-colors duration-200',
-          (isLoading || isFaceMeshLoading) ? 'text-muted-foreground' :
-          hasWrongGesture || hasPositionWarning ? 'text-destructive' :
-          phase === 'challenge_passed' || phase === 'complete' ? 'text-[var(--kyc-success)]' :
-          phase === 'challenge' ? 'text-[var(--kyc-warning)]' :
-          phase === 'failed' ? 'text-destructive' :
-          'text-foreground',
-        )}>
-          {isLoading ? t('presence.camera.settingUp') : hasWrongGesture ? t('presence.challenge.wrongGesture') : instructionText}
-        </p>
-
-        {/* Circular camera view. z-[95] keeps it ABOVE the flash overlay
-            (z-[90]) so the live face stays visible during the flash sequence
-            while the rest of the screen emits colour. */}
-        <div ref={previewRef} className="relative">
-          <div
-            className={cn(
-              'relative h-64 w-64 sm:h-80 sm:w-80 overflow-hidden rounded-full border-4 transition-colors duration-300',
-              ringColor,
-            )}
-          >
-            <video
-              ref={camera.videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="h-full w-full object-cover transform-[scaleX(-1)]"
-            />
-
-            {/* Face guide overlay (dashed oval) */}
-            <div className="pointer-events-none absolute inset-0">
-              <svg className="h-full w-full" viewBox="0 0 224 224">
-                <ellipse
-                  cx="112"
-                  cy="102"
-                  rx="60"
-                  ry="78"
-                  fill="none"
-                  stroke="var(--kyc-success)"
-                  strokeWidth="2"
-                  strokeDasharray="8,5"
-                  opacity={liveness.isFaceDetected ? 0.8 : 0.4}
-                  className="transition-opacity duration-300"
-                />
-              </svg>
-            </div>
-
-            {/* Loading overlay — shown while the camera starts and while the
-                face-mesh model finishes downloading. */}
-            {(isLoading || isFaceMeshLoading) && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 animate-fade-in">
-                <div className="relative flex items-center justify-center">
-                  <div className="absolute h-16 w-16 rounded-full border-2 border-primary/40 animate-pulse-ring" />
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 backdrop-blur-sm">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Challenge passed flash */}
-            {phase === 'challenge_passed' && (
-              <div className="absolute inset-0 flex items-center justify-center bg-[var(--kyc-success)]/20 animate-fade-in">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--kyc-success)] animate-checkmark-pop">
-                  <svg className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 13l4 4L19 7" style={{ strokeDasharray: 30, strokeDashoffset: 0 }} className="animate-checkmark" />
-                  </svg>
-                </div>
-              </div>
-            )}
-
-            {/* The shutter. Fires on `complete`, when the frame has actually
-                been taken — it used to sit on `capturing` reading "Got it!",
-                which announced a photo that had not been taken yet and left the
-                real wait (steadying, then flushing the recording) looking
-                finished. The ring below carries that wait instead. */}
-            {phase === 'complete' && (
-              <div className="pointer-events-none absolute inset-0 bg-white animate-capture-flash" />
-            )}
-          </div>
-
-          {/* The ring — drawn OUTSIDE the clipping container so it traces the
-              frame's own edge rather than being cut off inside it. On the frame
-              for the whole test, from positioning to the shutter, one line
-              building one way; the hook paces it. It stays mounted through
-              `complete` so the closure is actually SEEN: the counter reaches
-              the shutter and the phase changes in the same frame. */}
-          {ringOnFrame && (
-            <CaptureRing
-              progressRef={liveness.livenessProgressRef}
-              // Primary while it builds: progress is the brand colour, outcome
-              // is the semantic one. It turns success-green ONLY as it closes,
-              // on the same frame as the shutter flash, the solid border and
-              // the solid border, so the colour change is itself
-              // the completion signal — earned at the shutter, not claimed
-              // from the first frame of positioning.
-              className={cn(
-                'transition-colors duration-300',
-                phase === 'complete' ? 'text-[var(--kyc-success)]' : 'text-primary',
-              )}
-            />
-          )}
-        </div>
-
-        {/* Lighting warning (too dark or too bright) */}
-        {(isDim || isBright) && (
-          <div className="flex w-full items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800 animate-lighting-in dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
-              <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>
-              <path d="M9 18h6M10 22h4"/>
-            </svg>
-            <span>
-              {isBright ? t('presence.lighting.brightNotice') : t('presence.lighting.darkNotice')}
-            </span>
-          </div>
-        )}
-
-        {/* Progress dots */}
-        {liveness.challenges.length > 0 && (
-          <div className="flex items-center gap-0">
-            {liveness.challenges.map((entry, i) => (
-              <React.Fragment key={i}>
-                <ProgressDot entry={entry} index={i} />
-                {i < liveness.challenges.length - 1 && (
-                  <div
-                    className={cn(
-                      'h-0.5 w-8 transition-colors duration-300',
-                      entry.progress === 'passed' ? 'bg-[var(--kyc-success)]' : 'bg-gray-300',
-                    )}
-                  />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        )}
-
-        {/* Animated avatar */}
-        <LivenessAvatar gesture={avatarGesture} visible={showAvatar} assetsBasePath={config.assetsBasePath} />
-
-        {/* Failed state — retry */}
-        {phase === 'failed' && (
-          <div className="w-full space-y-3">
-            <p className="text-center text-sm text-destructive">
-              {t(FAILURE_TEXT_KEYS[liveness.state.reason] ?? 'presence.failed.generic')}
-            </p>
-            <Button className="w-full" onClick={liveness.retry}>
-              {t('presence.tryAgainButton')}
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Progress dot
-// ---------------------------------------------------------------------------
-
-function ProgressDot({ entry, index }: { entry: ChallengeEntry; index: number }) {
-  if (entry.progress === 'passed') {
-    return (
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--kyc-success)] text-white animate-checkmark-pop">
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 13l4 4L19 7" className="animate-checkmark" style={{ strokeDasharray: 30, strokeDashoffset: 0 }} />
-        </svg>
-      </div>
-    );
-  }
-
-  if (entry.progress === 'active') {
-    return (
-      <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[var(--kyc-success)] bg-background text-[var(--kyc-success)] font-semibold text-sm">
-        {index + 1}
-      </div>
-    );
-  }
-
+  const passed = liveness.challenges.filter((entry) => entry.progress === 'passed').length;
+  const total = liveness.challenges.length;
+  const settingUp = isLoading || isFaceMeshLoading;
   return (
-    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-gray-500 text-sm font-medium">
-      {index + 1}
-    </div>
+    <>
+      {flashOverlay}
+      <LiveView
+        videoRef={camera.videoRef}
+        windowRef={previewRef}
+        progressRef={liveness.livenessProgressRef}
+        phase={phase}
+        loading={settingUp}
+        text={
+          isLoading
+            ? t('presence.camera.settingUp')
+            : hasWrongGesture
+              ? t('presence.challenge.wrongGesture')
+              : (instructionText ?? '')
+        }
+        tone={
+          settingUp
+            ? 'prompt'
+            : hasWrongGesture || hasPositionWarning
+              ? 'warning'
+              : phase === 'challenge_passed' || phase === 'complete'
+                ? 'done'
+                : 'prompt'
+        }
+        warning={!settingUp && Boolean(hasWrongGesture || hasPositionWarning)}
+        gesture={showAvatar ? avatarGesture : null}
+        assetsBasePath={config.assetsBasePath}
+        lightingNote={
+          isBright ? t('presence.lighting.brightNotice') : isDim ? t('presence.lighting.darkNotice') : null
+        }
+        step={Math.min(passed + (phase === 'challenge' ? 1 : 0), total)}
+        total={total}
+        failure={
+          phase === 'failed'
+            ? {
+                message: t(FAILURE_TEXT_KEYS[liveness.state.reason] ?? 'presence.failed.generic'),
+                retryLabel: t('presence.tryAgainButton'),
+                onRetry: liveness.retry,
+              }
+            : null
+        }
+        dimRoom={dimRoom}
+        blurs={blurs}
+        onBack={handleBack}
+        onSize={onFrameSize}
+      />
+    </>
   );
 }
 

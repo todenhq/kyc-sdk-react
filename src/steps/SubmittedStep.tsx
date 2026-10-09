@@ -302,6 +302,7 @@ export function SubmittedStep({ stepOrder = [] }: { stepOrder?: readonly KYCStep
 								supportingDocuments: state.supportingDocuments.map((d) => ({
 									type: d.type,
 									mediaId: d.mediaId,
+									...(d.method ? { method: d.method } : {}),
 								})),
 							}
 						: {}),

@@ -24,7 +24,7 @@ export function MyazaWordmark({
       width={height * (81 / 25)}
       fill="none"
       // Decorative: every caller wraps this in something that carries the real
-      // label ("Powered by Myaza Trust"), and an aria-label here would be a
+      // label ("Protected by Myaza Trust"), and an aria-label here would be a
       // redundant nested name that some screen readers announce twice.
       aria-hidden
       focusable="false"

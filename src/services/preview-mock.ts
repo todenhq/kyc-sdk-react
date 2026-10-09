@@ -30,6 +30,12 @@ export function withPreviewMocks(api: KYCApi): KYCApi {
       return `preview_media_${mediaCounter}`;
     },
 
+    async uploadSignature(): Promise<string> {
+      await delay(350);
+      mediaCounter += 1;
+      return `preview_media_${mediaCounter}`;
+    },
+
     // The check reads an uploaded photo, and the preview uploads nothing.
     async checkDocumentCapture(body: { side: 'front' | 'back' }) {
       return { side: body.side, face: null, barcode: null };

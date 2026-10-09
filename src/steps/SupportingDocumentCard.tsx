@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { Check, FileText, Loader2, Upload, X } from '../components/icons';
+import React, { useRef, useState } from 'react';
+import { Check, FileText, Loader2, PenLine, Upload, X } from '../components/icons';
+import { SignaturePreview } from '../components/SignaturePreview';
 import { UploadedFileThumb } from '../components/UploadedFilePreview';
 import { useText } from '../i18n';
 import { BUSINESS_DOC_ACCEPTED_MIMES } from './BusinessDocumentSlot';
+import { SupportingDocumentSignature } from './SupportingDocumentSignature';
+import type { SignatureDrawing } from '../lib/signature';
 
 interface SupportingDocumentCardProps {
   /** 1-based, so the list reads as a checklist rather than a pile. */
@@ -23,6 +26,11 @@ interface SupportingDocumentCardProps {
   error: string | null;
   onPick: (file: File) => void;
   onRemove: () => void;
+  /** How it is provided: a file, a signature drawn on screen, or either. */
+  capture: 'upload' | 'draw' | 'draw_or_upload';
+  /** The provided document was signed on screen. */
+  drawn: boolean;
+  onSign: (drawing: SignatureDrawing) => void;
 }
 
 /**
@@ -48,11 +56,20 @@ export function SupportingDocumentCard({
   error,
   onPick,
   onRemove,
+  capture,
+  drawn,
+  onSign,
 }: SupportingDocumentCardProps) {
   const t = useText();
   const inputRef = useRef<HTMLInputElement>(null);
   const uploaded = fileName !== null;
   const errorId = `supporting-doc-error-${position}`;
+  // Where the workflow offers both, the pad comes first: it is the shorter way.
+  const [uploadInstead, setUploadInstead] = useState(false);
+  const signing = capture !== 'upload' && !uploadInstead;
+  // What was signed, kept so it can be shown once saved and reopened by Edit.
+  // It lives only as long as this screen: a resumed session shows the pen mark.
+  const [signed, setSigned] = useState<SignatureDrawing | null>(null);
 
   return (
     <section
@@ -131,24 +148,50 @@ export function SupportingDocumentCard({
       <div className="border-t border-border/60 p-3">
         {uploaded ? (
           <div className="flex items-center gap-3">
-            <UploadedFileThumb file={file} label={label} />
-            <p className="min-w-0 flex-1 truncate text-sm font-medium">{fileName}</p>
+            {drawn && signed ? (
+              <SignaturePreview drawing={signed} label={t('supportingDocuments.signature.preview')} />
+            ) : drawn ? (
+              <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <PenLine className="h-4 w-4" />
+              </span>
+            ) : (
+              <UploadedFileThumb file={file} label={label} />
+            )}
+            <p className="min-w-0 flex-1 truncate text-sm font-medium">
+              {drawn ? t('supportingDocuments.signature.saved') : fileName}
+            </p>
             <button
               type="button"
-              className="min-h-11 rounded-lg px-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-              onClick={() => inputRef.current?.click()}
+              className="flex min-h-11 items-center gap-1 rounded-lg px-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+              // Edit reopens the pad with the signature in it; replacing a file opens the picker.
+              onClick={() => (drawn ? onRemove() : inputRef.current?.click())}
             >
-              {t('supportingDocuments.card.replace')}
+              {drawn && <PenLine className="h-3.5 w-3.5" aria-hidden="true" />}
+              {t(drawn ? 'supportingDocuments.signature.redo' : 'supportingDocuments.card.replace')}
             </button>
             <button
               type="button"
               aria-label={`Remove ${label}`}
-              onClick={onRemove}
+              onClick={() => {
+                setSigned(null);
+                onRemove();
+              }}
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
+        ) : signing ? (
+          <SupportingDocumentSignature
+            label={label}
+            saving={uploading}
+            initial={signed}
+            onSave={(drawing) => {
+              setSigned(drawing);
+              onSign(drawing);
+            }}
+            onUploadInstead={capture === 'draw_or_upload' ? () => setUploadInstead(true) : undefined}
+          />
         ) : (
           <button
             type="button"
@@ -170,6 +213,17 @@ export function SupportingDocumentCard({
               </span>
               <span className="block text-[11px] text-muted-foreground">{t('supportingDocuments.card.uploadHint')}</span>
             </span>
+          </button>
+        )}
+
+        {!uploaded && capture === 'draw_or_upload' && uploadInstead && (
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => setUploadInstead(false)}
+            className="mt-1 min-h-11 w-full rounded-lg px-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+          >
+            {t('supportingDocuments.signature.drawInstead')}
           </button>
         )}
 

@@ -41,6 +41,7 @@ describe('resolveSupportingDocuments', () => {
         description: 'The slip NIMC issued with your NIN.',
         required: true,
         reads: [],
+        capture: 'upload',
       },
     ]);
     // The whole reason the scoping exists: a BVN applicant has no NIN slip.
@@ -65,7 +66,7 @@ describe('resolveSupportingDocuments', () => {
   it('asks an unscoped document of everyone', () => {
     const config = { enabled: true, types: [{ key: 'signed_mandate', label: 'Signed mandate' }] };
     expect(resolveSupportingDocuments(config, [BVN])).toEqual([
-      { key: 'signed_mandate', label: 'Signed mandate', description: null, required: false, reads: [] },
+      { key: 'signed_mandate', label: 'Signed mandate', description: null, required: false, reads: [], capture: 'upload' },
     ]);
   });
 
@@ -223,5 +224,20 @@ describe('mayAskSupportingDocuments (the consent screen’s question)', () => {
         types: [{ key: 'draft', label: '  ', required: false, idTypes: [] }],
       }),
     ).toBe(false);
+  });
+});
+
+describe('how a document is provided', () => {
+  const doc = (capture?: string) => ({
+    enabled: true,
+    types: [{ key: 'signature_specimen', label: 'Signature specimen', ...(capture ? { capture } : {}) }],
+  });
+
+  it('carries the capture mode, and reads an unknown one as upload', () => {
+    expect(resolveSupportingDocuments(doc() as never, [])[0]?.capture).toBe('upload');
+    expect(resolveSupportingDocuments(doc('draw') as never, [])[0]?.capture).toBe('draw');
+    expect(resolveSupportingDocuments(doc('draw_or_upload') as never, [])[0]?.capture).toBe('draw_or_upload');
+    // A mode a newer workflow adds degrades to the slot this build can draw.
+    expect(resolveSupportingDocuments(doc('typed') as never, [])[0]?.capture).toBe('upload');
   });
 });

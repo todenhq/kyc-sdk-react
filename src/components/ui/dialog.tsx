@@ -59,7 +59,7 @@ const DialogContent = React.forwardRef<
 				// viewport has its real size, and a fixed box sized by its insets
 				// then keeps that stale height until something forces a relayout:
 				// the sheet rendered content-tall with the dimmed page showing
-				// beneath "Powered by", and a refresh cured it. Viewport units are
+				// beneath "Protected by", and a refresh cured it. Viewport units are
 				// re-resolved when the viewport changes; insets were not. Browsers
 				// without dvh ignore the rule and fall back to the insets.
 				fullscreen

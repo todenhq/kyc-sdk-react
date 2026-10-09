@@ -9,6 +9,7 @@ import { HostedLoadingScreen, HostedScreen } from './hosted/HostedScreen';
 import { HANDOFF_TOKEN_PREFIX } from './hosted/token';
 import { SdkFrame } from './lib/sdk-frame';
 import type { MyazaKYCHostedProps } from './hosted/hosted-props';
+import { setFaceMeshOrigin } from './liveness/face-mesh';
 import type { KYCAppearance } from './types/config';
 import {
   isSessionCancelledError,
@@ -43,7 +44,12 @@ export function MyazaKYCHosted({
 }: MyazaKYCHostedProps) {
   // Direct to the API when the page names it; '' keeps the old same-origin
   // proxy path (see MyazaKYCHostedProps.serverUrl for why direct is right).
-  const [api] = useState<KYCApi>(() => createKYCApi(serverUrl, `${HANDOFF_TOKEN_PREFIX}${token}`));
+  const [api] = useState<KYCApi>(() => {
+    // The face mesh comes from the same server, with the public CDN behind it.
+    // Set here, before the flow mounts and starts loading it.
+    setFaceMeshOrigin({ serverUrl });
+    return createKYCApi(serverUrl, `${HANDOFF_TOKEN_PREFIX}${token}`);
+  });
   const [phase, setPhase] = useState<'loading' | 'ready' | 'completed' | 'cancelled' | 'error'>('loading');
   const [bootstrap, setBootstrap] = useState<HandoffBootstrapResponse | null>(null);
   const [summary, setSummary] = useState<CompletedSessionSummary | null>(null);

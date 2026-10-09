@@ -28,6 +28,17 @@ export const PRESENCE_CAPTURE_ENTRIES: TextEntry[] = [
   { key: 'presence.camera.settingUp', label: 'Camera starting', default: 'Setting up...' },
   { key: 'presence.camera.preparingDetection', label: 'Face detection loading', default: 'Preparing face detection...' },
   { key: 'presence.camera.loading', label: 'Loading', default: 'Loading...' },
+  {
+    key: 'presence.camera.secure',
+    label: 'Full-screen camera: secure connection line',
+    default: 'Your selfie is sent over a secure connection',
+  },
+  {
+    key: 'presence.camera.stepCount',
+    label: 'Full-screen camera: step count',
+    default: 'Step {step} of {total}',
+    placeholders: ['step', 'total'],
+  },
   { key: 'presence.position.placeFace', label: 'Guidance: position your face', default: 'Kindly position your face in the circle' },
   { key: 'presence.position.moveCloser', label: 'Guidance: move closer', default: 'Kindly move closer' },
   { key: 'presence.position.centerFace', label: 'Guidance: centre your face', default: 'Kindly center your face' },

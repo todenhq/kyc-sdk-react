@@ -65,7 +65,11 @@ export function progressFromState(state: KYCState): SessionProgressPayload {
       // bytes never ride progress, the same rule the selfie keeps.
       supportingDocuments:
         state.supportingDocuments.length > 0
-          ? state.supportingDocuments.map((d) => ({ type: d.type, mediaId: d.mediaId }))
+          ? state.supportingDocuments.map((d) => ({
+              type: d.type,
+              mediaId: d.mediaId,
+              ...(d.method ? { method: d.method } : {}),
+            }))
           : undefined,
       contact: state.contact,
       questionnaireAnswers: state.questionnaireAnswers,

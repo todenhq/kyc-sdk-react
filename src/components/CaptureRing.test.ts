@@ -12,6 +12,11 @@ const read = (rel: string) => readFileSync(join(SRC, rel), 'utf8');
 const source = read('components/CaptureRing.tsx');
 const step = read('steps/LivenessStep.tsx');
 const hook = read('hooks/useLiveness.ts');
+// The liveness camera is full screen on every device, so the line runs around
+// its tall window (steps/liveness/WindowRing), paced by this file's functions.
+const live = read('steps/liveness/LiveView.tsx');
+const review = read('steps/liveness/ReviewView.tsx');
+const windowRing = read('steps/liveness/WindowRing.tsx');
 
 // The ring's correctness is mostly about WHERE it is drawn and WHAT it is
 // driven by, neither of which a render test in jsdom can see: jsdom lays
@@ -103,16 +108,21 @@ describe('CaptureRing', () => {
   it('is one ring, on the liveness frame only', () => {
     // A second ring on the review screen, for the upload, made two circles of
     // one flow. The upload's signal is the Continue button's own spinner.
-    expect(step.match(/<CaptureRing/g)).toHaveLength(1);
+    expect(live.match(/<WindowRing/g)).toHaveLength(1);
+    expect(review).not.toContain('WindowRing');
+    expect(step).not.toContain('<CaptureRing');
     expect(source).not.toMatch(/trickle/i);
   });
 
-  it('is brand-coloured while it builds and goes green only as it closes', () => {
-    // Success green from the first frame would claim a result nothing has
-    // earned yet, and would leave the checkmark landing in green saying
-    // nothing new. The change of colour AT the shutter is the completion beat.
-    expect(step).toMatch(/phase === 'complete' \? 'text-\[var\(--kyc-success\)\]' : 'text-primary'/);
-    expect(step).toContain("'transition-colors duration-300'");
+  it('is one green line over a track that carries the warning', () => {
+    // Around the window the line is green from its first pixel, as on Flutter:
+    // it is the frame filling in, and the frame's own colour (the brand tint,
+    // red on a warning) is the track underneath, which is what changes.
+    expect(windowRing).toContain('stroke="var(--kyc-success)"');
+    expect(windowRing).toContain('stroke={track}');
+    expect(live).toContain("'var(--destructive)'");
+    // Paced by the same two functions as the circle: one rule, not two.
+    expect(windowRing).toContain("import { advanceTarget, easeToward } from '../../components/CaptureRing'");
   });
 
   it('has flat ends, sized to the border it traces', () => {
@@ -149,7 +159,7 @@ describe('CaptureRing', () => {
     // The counter reaches the shutter and the phase changes in the SAME frame,
     // so unmounting early swept the ring away mid-build and the user never saw
     // a finished circle. `ringOnFrame` includes `complete`.
-    expect(step).toMatch(/phase !== 'loading' && phase !== 'failed'/);
+    expect(live).toMatch(/const ringOn = !p\.loading && p\.phase !== 'loading' && p\.phase !== 'failed'/);
   });
 });
 
@@ -183,18 +193,20 @@ describe('the capture ring in the liveness step', () => {
   it('is on the frame from positioning to the shutter, over a neutral track', () => {
     // The border is the ring's track for the whole test; the review screen's
     // frame wears the same faint primary, so the two screens share one line.
-    expect(step).toContain('ringOnFrame');
-    expect(step).toContain("'border-primary/20'");
+    expect(live).toContain('{ringOn && <WindowRing');
+    expect(live).toContain("'color-mix(in srgb, var(--primary) 35%, transparent)'");
     expect(step).toContain('progressRef={liveness.livenessProgressRef}');
   });
 
   it('fires the shutter flash on complete, not on capturing', () => {
     // It used to say "Got it!" the moment the challenges passed, before any
     // photo existed, which left the real wait looking finished.
-    expect(step).toContain("{phase === 'complete' && (");
-    expect(step).toContain('animate-capture-flash');
+    expect(live).toContain("{p.phase === 'complete' && (");
+    expect(live).toContain('animate-capture-flash');
+    expect(live).not.toMatch(/p\.phase === 'capturing'[^\n]*capture-flash/);
     // The rendered text node, not the word: the comment above the flash still
     // names the copy it replaced, and that explanation is the point of it.
     expect(step).not.toMatch(/>\s*Got it!\s*</);
+    expect(live).not.toMatch(/>\s*Got it!\s*</);
   });
 });

@@ -26,6 +26,8 @@ export interface LivenessSignals {
     total: number;
     inconclusive: boolean;
     sequence: string[];
+    /** When each colour came on, ms from the start of the recording. */
+    onsets?: number[];
   };
   /** Face-continuity glitches observed during gesture challenges. */
   faceGlitches?: number;

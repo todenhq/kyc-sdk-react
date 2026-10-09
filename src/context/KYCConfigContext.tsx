@@ -141,6 +141,9 @@ export interface KYCConfigValue {
   flashSequenceLength?: number;
   /** Light theme while the liveness camera is on. On unless `false`. */
   livenessBrightScreen?: boolean;
+  /** Show the captured selfie, with Retake and Continue, before moving on.
+   *  Off unless `true`; the liveness capture otherwise hands straight over. */
+  selfieReview?: boolean;
   /** Device Intelligence (device + IP analysis). On by default; false skips it (and its charge). */
   deviceIntelligence?: boolean;
   /**
@@ -495,6 +498,7 @@ export function KYCConfigProvider({ children, apiOverride, serverConfigOverride,
       config.livenessMode,
       config.flashSequenceLength,
       config.livenessBrightScreen,
+      config.selfieReview,
       config.deviceIntelligence,
       config.deviceHandoff,
       config.consentStep,

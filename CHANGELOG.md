@@ -1,5 +1,55 @@
 # Changelog
 
+## 3.6.0
+
+A full-screen liveness camera, signing on screen, and no selfie review by default.
+
+**Deploy note for Myaza:** drawn signatures need a server with the signature upload route. The face tracking files are tried on the server first and fall back to the public CDN when the server does not serve them.
+
+### The liveness camera is full screen
+
+While the liveness camera is live it now takes the whole dialog, on desktop as well as on a phone. The camera fills the dialog, sharp inside a tall window for the face and blurred around it, with the instruction above the window and "Step 1 of 3" below. Back and close are drawn over the camera, and close stays hidden under `disableClose`. A line around the window shows progress, and the face is now judged against the window rather than the whole frame.
+
+Where the browser cannot blur, the person prefers more contrast or less transparency, or the device cannot keep up, the surround is a plain tint instead. Phones that support it give a short buzz as each step passes.
+
+No change to your code.
+
+### No selfie review unless you ask for one
+
+**This changes existing integrations.** After the liveness capture the SDK used to show the selfie with Retake and Continue. It now hands straight on to the next step. A liveness selfie is evidence, not a portrait, and the capture already waits for a face that is in the window and still.
+
+Switch the review back on with `selfieReview={true}`, or with the switch on the workflow's Presence Intelligence step. On a biometric workflow its own setting wins. A selfie that fails to upload still shows the review, which is where the retry is.
+
+### Going back to a finished liveness step
+
+Going back to the liveness step after the selfie is taken now shows "Selfie already taken" with the photo and Continue. There is no Retake, so the check runs once per session.
+
+### Sign a supporting document on screen
+
+A supporting document in a workflow can now be signed on screen. The workflow sets `capture` on the document: `upload` (the default, as before), `draw` (a signature drawn on screen) or `draw_or_upload` (either). The person signs in a box with Clear and an Expand button for more room, and "Use this signature" stays disabled until there is real ink. With `draw_or_upload` they can switch to "Upload a photo of your signature instead".
+
+After saving, the card shows the signature with an Edit action that reopens the box with the signature in it. A session picked up later shows a mark that it was signed, not the drawing itself.
+
+Existing workflows are unchanged: a document with no `capture` is uploaded as before. The server must be on a version that accepts drawn signatures.
+
+### Face tracking files load from the Myaza server
+
+The liveness step downloads its face tracking files when it opens. They came from a public CDN only, with no version pinned, so a slow CDN meant the camera never started. They are now tried in order: your own host at `<assetsBasePath>/face-mesh/` when `assetsBasePath` is set, then the Myaza server, then the CDN pinned to one version. A source that fails or times out is skipped.
+
+If you set `assetsBasePath` only for the gesture pictures, the SDK now asks your host for `face-mesh/face_mesh.js` first and moves on when it is not there. Under a Content Security Policy, allow the Myaza server in `script-src` and `connect-src`, or the SDK falls back to the CDN.
+
+### The flash check tells the server when each colour came on
+
+The submission now carries the time each flash colour came on, measured from the start of the recording, so the server's own check of the recording looks in the right place. Where the browser allows it (Chrome on Android and some webcams, not Safari), exposure and white balance are held still for the sequence. No change to your code, and an older server ignores the new field.
+
+### The hosted map gets longer to load
+
+The SDK waited 8 seconds for the hosted map before falling back to the built-in one. It now waits 20 seconds, which a slow connection needs.
+
+### New texts
+
+`presence.camera.secure`, `presence.camera.stepCount`, `presence.review.captured`, `presence.review.saving`, `presence.review.doneTitle`, `presence.review.doneDescription`, the `supportingDocuments.signature.*` group, `supportingDocuments.error.signatureEmpty` and `supportingDocuments.error.signatureFailed`.
+
 ## 3.5.0
 
 A screen for a cancelled verification, and a device ID on uploads.

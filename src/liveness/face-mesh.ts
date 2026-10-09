@@ -1,41 +1,36 @@
 // ---------------------------------------------------------------------------
 // MediaPipe Face Mesh loader
-// Loads the model from CDN — does NOT bundle the ~4MB WASM/model files.
+// The ~10 MB of WASM and model files are NOT bundled: they are fetched, from
+// the list of sources in face-mesh-sources.ts (the KYC server first, the
+// public CDN as the fallback), and a source that fails is skipped for the next.
 // ---------------------------------------------------------------------------
 
 import type { NormalizedLandmark } from './types';
+import { faceMeshSources, type FaceMeshOrigin } from './face-mesh-sources';
+import {
+  loadFaceMeshScript,
+  type FaceMeshInstance,
+  type FaceMeshResults,
+} from './face-mesh-script';
 
 // ---------------------------------------------------------------------------
-// CDN base URL for MediaPipe Face Mesh model files
+// Where to load from. Set by `primeFaceMesh` at SDK mount, which is the one
+// place that knows the server the SDK was mounted with; the public CDN alone
+// until then.
 // ---------------------------------------------------------------------------
 
-const FACE_MESH_CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/';
+let origin: FaceMeshOrigin = {};
 
-// ---------------------------------------------------------------------------
-// Types for the MediaPipe JS API (we only use what we need)
-// ---------------------------------------------------------------------------
-
-interface FaceMeshResults {
-  multiFaceLandmarks?: NormalizedLandmark[][];
+/**
+ * Say where the files are loaded from. Call it before the first load starts
+ * (SDK mount): a model already loading or loaded keeps the source it has.
+ */
+export function setFaceMeshOrigin(from: FaceMeshOrigin): void {
+  origin = from;
 }
 
-interface FaceMeshInstance {
-  setOptions: (opts: Record<string, unknown>) => void;
-  onResults: (callback: (results: FaceMeshResults) => void) => void;
-  initialize: () => Promise<void>;
-  send: (input: { image: HTMLVideoElement }) => Promise<void>;
-  close: () => void;
-}
-
-interface FaceMeshConstructor {
-  new (config: { locateFile: (file: string) => string }): FaceMeshInstance;
-}
-
-// ---------------------------------------------------------------------------
-// Singleton loader — ensures we only load the script once
-// ---------------------------------------------------------------------------
-
-let faceMeshConstructorPromise: Promise<FaceMeshConstructor> | null = null;
+/** How long one source has to download and start the model. */
+const INIT_TIMEOUT_MS = 25_000;
 
 // ---------------------------------------------------------------------------
 // Persistent warm instance — created once (at SDK load time via
@@ -61,37 +56,6 @@ type LandmarkCallback = (
 ) => void;
 
 let activeCallback: LandmarkCallback | null = null;
-
-function loadFaceMeshScript(): Promise<FaceMeshConstructor> {
-  if (faceMeshConstructorPromise) return faceMeshConstructorPromise;
-
-  faceMeshConstructorPromise = new Promise<FaceMeshConstructor>((resolve, reject) => {
-    // Check if already loaded (e.g. from a previous session)
-    if ((window as unknown as Record<string, unknown>).FaceMesh) {
-      resolve((window as unknown as Record<string, unknown>).FaceMesh as unknown as FaceMeshConstructor);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = `${FACE_MESH_CDN}face_mesh.js`;
-    script.async = true;
-    script.onload = () => {
-      const FM = (window as unknown as Record<string, unknown>).FaceMesh as unknown as FaceMeshConstructor | undefined;
-      if (FM) {
-        resolve(FM);
-      } else {
-        reject(new Error('FaceMesh not found on window after script load'));
-      }
-    };
-    script.onerror = () => {
-      faceMeshConstructorPromise = null; // Allow retry on next call
-      reject(new Error('Failed to load MediaPipe Face Mesh from CDN'));
-    };
-    document.head.appendChild(script);
-  });
-
-  return faceMeshConstructorPromise;
-}
 
 // ---------------------------------------------------------------------------
 // Shared options used for both prewarming and live instances
@@ -130,40 +94,47 @@ function ensureInstance(): Promise<FaceMeshInstance> {
   if (sharedInitPromise) return sharedInitPromise;
 
   sharedInitPromise = (async () => {
-    const FaceMesh = await loadFaceMeshScript();
-    const instance = new FaceMesh({ locateFile: (f) => `${FACE_MESH_CDN}${f}` });
-    applyOptions(instance);
+    const sources = faceMeshSources(origin);
+    let lastError: unknown = new Error('No Face Mesh source');
+    // One source at a time, each to completion: the script, then the model it
+    // fetches from the same place. Whatever goes wrong, the next one is tried.
+    for (const base of sources) {
+      let instance: FaceMeshInstance | null = null;
+      try {
+        const FaceMesh = await loadFaceMeshScript(base);
+        instance = new FaceMesh({ locateFile: (f) => `${base}${f}` });
+        applyOptions(instance);
 
-    // Installed once for the instance's lifetime; routes to the active session.
-    instance.onResults((results: FaceMeshResults) => {
-      const cb = activeCallback;
-      if (!cb) return; // no session attached — ignore stray frames
-      const faces = results.multiFaceLandmarks ?? [];
-      if (faces.length > 0) {
-        cb(faces[0], faces.length);
-      } else {
-        cb(null, 0);
+        // Installed once for the instance's lifetime; routes to the active session.
+        instance.onResults((results: FaceMeshResults) => {
+          const cb = activeCallback;
+          if (!cb) return; // no session attached, ignore stray frames
+          const faces = results.multiFaceLandmarks ?? [];
+          if (faces.length > 0) {
+            cb(faces[0], faces.length);
+          } else {
+            cb(null, 0);
+          }
+        });
+
+        await Promise.race([
+          instance.initialize(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`Face Mesh did not start from ${base}`)), INIT_TIMEOUT_MS),
+          ),
+        ]);
+        sharedInstance = instance;
+        return instance;
+      } catch (err) {
+        lastError = err;
+        // Tear down the partial instance before the next source is tried.
+        try { instance?.close(); } catch { /* ignore */ }
       }
-    });
-
-    try {
-      await Promise.race([
-        instance.initialize(),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('MediaPipe initialize() timed out')), 25_000),
-        ),
-      ]);
-    } catch (err) {
-      // Init failed — tear down the partial instance and allow a later retry.
-      try { instance.close(); } catch { /* ignore */ }
-      sharedInstance = null;
-      sharedInitPromise = null;
-      faceMeshConstructorPromise = null;
-      throw err;
     }
-
-    sharedInstance = instance;
-    return instance;
+    // Every source failed. Allow a later retry (the step's Try Again).
+    sharedInstance = null;
+    sharedInitPromise = null;
+    throw lastError;
   })();
 
   return sharedInitPromise;
@@ -174,8 +145,11 @@ function ensureInstance(): Promise<FaceMeshInstance> {
  * script and initialize the WASM model in the background. When the user reaches
  * the liveness step, `createFaceMesh` reuses the warm instance immediately
  * instead of waiting for the model to download.
+ *
+ * [from] says where the files are loaded from (see face-mesh-sources.ts).
  */
-export function primeFaceMesh(): void {
+export function primeFaceMesh(from?: FaceMeshOrigin): void {
+  if (from) setFaceMeshOrigin(from);
   // Kick off (or reuse) the shared init; failures are retried on demand later.
   ensureInstance().catch(() => { /* prewarm is best-effort */ });
 }

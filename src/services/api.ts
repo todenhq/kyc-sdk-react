@@ -1,5 +1,6 @@
 import { SDK_VERSION } from '../utils/device-metadata';
 import { uploadDeviceIdHeader } from '../lib/upload-device-id';
+import { compactDrawing, type SignatureDrawing } from '../lib/signature';
 
 export class KYCApiError extends Error {
   constructor(
@@ -466,6 +467,9 @@ export interface WorkflowConfigPayload {
   flashSequenceLength?: number;
   /** Light theme while the liveness camera is on. On unless `false`. */
   livenessBrightScreen?: boolean;
+  /** Show the captured selfie, with Retake and Continue, before moving on.
+   *  Off unless `true`; the liveness capture otherwise hands straight over. */
+  selfieReview?: boolean;
   /** "Continue on your phone" desktop QR gate. On by default; false disables it. */
   deviceHandoff?: boolean;
   /** The consent (welcome) screen the flow opens on; false skips it. */
@@ -595,6 +599,9 @@ export interface HandoffSessionSnapshot {
   flashSequenceLength?: number;
   /** Light theme while the liveness camera is on. On unless `false`. */
   livenessBrightScreen?: boolean;
+  /** Show the captured selfie, with Retake and Continue, before moving on.
+   *  Off unless `true`; the liveness capture otherwise hands straight over. */
+  selfieReview?: boolean;
   /** "Continue on your phone" desktop QR gate. On by default; false disables it. */
   deviceHandoff?: boolean;
   /** The consent (welcome) screen the flow opens on; false skips it. */
@@ -982,6 +989,20 @@ export function createKYCApi(baseUrl: string, apiKey: string) {
         method: 'POST',
         headers: { ...headers, ...uploadDeviceIdHeader() },
         body: form,
+      });
+      const { mediaId } = await handleResponse<UploadResponse>(res);
+      return mediaId;
+    },
+
+    /**
+     * Save a signature drawn on screen. The server draws the image from the
+     * strokes and stores it as a supporting document; returns its mediaId.
+     */
+    async uploadSignature(drawing: SignatureDrawing): Promise<string> {
+      const res = await fetch(`${base}/upload/signature`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json', ...uploadDeviceIdHeader() },
+        body: JSON.stringify(compactDrawing(drawing)),
       });
       const { mediaId } = await handleResponse<UploadResponse>(res);
       return mediaId;

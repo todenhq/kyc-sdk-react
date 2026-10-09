@@ -106,7 +106,7 @@ export function kycReducer(state: KYCState, action: KYCAction): KYCState {
         ...(Array.isArray(d.supportingDocuments)
           ? {
               supportingDocuments: d.supportingDocuments.filter(
-                (doc): doc is { type: string; mediaId: string } =>
+                (doc): doc is { type: string; mediaId: string; method?: 'drawn' | 'uploaded' } =>
                   !!doc &&
                   typeof doc === 'object' &&
                   typeof (doc as { type?: unknown }).type === 'string' &&

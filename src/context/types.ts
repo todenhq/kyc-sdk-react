@@ -294,7 +294,7 @@ export interface KYCState {
    * entry is `{ type, mediaId }` on the wire; `fileName` is display only and
    * is dropped from session progress like every other preview artefact.
    */
-  supportingDocuments: Array<{ type: string; mediaId: string; fileName?: string }>;
+  supportingDocuments: Array<{ type: string; mediaId: string; fileName?: string; method?: 'drawn' | 'uploaded' }>;
 
   // Steps 1b/1c — contact verification (email/phone OTP). The proof tokens are
   // single-use server mints submitted with /verify; destinations are kept for

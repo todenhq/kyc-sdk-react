@@ -29,6 +29,8 @@ export interface RequestedSupportingDocument {
    * applicant nothing.
    */
   reads: string[];
+  /** How it is provided: uploaded, signed on screen, or either. */
+  capture: 'upload' | 'draw' | 'draw_or_upload';
 }
 
 /** The names on one document's fields: what the applicant is told we read. */
@@ -87,6 +89,8 @@ export function resolveSupportingDocuments(
       description: entry.description?.trim() || null,
       required: entry.required === true && inScope,
       reads: documentReads(entry.fields),
+      // An unknown mode from a newer workflow degrades to the upload slot.
+      capture: entry.capture === 'draw' || entry.capture === 'draw_or_upload' ? entry.capture : 'upload',
     });
   }
   return out;

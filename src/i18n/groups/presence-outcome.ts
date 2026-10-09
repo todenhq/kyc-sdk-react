@@ -32,6 +32,13 @@ export const PRESENCE_OUTCOME_ENTRIES: TextEntry[] = [
     default: 'Your selfie from earlier is saved. Continue, or retake it if you prefer.',
     multiline: true,
   },
+  { key: 'presence.review.doneTitle', label: 'Finished step: title', default: 'Selfie already taken' },
+  {
+    key: 'presence.review.doneDescription',
+    label: 'Finished step: description',
+    default: 'You have completed this step. There is nothing more to do here.',
+    multiline: true,
+  },
   { key: 'presence.review.restoredBadge', label: 'Review: saved selfie badge', default: 'Selfie already captured' },
   {
     key: 'presence.review.retrying',
@@ -46,6 +53,8 @@ export const PRESENCE_OUTCOME_ENTRIES: TextEntry[] = [
       'This photo looks blurry. For the best chance of a match, retake it holding the phone steady until your face is sharp.',
     multiline: true,
   },
+  { key: 'presence.review.captured', label: 'Full-screen review: selfie captured', default: 'Selfie captured' },
+  { key: 'presence.review.saving', label: 'Full-screen review: saving', default: 'Saving your selfie…' },
   { key: 'presence.review.retryUpload', label: 'Review: retry upload button', default: 'Retry Upload' },
   { key: 'presence.review.compressing', label: 'Review: compressing', default: 'Compressing image...' },
   {

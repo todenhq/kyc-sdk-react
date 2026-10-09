@@ -26,6 +26,7 @@ const WORKFLOW_KEYS = [
   'livenessMode',
   'flashSequenceLength',
   'livenessBrightScreen',
+  'selfieReview',
   'deviceIntelligence',
   'deviceHandoff',
   'consentStep',
@@ -128,6 +129,7 @@ const APPLICANT_LEG_KEYS = [
   'livenessMode',
   'flashSequenceLength',
   'livenessBrightScreen',
+  'selfieReview',
   'nfc',
 ] as const;
 

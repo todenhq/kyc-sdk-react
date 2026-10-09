@@ -327,7 +327,26 @@
   100% { opacity: 0; }
 }
 
+/* One pass of light down the full-screen selfie window as the photo is
+   taken: the shutter's follow-through. Decorative, so it is switched off
+   under prefers-reduced-motion below. */
+@keyframes liveness-scan {
+  0% { top: 0; opacity: 0; }
+  8% { opacity: 0.9; }
+  92% { opacity: 0.9; }
+  100% { top: 100%; opacity: 0; }
+}
+
 @layer utilities {
+  .animate-liveness-scan {
+    animation: liveness-scan 550ms ease-in-out 150ms both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-liveness-scan {
+      animation: none;
+      opacity: 0;
+    }
+  }
   .animate-slide-up {
     animation: slide-up 300ms ease-out;
   }

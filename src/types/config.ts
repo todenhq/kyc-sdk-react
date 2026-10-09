@@ -196,6 +196,11 @@ export interface SupportingDocumentRequest {
    * it from everybody else, which is the default.
    */
   alwaysAsk?: boolean;
+  /**
+   * How it is provided: a file (`upload`, the default), a signature drawn on
+   * screen (`draw`), or either (`draw_or_upload`).
+   */
+  capture?: 'upload' | 'draw' | 'draw_or_upload';
 }
 
 export interface SupportingDocumentsConfig {
@@ -737,6 +742,9 @@ export interface MyazaKYCConfig<C extends AnyCountry = AnyCountry> {
    * turns it off. Usually configured in the workflow builder.
    */
   livenessBrightScreen?: boolean;
+  /** Show the captured selfie, with Retake and Continue, before moving on.
+   *  Off unless `true`; the liveness capture otherwise hands straight over. */
+  selfieReview?: boolean;
 
   /**
    * Device Intelligence — device + IP fraud analysis (multi-accounting,

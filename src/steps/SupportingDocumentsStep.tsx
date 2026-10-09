@@ -13,6 +13,8 @@ import { resolveSupportingDocuments, verifiedIdsFromState } from '../lib/support
 import { stepAfterSupportingDocuments } from '../lib/post-capture';
 import { stepBeforeSupportingDocuments } from '../lib/supporting-documents-nav';
 import { useText } from '../i18n';
+import { KYCApiError } from '../services/api';
+import { hasSignature, type SignatureDrawing } from '../lib/signature';
 
 /**
  * Supporting-documents step: one upload slot per requested document.
@@ -74,10 +76,31 @@ export function SupportingDocumentsStep() {
       setFiles((prev) => ({ ...prev, [key]: file }));
       dispatch({
         type: 'SET_SUPPORTING_DOCUMENTS',
-        payload: [...uploads.filter((d) => d.type !== key), { type: key, mediaId, fileName: file.name }],
+        payload: [...uploads.filter((d) => d.type !== key), { type: key, mediaId, fileName: file.name, method: 'uploaded' }],
       });
     } catch {
       setError(key, t('supportingDocuments.error.uploadFailed'));
+    } finally {
+      setUploadingKey(null);
+    }
+  };
+
+  const handleSign = async (key: string, drawing: SignatureDrawing) => {
+    setError(key, null);
+    if (!hasSignature(drawing)) {
+      setError(key, t('supportingDocuments.error.signatureEmpty'));
+      return;
+    }
+    setUploadingKey(key);
+    try {
+      const mediaId = await config.api.uploadSignature(drawing);
+      dispatch({
+        type: 'SET_SUPPORTING_DOCUMENTS',
+        payload: [...uploads.filter((d) => d.type !== key), { type: key, mediaId, method: 'drawn' }],
+      });
+    } catch (err) {
+      const empty = err instanceof KYCApiError && err.code === 'signature_empty';
+      setError(key, t(empty ? 'supportingDocuments.error.signatureEmpty' : 'supportingDocuments.error.signatureFailed'));
     } finally {
       setUploadingKey(null);
     }
@@ -109,7 +132,11 @@ export function SupportingDocumentsStep() {
             description={slot.description}
             required={slot.required}
             reads={slot.reads}
-            fileName={uploadFor(slot.key)?.fileName ?? null}
+            // A restored upload may carry no file name; the mediaId is what says it is there.
+            fileName={uploadFor(slot.key) ? (uploadFor(slot.key)?.fileName ?? slot.label) : null}
+            capture={slot.capture}
+            drawn={uploadFor(slot.key)?.method === 'drawn'}
+            onSign={(drawing) => void handleSign(slot.key, drawing)}
             file={files[slot.key] ?? null}
             uploading={uploadingKey === slot.key}
             error={errors[slot.key] ?? null}

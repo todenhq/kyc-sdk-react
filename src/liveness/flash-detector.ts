@@ -12,6 +12,8 @@
 // recorded) captures the flashes for server-side audit.
 // ---------------------------------------------------------------------------
 
+import { flashOnsets } from './flash-timeline';
+
 export interface FlashColor {
   /** CSS color painted over the screen. */
   css: string;
@@ -38,6 +40,8 @@ export interface FlashResult {
   total: number;
   /** True when ambient light drowned the flashes (no measurable shift at all). */
   inconclusive: boolean;
+  /** When each colour came on, in ms from the start of the recording (flash-timeline.ts). */
+  onsets?: number[];
 }
 
 export function generateFlashSequence(count = 4): FlashColor[] {
@@ -108,6 +112,7 @@ export async function runFlashSequence(
   const canvas = document.createElement('canvas');
   let matched = 0;
   let measurable = 0;
+  const onAt: number[] = [];
 
   try {
     for (const flash of sequence) {
@@ -118,6 +123,7 @@ export async function runFlashSequence(
       const baseline = await sampleWindow(video, canvas, 300);
 
       setColor(flash.css);
+      onAt.push(performance.now());
       await delay(200); // screen + camera exposure latency
       const lit = await sampleWindow(video, canvas, 450);
 
@@ -146,5 +152,6 @@ export async function runFlashSequence(
   const inconclusive = measurable === 0;
   const score = total > 0 ? matched / total : 0;
   const passed = !inconclusive && matched >= Math.max(1, Math.ceil(measurable * 0.66));
-  return { passed, score, sequence: sequence.map((s) => s.name), matched, total, inconclusive };
+  const onsets = flashOnsets(onAt, total);
+  return { passed, score, sequence: sequence.map((s) => s.name), matched, total, inconclusive, ...(onsets ? { onsets } : {}) };
 }

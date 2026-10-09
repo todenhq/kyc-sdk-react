@@ -3,7 +3,7 @@
 // Provenance, at the one moment it is load-bearing. A bare QR is a black box:
 // the user is being asked to point their camera at an unreadable square and hand
 // over a passport on the other side. The mark makes the destination legible
-// before they scan, and matches the "Powered by Myaza Trust" lockup already at
+// before they scan, and matches the "Protected by Myaza Trust" lockup already at
 // the foot of the modal.
 //
 // A data URI rather than a file: the SDK ships as a bundle into other people's

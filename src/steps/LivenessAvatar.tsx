@@ -43,6 +43,11 @@ interface LivenessAvatarProps {
 	 */
 	assetsBasePath?: string;
 	className?: string;
+	/**
+	 * Diameter in px. Absent keeps the modal's own size; the full-screen
+	 * camera hands a smaller one, since its avatar sits above the window.
+	 */
+	size?: number;
 }
 
 export function LivenessAvatar({
@@ -50,6 +55,7 @@ export function LivenessAvatar({
 	visible,
 	assetsBasePath,
 	className,
+	size,
 }: LivenessAvatarProps) {
 	// Flash and the passive hold have no demonstrable gesture — treat them as "no avatar".
 	const gesture: GestureChallenge | null =
@@ -126,7 +132,9 @@ export function LivenessAvatar({
 						"translate-x-0 opacity-100 animate-avatar-slide-in",
 					slideState === "in" && "translate-x-0 opacity-100",
 				)}>
-				<div className='h-32 w-32 overflow-hidden rounded-full bg-primary/10'>
+				<div
+					className={cn('overflow-hidden rounded-full bg-primary/10', size == null && 'h-32 w-32')}
+					style={size == null ? undefined : { width: size, height: size }}>
 					{g && src && (
 						<img
 							src={src}

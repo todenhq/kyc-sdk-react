@@ -80,10 +80,15 @@ export function biometricFlowOptions(config: BiometricConfigLike): BiometricFlow
   };
 }
 
-/** Whether the liveness step shows the selfie review before handing over. A
- *  full verification always does; only the biometric scopes can switch it off. */
-export function showsSelfieReview(config: BiometricConfigLike): boolean {
-  return biometricFlowOptions(config)?.selfieReview ?? true;
+/** Whether the liveness step shows the selfie review (the photo with Retake
+ *  and Continue) before handing over. OFF unless a workflow or the host
+ *  switches it on: the capture already waits for a usable face, and a retake
+ *  is a second attempt to choose from. On a biometric scope its own
+ *  `biometric.selfieReview` wins; every other flow reads `selfieReview`.
+ *  MIRRORED across the web, React Native and Flutter SDKs. */
+export function showsSelfieReview(config: BiometricConfigLike & { selfieReview?: boolean }): boolean {
+  const own = biometricFlowOptions(config) ? config.biometric?.selfieReview : undefined;
+  return own ?? config.selfieReview ?? false;
 }
 
 /** Whether the submitted step waits for the verdict in the flow ('app' and

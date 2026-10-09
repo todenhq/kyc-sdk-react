@@ -19,7 +19,7 @@ import { KYCHeader } from './KYCHeader';
 import { SandboxBanner } from './SandboxBanner';
 import { StepHeaderSlotContext } from './step-header-slot';
 import { CaptureLightContext } from './capture-light';
-import { ImmersiveCaptureContext } from './immersive-capture';
+import { ImmersiveCaptureContext, ImmersiveCloseContext } from './immersive-capture';
 import { LivenessCameraContext } from './liveness-camera';
 import { useLivenessLight } from './use-liveness-light';
 import { Button } from './ui/button';
@@ -384,6 +384,7 @@ export function KYCModal({ open, onClose, showThemeToggle, disableClose, fullScr
     <BackAvailableContext.Provider value={backAvailable}>
     <CaptureLightContext.Provider value={setLightOverride}>
     <ImmersiveCaptureContext.Provider value={setImmersive}>
+    <ImmersiveCloseContext.Provider value={dismissBlocked ? null : onClose}>
     <LivenessCameraContext.Provider value={reportCameraShown}>
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen && !dismissBlocked) onClose(); }}>
       <DialogContent
@@ -451,7 +452,9 @@ export function KYCModal({ open, onClose, showThemeToggle, disableClose, fullScr
                 <SessionCancelledScreen message={cancelled.message} onClose={onClose} />
               ) : (
                 <>
-                  {plan && ['id-type', 'id-input', 'document-capture', 'liveness'].includes(state.currentStep) && (
+                  {/* Not over the full-screen selfie camera: it has no
+                      padded body for the strip to sit in. */}
+                  {plan && !(immersive && state.currentStep === 'liveness') && ['id-type', 'id-input', 'document-capture', 'liveness'].includes(state.currentStep) && (
                     <MultiIdProgress plan={plan} slots={state.multiIdSlots} />
                   )}
                   {/* A step the reviewer narrowed away is never rendered, not
@@ -472,6 +475,7 @@ export function KYCModal({ open, onClose, showThemeToggle, disableClose, fullScr
       </DialogContent>
     </Dialog>
     </LivenessCameraContext.Provider>
+    </ImmersiveCloseContext.Provider>
     </ImmersiveCaptureContext.Provider>
     </CaptureLightContext.Provider>
     </BackAvailableContext.Provider>
