@@ -10,7 +10,7 @@ export const SDK_TYPE = 'web' as const;
 // publishing, and fails the release if it cannot. It used to say "keep in sync
 // with package.json", which nothing enforced -- 2.12.0 shipped reporting
 // 2.11.0. Treat the value here as a development default, not the released one.
-export const SDK_VERSION = '3.6.0';
+export const SDK_VERSION = '3.7.0';
 
 export interface WebDeviceMetadata {
 	sdkType: 'web';

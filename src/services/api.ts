@@ -653,6 +653,36 @@ export interface HandoffSessionSnapshot {
 }
 
 /** Response from `POST /api/kyc/session`. */
+/** Response from `POST /api/kyc/session/start` for embedded attempts. */
+export interface StartSessionResponse {
+  sessionId: string;
+  expiresAt: string;
+  resumed: boolean;
+  /** Where the user got to, when resuming. Media references are already
+   *  pruned server-side of anything that has since expired. */
+  progress?: {
+    step?: string;
+    mediaIds?: Record<string, string>;
+    data?: Record<string, unknown>;
+  };
+  /** A committed KYB application still waiting on its applicant leg
+   *  (lib/resumed-application.ts). */
+  applicantKeyPersonId?: string;
+  parentVerificationId?: string;
+  parentRequestId?: string;
+  /**
+   * The flow this attempt was started with, as the server recorded it. A phone
+   * handoff is only bound to this attempt when it matches what this mount is
+   * showing (lib/embedded-handoff-root.ts).
+   */
+  configSnapshot?: HandoffSessionSnapshot;
+  /**
+   * The applicant-leg workflow recorded with the attempt. `null` is an answer:
+   * the attempt has none, and one published later must not be picked up.
+   */
+  applicantWorkflow?: ApplicantWorkflowPayload | null;
+}
+
 export interface CreateHandoffSessionResponse {
   sessionId: string;
   /** Human-typable / copyable short code (display only). */
@@ -871,23 +901,7 @@ export function createKYCApi(baseUrl: string, apiKey: string) {
        *  in-progress row shows the device and SDK from the moment the SDK
        *  loads rather than after the applicant finishes (2026-09-08). */
       device?: Record<string, unknown>;
-    }): Promise<{
-      sessionId: string;
-      expiresAt: string;
-      resumed: boolean;
-      /** Where the user got to, when resuming. Media references are already
-       *  pruned server-side of anything that has since expired. */
-      progress?: {
-        step?: string;
-        mediaIds?: Record<string, string>;
-        data?: Record<string, unknown>;
-      };
-      /** A committed KYB application still waiting on its applicant leg
-       *  (lib/resumed-application.ts). */
-      applicantKeyPersonId?: string;
-      parentVerificationId?: string;
-      parentRequestId?: string;
-    }> {
+    }): Promise<StartSessionResponse> {
       return request('/session/start', { method: 'POST', body: JSON.stringify(input) });
     },
 
@@ -1195,10 +1209,18 @@ export function createKYCApi(baseUrl: string, apiKey: string) {
     // ── Device handoff (continue-on-phone) ──────────────────────────────────
 
     /** Desktop: mint a handoff session from a PII-free config snapshot. */
-    async createHandoffSession(snapshot: HandoffSessionSnapshot): Promise<CreateHandoffSessionResponse> {
+    /**
+     * `parentSessionId` ties the phone's session to the attempt that minted it.
+     * It describes the relationship only: the server keeps it out of the
+     * stored snapshot.
+     */
+    async createHandoffSession(
+      snapshot: HandoffSessionSnapshot,
+      parentSessionId?: string,
+    ): Promise<CreateHandoffSessionResponse> {
       return request<CreateHandoffSessionResponse>('/session', {
         method: 'POST',
-        body: JSON.stringify(snapshot),
+        body: JSON.stringify(parentSessionId ? { ...snapshot, parentSessionId } : snapshot),
       });
     },
 

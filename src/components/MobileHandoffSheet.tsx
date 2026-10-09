@@ -14,9 +14,11 @@ import { Button } from './ui/button';
 import { useKYCConfig } from '../context/KYCConfigContext';
 import { useKYCContext } from '../context/KYCContext';
 import { useDeviceHandoff } from '../hooks/useDeviceHandoff';
+import { HANDOFF_TOKEN_PREFIX } from '../hosted/token';
 import { isDesktopDevice } from '../lib/device';
 import { useText } from '../i18n';
 import type { HandoffSessionSnapshot } from '../services/api';
+import { handoffLeaveErrorMessage } from '../lib/handoff-leave-error';
 
 /**
  * Mobile-only. Renders an unobtrusive "Continue on a different device" trigger
@@ -26,12 +28,15 @@ import type { HandoffSessionSnapshot } from '../services/api';
  */
 export function MobileHandoffSheet() {
   const config = useKYCConfig();
-  const { dispatch } = useKYCContext();
+  const { state, dispatch } = useKYCContext();
   const t = useText();
   const [isDesktop, setIsDesktop] = useState(true); // SSR-safe: assume desktop until after mount
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const submittedRef = useRef(false);
+  const returningRef = useRef(false);
+  const [leaving, setLeaving] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
 
   useEffect(() => { setIsDesktop(isDesktopDevice()); }, []);
 
@@ -55,7 +60,36 @@ export function MobileHandoffSheet() {
   ]);
 
   // Session is only created when the drawer is open (enabled=open).
-  const handoff = useDeviceHandoff(config.api, snapshot, open);
+  const handoff = useDeviceHandoff(config.api, snapshot, open, {
+    parentSessionId: state.sessionId,
+    ensureParentSession: config.ensureHandoffParent,
+    bearerIsParent: config.apiKey.startsWith(HANDOFF_TOKEN_PREFIX),
+  });
+  // A failed mint that left nothing behind has nothing to give back.
+  const nothingToReturn = handoff.phase === 'error' && !handoff.unresolved;
+  const returnBlocked = !nothingToReturn && (leaving || !handoff.sessionId ||
+    ['creating', 'error', 'opened', 'submitted'].includes(handoff.phase));
+
+  const stayHere = async () => {
+    if (returnBlocked || returningRef.current) return;
+    if (nothingToReturn) { setOpen(false); handoff.regenerate(); return; }
+    returningRef.current = true;
+    setLeaving(true);
+    setLeaveError(null);
+    try {
+      // Staying gives the other device's session back first. Reopening the
+      // sheet then mints a fresh link rather than reusing the returned one.
+      if (await handoff.release()) {
+        setOpen(false);
+        handoff.regenerate();
+      }
+    } catch (error) {
+      setLeaveError(handoffLeaveErrorMessage(error, false, t));
+    } finally {
+      returningRef.current = false;
+      setLeaving(false);
+    }
+  };
 
   // When the other device completes, fire onSubmit once and close this flow.
   useEffect(() => {
@@ -96,7 +130,10 @@ export function MobileHandoffSheet() {
         {t('handoff.sheet.trigger')}
       </button>
 
-      <Drawer open={open} onOpenChange={setOpen}>
+      <Drawer open={open} dismissible={!returnBlocked} onOpenChange={(nextOpen) => {
+        if (nextOpen) setOpen(true);
+        else void stayHere();
+      }}>
         <DrawerContent>
           <div className="flex flex-col items-center gap-5 px-6 pb-8 pt-4">
             <div className="flex flex-col items-center gap-1.5 text-center">
@@ -160,10 +197,12 @@ export function MobileHandoffSheet() {
             )}
 
             {handoff.phase !== 'submitted' && (
-              <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={() => setOpen(false)}>
+              <Button variant="ghost" size="sm" className="w-full text-muted-foreground" disabled={returnBlocked} onClick={() => void stayHere()}>
+                {leaving && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
                 {t('handoff.sheet.stayButton')}
               </Button>
             )}
+            {leaveError && <p role="alert" className="text-xs text-destructive">{leaveError}</p>}
           </div>
         </DrawerContent>
       </Drawer>

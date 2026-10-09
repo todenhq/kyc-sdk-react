@@ -30,6 +30,43 @@ export const HANDOFF_TEXTS: TextGroup = {
     { key: 'handoff.gate.linkCopied', label: 'Link copied', default: 'Link copied' },
     { key: 'handoff.gate.opened', label: 'Opened on the phone', default: 'Continuing on your phone…' },
     { key: 'handoff.continueHere', label: 'Continue on this device button', default: 'Continue on this device' },
+    { key: 'handoff.leaving', label: 'Switching to this device', default: 'Switching…' },
+    {
+      key: 'handoff.leave.unresolved',
+      label: 'Leaving: no link to give back',
+      default: 'We could not confirm which device owns this verification. Try generating the link again.',
+      multiline: true,
+    },
+    {
+      key: 'handoff.leave.inUse.phone',
+      label: 'Leaving: already open on the phone',
+      default: 'This verification is already open on your phone. Continue there.',
+      multiline: true,
+    },
+    {
+      key: 'handoff.leave.inUse.otherDevice',
+      label: 'Leaving: already open on the other device',
+      default: 'This verification is already open on your other device. Continue there.',
+      multiline: true,
+    },
+    {
+      key: 'handoff.leave.serverError',
+      label: 'Leaving: server error',
+      default: 'We could not reach the server to release this verification. Try again in a moment.',
+      multiline: true,
+    },
+    {
+      key: 'handoff.leave.refused',
+      label: 'Leaving: refused',
+      default: 'We could not release this verification. Try again, or continue on the other device.',
+      multiline: true,
+    },
+    {
+      key: 'handoff.leave.offline',
+      label: 'Leaving: offline',
+      default: 'We could not reach the server to release this verification. Check your connection and try again.',
+      multiline: true,
+    },
     {
       key: 'handoff.gate.computerNotAllowed',
       label: 'Mobile only: not on a computer',
@@ -47,7 +84,7 @@ export const HANDOFF_TEXTS: TextGroup = {
     {
       key: 'handoff.linkFailed.description',
       label: 'Link failed: description',
-      default: 'This verification must be completed on a mobile device. Try generating the link again.',
+      default: 'We could not prepare the link for your phone. Try again before continuing this verification.',
       multiline: true,
     },
     { key: 'handoff.mobileOnly.title', label: 'Mobile only, no QR: title', default: 'Continue on a mobile device' },

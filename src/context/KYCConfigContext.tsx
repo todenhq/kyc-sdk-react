@@ -233,6 +233,12 @@ export interface KYCConfigValue {
    */
   hostedMode?: boolean;
   /**
+   * Starts (or returns) this mount's attempt, for binding a phone handoff to
+   * it. Supplied by MyazaKYC; absent on a hosted page, whose session token is
+   * the attempt (lib/handoff-parent.ts).
+   */
+  ensureHandoffParent?: (retry?: boolean) => Promise<string | undefined>;
+  /**
    * The hosted session's own token (hosted mounts only).
    *
    * The success screen re-reads the server's settled view of the key people
@@ -509,6 +515,7 @@ export function KYCConfigProvider({ children, apiOverride, serverConfigOverride,
       config.appearance,
       config.previewMode,
       config.previewTrustAttribution,
+      config.ensureHandoffParent,
       config.consent,
       config.texts,
       config.language,

@@ -30,6 +30,13 @@ import { previewSelectionForSupportingDocuments } from './lib/supporting-documen
 import { resetIntegritySignals } from './lib/integrity-signals';
 import { persistentDeviceId } from './lib/fingerprint';
 import { startSessionOnce } from './lib/start-session-once';
+import {
+  HandoffAttemptChangedError,
+  handoffRootTemplate,
+  handoffScope,
+  resolveHandoffParent,
+} from './lib/handoff-parent';
+import type { StartSessionResponse } from './services/api';
 import { classifySessionStartFailure } from './lib/session-cancelled';
 import { resetStepLog } from './lib/step-log';
 import { resetSilentCaptures } from './lib/silent-capture-store';
@@ -365,51 +372,104 @@ function KYCInner({
     dispatch({ type: 'SET_SESSION_CANCELLED', payload: { message } }),
   );
 
-  const startSessionRef = useRef(false);
-  const beginSession = useCallback(async () => {
-    if (startSessionRef.current || previewMode) return;
-    if (apiKey.startsWith(HANDOFF_TOKEN_PREFIX)) return;
-    startSessionRef.current = true;
-    try {
-      // Collapsed at MODULE scope, not just per instance: StrictMode remounts
-      // the component with fresh refs, so the per-instance guard above still
-      // let each launch mint TWO sessions — the flow adopted one and the other
-      // sat on the org's list forever as a "Not started" ghost. Both mounts now
-      // share one in-flight request (and therefore one session).
-      const started = await startSessionOnce(
-        `${apiKey}|${workflowId ?? ''}|${userId ?? metadata?.userId ?? ''}`,
-        () =>
-          sessionApiRef.current.startSession({
-            externalUserId: userId ?? metadata?.userId,
-            workflowId,
-            // Anonymous mounts resume by device: without a userId the server
-            // has nothing else to find the previous attempt by, and every
-            // relaunch minted a fresh session.
-            deviceRef: persistentDeviceId(),
-            // What this browser is, sent up front: the dashboard's in-progress
-            // row shows Device and Source from the moment the SDK loads.
-            device: collectWebDeviceMetadata() as unknown as Record<string, unknown>,
-          }),
-      );
-      dispatch({ type: 'SET_SESSION_ID', payload: started.sessionId });
-      // Resuming: put the user back where they were. Media references have been
-      // pruned server-side of anything that expired, so a restored capture slot
-      // is one whose bytes genuinely still exist.
-      if (started.progress) dispatch({ type: 'RESTORE_PROGRESS', payload: started.progress });
-      // A KYB application whose business half already committed: the
-      // submitting screen replays it rather than sending a second one the
-      // server refuses (lib/resumed-application.ts).
-      dispatch({ type: 'SET_RESUMED_APPLICATION', payload: resumedApplicationFrom(started) });
-    } catch (err) {
-      // Resuming is a convenience; verifying is not conditional on it. The one
-      // refusal that DOES stop the flow is a cancelled session: the applicant
-      // must not be walked into captures the server will refuse.
-      const failure = classifySessionStartFailure(err);
-      if (failure.kind === 'cancelled') {
-        dispatch({ type: 'SET_SESSION_CANCELLED', payload: { message: failure.message } });
+  // One attempt per scope (key, server, workflow, user). The flow and the
+  // phone handoff both wait on the SAME promise, so "continue on your phone"
+  // is bound to the attempt this device started rather than racing it.
+  const sessionScope = handoffScope({
+    apiKey, devUrl, workflowId, externalUserId: userId ?? metadata?.userId,
+  });
+  const sessionScopeRef = useRef(sessionScope);
+  sessionScopeRef.current = sessionScope;
+  const handoffSnapshotRef = useRef(handoffSnapshot);
+  handoffSnapshotRef.current = handoffSnapshot;
+  const startRef = useRef<{
+    scope: string; failed: boolean; promise: Promise<StartSessionResponse | null>;
+  } | null>(null);
+
+  const beginSession = useCallback((retry = false): Promise<StartSessionResponse | null> => {
+    if (previewMode || apiKey.startsWith(HANDOFF_TOKEN_PREFIX)) return Promise.resolve(null);
+    const current = startRef.current;
+    // A failed start is only tried again when asked to (the gate's Try again).
+    if (current && current.scope === sessionScope && !(retry && current.failed)) return current.promise;
+    const entry: NonNullable<typeof startRef.current> = {
+      scope: sessionScope, failed: false, promise: Promise.resolve(null),
+    };
+    entry.promise = (async () => {
+      try {
+        const input = {
+          externalUserId: userId ?? metadata?.userId,
+          workflowId,
+          // Anonymous mounts resume by device: without a userId the server
+          // has nothing else to find the previous attempt by, and every
+          // relaunch minted a fresh session.
+          deviceRef: persistentDeviceId(),
+          // What this browser is, sent up front: the dashboard's in-progress
+          // row shows Device and Source from the moment the SDK loads.
+          device: collectWebDeviceMetadata() as unknown as Record<string, unknown>,
+        };
+        // A prop-configured mount records its flow on the attempt, so a phone
+        // session bound to it walks the same flow. A workflow mount sends
+        // none: the server takes the published workflow.
+        const template = workflowId ? undefined : handoffRootTemplate(handoffSnapshotRef.current);
+        // Collapsed at MODULE scope, not just per instance: StrictMode remounts
+        // the component with fresh refs, so the per-instance guard above still
+        // let each launch mint TWO sessions — the flow adopted one and the other
+        // sat on the org's list forever as a "Not started" ghost. Both mounts now
+        // share one in-flight request (and therefore one session).
+        const started = await startSessionOnce(sessionScope, async () => {
+          if (!template) return sessionApiRef.current.startSession(input);
+          try {
+            return await sessionApiRef.current.startSession({ ...input, config: template });
+          } catch (err) {
+            // The server could not read the flow as sent. Starting matters more
+            // than recording it: the attempt starts as it always has, and the
+            // phone's session is then created on its own.
+            if (err instanceof KYCApiError && err.statusCode === 400) {
+              return sessionApiRef.current.startSession(input);
+            }
+            throw err;
+          }
+        });
+        // The mount moved to another key or user while this was out: the
+        // answer belongs to an attempt nobody is looking at any more.
+        if (sessionScopeRef.current !== sessionScope) return started;
+        dispatch({ type: 'SET_SESSION_ID', payload: started.sessionId });
+        // Resuming: put the user back where they were. Media references have been
+        // pruned server-side of anything that expired, so a restored capture slot
+        // is one whose bytes genuinely still exist.
+        if (started.progress) dispatch({ type: 'RESTORE_PROGRESS', payload: started.progress });
+        // A KYB application whose business half already committed: the
+        // submitting screen replays it rather than sending a second one the
+        // server refuses (lib/resumed-application.ts).
+        dispatch({ type: 'SET_RESUMED_APPLICATION', payload: resumedApplicationFrom(started) });
+        return started;
+      } catch (err) {
+        entry.failed = true;
+        // Resuming is a convenience; verifying is not conditional on it. The one
+        // refusal that DOES stop the flow is a cancelled session: the applicant
+        // must not be walked into captures the server will refuse.
+        const failure = classifySessionStartFailure(err);
+        if (failure.kind === 'cancelled') {
+          dispatch({ type: 'SET_SESSION_CANCELLED', payload: { message: failure.message } });
+        }
+        return null;
       }
-    }
-  }, [apiKey, devUrl, dispatch, metadata, previewMode, userId, workflowId]);
+    })();
+    startRef.current = entry;
+    return entry.promise;
+  }, [apiKey, dispatch, metadata, previewMode, sessionScope, userId, workflowId]);
+
+  /**
+   * The attempt a phone session is bound to (lib/handoff-parent.ts). Starts it
+   * if the flow has not yet; `retry` starts it again after a failure.
+   */
+  const ensureHandoffParent = useCallback(async (retry = false): Promise<string | undefined> => {
+    // Preview mints nothing real, and a session token is its own attempt.
+    if (previewMode || apiKey.startsWith(HANDOFF_TOKEN_PREFIX)) return undefined;
+    const started = await beginSession(retry);
+    if (sessionScopeRef.current !== sessionScope) throw new HandoffAttemptChangedError();
+    return resolveHandoffParent(started, Boolean(workflowId));
+  }, [apiKey, beginSession, previewMode, sessionScope, workflowId]);
 
   const handleOpen = useCallback(async () => {
     resetIntegritySignals(); // fresh capture-integrity slate per session
@@ -486,6 +546,7 @@ function KYCInner({
       devUrl={devUrl}
       apiKey={apiKey}
       workflowId={workflowId}
+      ensureHandoffParent={ensureHandoffParent}
       applicantWorkflowId={applicantWorkflowId}
       serverConfigOverride={serverConfigOverride}
       subjectType={subjectType}

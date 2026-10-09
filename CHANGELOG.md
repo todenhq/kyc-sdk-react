@@ -1,5 +1,44 @@
 # Changelog
 
+## 3.7.0
+
+"Continue on your phone" is now tied to the verification this device started.
+
+**Deploy note for Myaza:** needs a server that accepts `parentSessionId` on `POST /api/kyc/session` and `config` on `POST /api/kyc/session/start`. Production has both.
+
+### The phone continues the same verification
+
+When someone chooses to continue on their phone, the SDK now tells the server which verification the phone belongs to. Before, the phone's session stood on its own.
+
+What this changes for the people verifying:
+
+- The phone walks the flow the server holds for that verification. With a workflow that is the published workflow, not the browser's copy of it.
+- A retry after a dropped connection finds the phone's existing session. It no longer creates a second one.
+- A business flow that verifies the applicant can now be continued on a phone from an embedded mount. The server used to refuse it.
+- The phone's link expires no later than the verification it belongs to.
+
+The SDK starts the verification before it asks for the phone's link, so the QR code can take a moment longer to appear on a slow connection. If the verification cannot be started, the QR screen shows an error with Try again.
+
+**One thing to know:** the phone no longer receives `userData` from the mount, so a name passed as a prefill is not filled in on the phone. Your user reference (`userId`) is kept, and the result is still linked to your user.
+
+### Leaving the QR screen is safe
+
+"Verify on this device instead" and closing the QR screen now wait for the server to take the phone's link back. The button shows "Switching…" while it does.
+
+- If the phone already has the link open, the SDK says so and stays on the QR screen.
+- If the server does not answer, the SDK asks the person to try again. It does not carry on with two devices both able to submit.
+- If the link could not be created at all, there is nothing to take back and the person can continue on this device straight away.
+
+The same applies to "Stay on this device" in the sheet shown on a phone.
+
+New texts you can override under `texts`: `handoff.leaving`, `handoff.leave.unresolved`, `handoff.leave.inUse.phone`, `handoff.leave.inUse.otherDevice`, `handoff.leave.serverError`, `handoff.leave.refused` and `handoff.leave.offline`. The default for `handoff.linkFailed.description` changed.
+
+### Preview mode no longer takes keyboard focus
+
+With `previewMode`, the dialog no longer moves focus into itself when it opens or traps it there. A page that shows the SDK beside its own form keeps the caret where the person was typing. Real flows are unchanged.
+
+No change to your code.
+
 ## 3.6.0
 
 A full-screen liveness camera, signing on screen, and no selfie review by default.

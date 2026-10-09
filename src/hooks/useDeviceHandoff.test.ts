@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect, vi } from 'vitest';
+import { canMintDeviceHandoff, mintLeftOwnershipOpen, serverRefused } from './useDeviceHandoff';
 
 // The mint guard, tested as the logic it is rather than through a renderer.
 //
@@ -22,6 +23,16 @@ function makeMinter(create: () => Promise<{ sessionId: string }>) {
 }
 
 describe('the device-handoff mint guard', () => {
+  it('never mints without an attempt to bind the phone to', () => {
+    expect(canMintDeviceHandoff({})).toBe(false);
+    expect(canMintDeviceHandoff({ parentSessionId: null })).toBe(false);
+    // Any one of the three is an attempt: an id in hand, a way to start one,
+    // or a session token that is the attempt.
+    expect(canMintDeviceHandoff({ parentSessionId: 'session_root' })).toBe(true);
+    expect(canMintDeviceHandoff({ ensureParentSession: async () => 'session_root' })).toBe(true);
+    expect(canMintDeviceHandoff({ bearerIsParent: true })).toBe(true);
+  });
+
   it('mints ONCE when the effect runs twice for the same key', async () => {
     // Exactly StrictMode: mount, cleanup, mount again.
     const create = vi.fn().mockResolvedValue({ sessionId: 's1' });
@@ -80,44 +91,65 @@ describe('the device-handoff mint guard', () => {
 /** The decision in `release`, as the hook makes it. */
 async function release(
   cancel: (id: string) => Promise<unknown>,
-  { sessionId, inUse }: { sessionId: string | null; inUse: boolean },
+  { sessionId, phase }: { sessionId: string | null; phase: string },
 ): Promise<boolean> {
-  if (!sessionId) return true;
-  if (inUse) return false;
-  try {
-    await cancel(sessionId);
-  } catch {
-    /* not a reason to trap somebody on the gate */
-  }
+  if (!sessionId || ['creating', 'error', 'opened', 'submitted'].includes(phase)) return false;
+  await cancel(sessionId);
   return true;
 }
 
 describe('returning the handoff before verifying here', () => {
   it('cancels the minted session, so the budget comes back', async () => {
     const cancel = vi.fn().mockResolvedValue({ cancelled: true });
-    await expect(release(cancel, { sessionId: 's1', inUse: false })).resolves.toBe(true);
+    await expect(release(cancel, { sessionId: 's1', phase: 'waiting' })).resolves.toBe(true);
     expect(cancel).toHaveBeenCalledWith('s1');
   });
 
-  it('refuses once the phone has the flow open', async () => {
+  it('does not ask once the phone has the flow open', async () => {
     // The server refuses the reclaim for the same reason. Going ahead here
     // would spend a budget the phone is already using.
     const cancel = vi.fn();
-    await expect(release(cancel, { sessionId: 's1', inUse: true })).resolves.toBe(false);
+    await expect(release(cancel, { sessionId: 's1', phase: 'opened' })).resolves.toBe(false);
     expect(cancel).not.toHaveBeenCalled();
   });
 
-  it('lets the flow continue when the cancel itself fails', async () => {
-    // Offline, or a server too old to have the route. Blocking would leave the
-    // gate with no way forward at all, which is worse than the retryable error.
+  it('does not carry on when the server did not confirm', async () => {
+    // A lost answer does not prove the phone's session is gone. Carrying on
+    // would let two devices both believe they may submit this verification.
     const cancel = vi.fn().mockRejectedValue(new Error('offline'));
-    await expect(release(cancel, { sessionId: 's1', inUse: false })).resolves.toBe(true);
+    await expect(release(cancel, { sessionId: 's1', phase: 'waiting' })).rejects.toThrow('offline');
   });
 
-  it('is a no-op before anything has been minted', async () => {
+  it('has nothing to give back before anything has been minted', async () => {
     const cancel = vi.fn();
-    await expect(release(cancel, { sessionId: null, inUse: false })).resolves.toBe(true);
+    await expect(release(cancel, { sessionId: null, phase: 'creating' })).resolves.toBe(false);
     expect(cancel).not.toHaveBeenCalled();
+  });
+});
+
+// A failed mint must not trap somebody on the gate unless a phone session may
+// really be holding their attempt.
+describe('a failed mint', () => {
+  const lost = new Error('Failed to fetch');
+  const refused = Object.assign(new Error('nope'), { statusCode: 409, code: 'applicant_session_required' });
+  const broke = Object.assign(new Error('boom'), { statusCode: 502 });
+
+  it('reads a 4xx as the server answering no', () => {
+    expect(serverRefused(refused)).toBe(true);
+    expect(serverRefused(broke)).toBe(false);
+    expect(serverRefused(lost)).toBe(false);
+    expect(serverRefused(null)).toBe(false);
+  });
+
+  it('leaves ownership open only when a bound request got no clear answer', () => {
+    expect(mintLeftOwnershipOpen(true, lost)).toBe(true);
+    expect(mintLeftOwnershipOpen(true, broke)).toBe(true);
+    // The server said no: nothing was created.
+    expect(mintLeftOwnershipOpen(true, refused)).toBe(false);
+    // Nothing bound was sent: the attempt could not be started, or the phone's
+    // session stands alone and holds nothing of this device's.
+    expect(mintLeftOwnershipOpen(false, lost)).toBe(false);
+    expect(mintLeftOwnershipOpen(false, broke)).toBe(false);
   });
 });
 
@@ -136,5 +168,15 @@ describe('the gate wiring', () => {
     expect(gate).toContain('onContinueHere={continueHere}');
     expect(gate).toContain('onDone={closeGate}');
     expect(gate).toContain('closeGate()');
+  });
+
+  it('binds the phone to this mount\'s attempt, and a hosted page to its token', () => {
+    expect(gate).toContain('ensureParentSession: config.ensureHandoffParent');
+    expect(gate).toContain('bearerIsParent: config.apiKey.startsWith(HANDOFF_TOKEN_PREFIX)');
+    const sheet = readFileSync(
+      join(new URL('..', import.meta.url).pathname, 'components/MobileHandoffSheet.tsx'),
+      'utf8',
+    );
+    expect(sheet).toContain('ensureParentSession: config.ensureHandoffParent');
   });
 });

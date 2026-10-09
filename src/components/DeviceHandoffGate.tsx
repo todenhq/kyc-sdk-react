@@ -23,6 +23,7 @@ import { useKYCConfig } from '../context/KYCConfigContext';
 import { useBranding } from '../hooks/useBranding';
 import { themeRootOrDocument, useThemeRoot } from '../lib/sdk-frame-context';
 import { useDeviceHandoff } from '../hooks/useDeviceHandoff';
+import { HANDOFF_TOKEN_PREFIX } from '../hosted/token';
 import { hasNoWebcam } from '../lib/device';
 import { buildThemeVars } from '../lib/theme';
 import { applyConfiguredTheme } from '../lib/apply-theme';
@@ -30,11 +31,14 @@ import { useIsDark } from '../lib/use-is-dark';
 import { useBrandFonts } from '../lib/use-brand-fonts';
 import { cn } from '../lib/utils';
 import { useText } from '../i18n';
+import { handoffLeaveErrorMessage } from '../lib/handoff-leave-error';
 import type { HandoffSessionSnapshot } from '../services/api';
 
 interface DeviceHandoffGateProps {
   /** PII-free config snapshot sent to the server to mint the session. */
   snapshot: HandoffSessionSnapshot;
+  /** Existing embedded root attempt whose immutable pins the phone inherits. */
+  parentSessionId?: string | null;
   /** User chose to verify on this computer — close the gate, open the flow. */
   onContinueHere: () => void;
   /** Gate dismissed (X / backdrop / completed-on-phone "Done"). */
@@ -100,6 +104,7 @@ function HeaderBrand() {
 
 export default function DeviceHandoffGate({
   snapshot,
+  parentSessionId,
   onContinueHere,
   onClose,
   showThemeToggle,
@@ -110,24 +115,17 @@ export default function DeviceHandoffGate({
   const config = useKYCConfig();
   // A mobile-only workflow with handoff switched off has nothing to hand off
   // to — don't mint a session just to render a notice.
-  const handoff = useDeviceHandoff(config.api, snapshot, !noHandoff);
-
-  // Leaving the gate gives the handoff back first. Minting the QR moved the
-  // flow's one-verification budget to the phone's session, so walking away
-  // without returning it leaves this device holding a session that no longer
-  // owns it - and the refusal does not surface until the next upload, several
-  // steps later, reading as a broken flow rather than as the QR's doing.
-  const leaveGate = (go: () => void) => () => {
-    void handoff.release().then((released) => {
-      // False means the phone has it open. Going ahead here would spend a
-      // budget it is already using, so the gate stays and the poll says so.
-      if (released) go();
-    });
-  };
-  const continueHere = leaveGate(onContinueHere);
-  const closeGate = leaveGate(onClose);
+  const handoff = useDeviceHandoff(config.api, snapshot, !noHandoff, {
+    parentSessionId,
+    ensureParentSession: config.ensureHandoffParent,
+    // A hosted page signs its requests with the attempt's own token.
+    bearerIsParent: config.apiKey.startsWith(HANDOFF_TOKEN_PREFIX),
+  });
+  const t = useText();
   const [copied, setCopied] = useState(false);
   const [noCamera, setNoCamera] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
   const submittedRef = useRef(false);
   const isDarkTheme = useIsDark();
   const themeVars = buildThemeVars(config.appearance, isDarkTheme);
@@ -147,15 +145,6 @@ export default function DeviceHandoffGate({
     hasNoWebcam().then((v) => { if (active) setNoCamera(v); });
     return () => { active = false; };
   }, []);
-
-  // If the session can't be created (server not running, endpoint not deployed,
-  // network error), silently fall through to the local flow. The user sees a
-  // brief spinner, then the normal modal opens — no error screen.
-  // EXCEPT on a mobile-only workflow: falling through would run the flow on the
-  // very device the workflow forbids, so the error surfaces as a retry instead.
-  useEffect(() => {
-    if (handoff.phase === 'error' && !mobileOnly) onContinueHere();
-  }, [handoff.phase, onContinueHere, mobileOnly]);
 
   // Fire onSubmit EXACTLY ONCE when the phone completes. The desktop never
   // enters the verification flow, so it never calls api.verify — this is the
@@ -181,7 +170,48 @@ export default function DeviceHandoffGate({
   };
 
   const isTerminal = handoff.phase === 'submitted';
-  const dismissBlocked = disableClose === true && !isTerminal;
+  // A mobile-only notice with handoff off mints nothing, so there is nothing
+  // to wait for and nothing to give back.
+  const nothingMinted = noHandoff === true;
+  const minting = !nothingMinted && handoff.phase === 'creating' && !handoff.sessionId;
+  // A lost answer to a bound mint is ambiguous: the server may have created
+  // the phone's session though this browser never saw it. A refusal, or a
+  // failure before anything was sent, left nothing behind and never traps
+  // somebody on the gate (hooks/useDeviceHandoff.ts, mintLeftOwnershipOpen).
+  const ownershipUnresolved = !nothingMinted && handoff.phase === 'error' && handoff.unresolved;
+  const dismissBlocked = !isTerminal && (
+    disableClose === true || minting || ownershipUnresolved || leaving
+  );
+
+  // Leaving the gate gives the handoff back first. Minting the QR moved the
+  // flow's one-verification budget to the phone's session, so walking away
+  // without returning it leaves this device holding a session that no longer
+  // owns it. The refusal would not surface until the next upload, several
+  // steps later, reading as a broken flow rather than as the QR's doing.
+  const leave = (onLeave: () => void) => {
+    if (nothingMinted) { onLeave(); return; }
+    // The mint failed and left nothing to give back.
+    if (handoff.phase === 'error' && !handoff.unresolved) { onLeave(); return; }
+    if (leaving || handoff.phase === 'opened' || handoff.phase === 'submitted') return;
+    setLeaving(true);
+    setLeaveError(null);
+    void handoff.release()
+      .then((released) => {
+        // False: there was no session this device could give back.
+        if (released) onLeave();
+        else setLeaveError(t('handoff.leave.unresolved'));
+      })
+      // The server was asked and did not confirm. Going on here would let two
+      // devices both believe they may submit this verification.
+      .catch((error: unknown) => setLeaveError(handoffLeaveErrorMessage(error, true, t)))
+      .finally(() => setLeaving(false));
+  };
+
+  const continueHere = () => leave(onContinueHere);
+  const closeGate = () => {
+    if (isTerminal) onClose();
+    else leave(onClose);
+  };
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o && !dismissBlocked) closeGate(); }}>
@@ -204,7 +234,7 @@ export default function DeviceHandoffGate({
               {!dismissBlocked && (
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={closeGate}
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                   aria-label="Close"
                 >
@@ -227,6 +257,8 @@ export default function DeviceHandoffGate({
               onContinueHere={continueHere}
               onRegenerate={handoff.regenerate}
               onDone={closeGate}
+              leaving={leaving}
+              leaveError={leaveError}
             />
           </div>
 
@@ -258,11 +290,13 @@ interface GateBodyProps {
   onContinueHere: () => void;
   onRegenerate: () => void;
   onDone: () => void;
+  leaving: boolean;
+  leaveError: string | null;
 }
 
 function GateBody({
   phase, url, code, noCamera, copied, mobileOnly, noHandoff,
-  onCopyLink, onContinueHere, onRegenerate, onDone,
+  onCopyLink, onContinueHere, onRegenerate, onDone, leaving, leaveError,
 }: GateBodyProps) {
   const t = useText();
   // Mobile-only with handoff off: nothing to scan — the user must reopen the
@@ -318,9 +352,10 @@ function GateBody({
     );
   }
 
-  // Mobile-only: a failed mint can't fall through to the local flow (the parent
-  // suppresses that), so it needs its own retry.
-  if (phase === 'error' && mobileOnly) {
+  // A failed response is ambiguous: the server may have committed the child
+  // session even though the browser did not receive it. Retry the idempotent
+  // mint to recover that exact child before choosing which device continues.
+  if (phase === 'error') {
     return (
       <div className="flex flex-col items-center gap-6 py-8 animate-fade-in">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
@@ -335,10 +370,7 @@ function GateBody({
     );
   }
 
-  // error: useEffect in the parent calls onContinueHere() — keep showing the
-  // spinner so there’s no flash of error UI before the gate closes.
-
-  // creating | waiting | opened | error
+  // creating | waiting | opened
   return (
     <div className="flex flex-col items-center gap-6 py-2 animate-fade-in">
       <div className="flex flex-col items-center gap-2 text-center">
@@ -396,11 +428,14 @@ function GateBody({
             variant="ghost"
             className={cn('w-full gap-2', phase === 'opened' && 'pointer-events-none opacity-50')}
             onClick={onContinueHere}
-            disabled={phase === 'opened'}
+            disabled={phase === 'opened' || phase === 'creating' || leaving}
           >
-            <Monitor className="h-4 w-4" />
-            {t('handoff.continueHere')}
+            {leaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Monitor className="h-4 w-4" />}
+            {leaving ? t('handoff.leaving') : t('handoff.continueHere')}
           </Button>
+        )}
+        {leaveError && (
+          <p role="alert" className="mt-2 text-center text-xs text-destructive">{leaveError}</p>
         )}
       </div>
     </div>

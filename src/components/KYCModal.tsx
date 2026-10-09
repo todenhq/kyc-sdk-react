@@ -386,8 +386,12 @@ export function KYCModal({ open, onClose, showThemeToggle, disableClose, fullScr
     <ImmersiveCaptureContext.Provider value={setImmersive}>
     <ImmersiveCloseContext.Provider value={dismissBlocked ? null : onClose}>
     <LivenessCameraContext.Provider value={reportCameraShown}>
-    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen && !dismissBlocked) onClose(); }}>
+    {/* The builder preview is one pane of a larger page. A modal dialog traps
+        focus and takes it on mount, which pulled the caret out of whichever
+        builder field the author was typing in. Real flows keep both. */}
+    <Dialog modal={!config.previewMode} open={open} onOpenChange={(isOpen) => { if (!isOpen && !dismissBlocked) onClose(); }}>
       <DialogContent
+        onOpenAutoFocus={(event) => { if (config.previewMode) event.preventDefault(); }}
         fullscreen={fullscreen}
         overlayClassName={litForCapture ? 'bg-white' : undefined}
         overlayStyle={!litForCapture && overlayColor ? { backgroundColor: overlayColor } : undefined}
