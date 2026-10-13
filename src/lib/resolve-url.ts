@@ -45,7 +45,7 @@ export function detectEnvironment(apiKey: string): SdkEnvironment {
   const match = typeof apiKey === 'string' ? apiKey.match(KEY_ENV_RE) : null;
   if (!match) {
     throw new Error(
-      'Invalid Myaza API key: expected a dev, test, or live key prefix ' +
+      'Invalid Toden API key: expected a dev, test, or live key prefix ' +
         '(e.g. pk_dev_…, pk_test_…, or pk_live_…).',
     );
   }

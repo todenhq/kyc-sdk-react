@@ -6,8 +6,8 @@ import { StepHeader } from '../components/StepHeader';
 import { Button } from '../components/ui/button';
 import { ReadyPrimer } from '../components/ReadyPrimer';
 import { READY_DOCUMENT, READY_LIVENESS } from '../components/ready-primer-content';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { stepAfterCapture } from '../lib/post-capture';
 import { documentCaptureMethods } from '../lib/document-capture-methods';
 import { verifiedIdsFromState } from '../lib/supporting-documents';
@@ -22,8 +22,8 @@ import { useReportLivenessCamera } from '../components/liveness-camera';
  * walkable end to end.
  */
 export function PreviewCapturePlaceholder({ kind }: { kind: 'document' | 'liveness' }) {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   // The real steps open with a "here's what happens next" screen before the
   // camera. Preview mode swaps the WHOLE step for this placeholder, so without
   // repeating the gate here the builder would show a flow its end users never

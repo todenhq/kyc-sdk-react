@@ -10,7 +10,7 @@
 // same element and are untouched.
 
 import { useEffect, useRef } from 'react';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { withRetry } from '../lib/retry';
 import {
   SILENT_FRAME_QUALITY,
@@ -61,7 +61,7 @@ function grabFrame(video: HTMLVideoElement | null): Promise<Blob | null> {
 }
 
 export function useSilentCapture({ videoRef, active, delayMs }: UseSilentCaptureOptions): void {
-  const config = useKYCConfig();
+  const config = useVerificationConfig();
   const applies = silentCaptureApplies(config);
   const apiRef = useRef(config.api);
   apiRef.current = config.api;

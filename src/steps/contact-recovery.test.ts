@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { KYCApiError } from '../services/api';
+import { VerificationApiError } from '../services/api';
 import { contactStepFor, expiredContactChannels, stepAfterContactVerified } from './contact-recovery';
 
 describe('expiredContactChannels', () => {
   it('reads the missing channels off a contact_verification_required 422', () => {
-    const err = new KYCApiError('required', 422, 'contact_verification_required', {
+    const err = new VerificationApiError('required', 422, 'contact_verification_required', {
       error: 'contact_verification_required',
       missing: ['email'],
     });
@@ -12,23 +12,23 @@ describe('expiredContactChannels', () => {
   });
 
   it('keeps both channels and drops anything unrecognised', () => {
-    const err = new KYCApiError('required', 422, 'contact_verification_required', {
+    const err = new VerificationApiError('required', 422, 'contact_verification_required', {
       missing: ['phone', 'email', 'fax'],
     });
     expect(expiredContactChannels(err)).toEqual(['phone', 'email']);
   });
 
   it('returns nothing for other errors', () => {
-    expect(expiredContactChannels(new KYCApiError('nope', 422, 'questionnaire_invalid', {}))).toEqual([]);
+    expect(expiredContactChannels(new VerificationApiError('nope', 422, 'questionnaire_invalid', {}))).toEqual([]);
     expect(expiredContactChannels(new Error('network'))).toEqual([]);
     expect(expiredContactChannels(undefined)).toEqual([]);
   });
 
   it('tolerates a missing or malformed missing[] on the body', () => {
-    expect(expiredContactChannels(new KYCApiError('x', 422, 'contact_verification_required'))).toEqual([]);
+    expect(expiredContactChannels(new VerificationApiError('x', 422, 'contact_verification_required'))).toEqual([]);
     expect(
       expiredContactChannels(
-        new KYCApiError('x', 422, 'contact_verification_required', { missing: 'email' }),
+        new VerificationApiError('x', 422, 'contact_verification_required', { missing: 'email' }),
       ),
     ).toEqual([]);
   });

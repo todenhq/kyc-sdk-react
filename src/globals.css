@@ -30,25 +30,27 @@
   --color-ring: var(--ring);
   --color-white: #fff;
   --color-black: #000;
-  --color-gray-50: #F6F5FE;
-  --color-gray-100: #E9E7FE;
-  --color-gray-200: #D3CFFC;
-  --color-gray-300: #CDCDD6;
-  --color-gray-400: #ACABBA;
-  --color-gray-500: #828197;
-  --color-gray-600: #5A5775;
-  --color-gray-700: #302D53;
-  --color-gray-800: #070330;
-  --color-gray-900: #040218;
+  --color-gray-50: #F7F8FB;
+  --color-gray-100: #F3F5F9;
+  --color-gray-200: #DFE3EA;
+  --color-gray-300: #CDD2DC;
+  --color-gray-400: #B8BDC8;
+  --color-gray-500: #858B9F;
+  --color-gray-600: #646C7D;
+  --color-gray-700: #444B5C;
+  --color-gray-800: #121522;
+  --color-gray-900: #080A12;
   --color-myaza: #5645F5;
   --color-myaza-dark: #1F156F;
   --color-myaza-light: #F6F5FE;
   --radius: 0.75rem;
 
   /* Font families */
-  --font-heading: "Space Grotesk", system-ui, sans-serif;
-  --font-body: "Karla", system-ui, sans-serif;
-  --font-sans: "Karla", system-ui, sans-serif;
+  --font-heading: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: "Geist", system-ui, sans-serif;
+  --font-sans: "Geist", system-ui, sans-serif;
+  /* Body text at 16px and up (see the type rule in the base layer). */
+  --font-copy: "Bricolage Grotesque", system-ui, sans-serif;
 }
 
 @layer base {
@@ -58,19 +60,19 @@
      v4 already emits its own theme variables on `:root, :host`. */
   :root, :host {
     --background: #FFFFFF;
-    --foreground: #070330;
+    --foreground: #121522;
     --primary: #5645F5;
-    --primary-foreground: #F6F5FE;
-    --secondary: #F6F5FE;
-    --secondary-foreground: #070330;
-    --muted: #F6F5FE;
-    --muted-foreground: #5A5775;
-    --accent: #E9E7FE;
-    --accent-foreground: #070330;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F3F5F9;
+    --secondary-foreground: #121522;
+    --muted: #F3F5F9;
+    --muted-foreground: #646C7D;
+    --accent: #ECEFF5;
+    --accent-foreground: #121522;
     --destructive: #BD1B09;
     --destructive-foreground: #FCD8D8;
-    --border: #D3CFFC;
-    --input: #D3CFFC;
+    --border: #DFE3EA;
+    --input: #DFE3EA;
     --ring: #5645F5;
     /* Floating surfaces (anchored menus) sit ON the flow, so they take the
        flow's own background. Defined as a var rather than a literal so an org's
@@ -79,39 +81,36 @@
     --popover: var(--background);
     --popover-foreground: var(--foreground);
     --radius: 0.75rem;
-    --kyc-success: #0DA211;
-    --kyc-success-light: #D8F4DC;
-    --kyc-warning: #FFC107;
-    --kyc-warning-light: #FFF1D6;
-    --kyc-error: #BD1B09;
-    --kyc-error-light: #FCD8D8;
-    --kyc-info: #004FAF;
-    --kyc-info-light: #C8E9FF;
+    --verification-success: #0DA211;
+    --verification-success-light: #D8F4DC;
+    --verification-warning: #FFC107;
+    --verification-warning-light: #FFF1D6;
+    --verification-error: #BD1B09;
+    --verification-error-light: #FCD8D8;
+    --verification-info: #004FAF;
+    --verification-info-light: #C8E9FF;
   }
 
   .dark {
-    --background: #040218;
+    --background: #080A12;
     --foreground: #F6F5FE;
     --primary: #7B6EF7;
-    --primary-foreground: #F6F5FE;
-    /* The dark card surface, NOT the border's colour. These were both #302D53,
-       so anything bordered ON a card drew its edge in the card's own colour and
-       vanished — the upload dropzone's dashed outline and the divider above it
-       among them. #0F0C2E is what the React Native and Flutter SDKs already use
-       for this surface (their `backgroundSecondary`), against the same #302D53
-       border, so the three now agree. Light mode never had the collision
-       (#F6F5FE surface vs #D3CFFC border). */
-    --secondary: #0F0C2E;
+    --primary-foreground: #FFFFFF;
+    /* The dark card surface, NOT the border's colour. When the two shared one
+       value, anything bordered ON a card drew its edge in the card's own colour
+       and vanished (the upload dropzone's dashed outline, the divider above
+       it). The React Native and Flutter SDKs use the same pair. */
+    --secondary: #191E2E;
     --secondary-foreground: #F6F5FE;
-    --muted: #0F0C2E;
-    --muted-foreground: #ACABBA;
-    --accent: #302D53;
+    --muted: #191E2E;
+    --muted-foreground: #858B9F;
+    --accent: #232A3D;
     --accent-foreground: #F6F5FE;
     --destructive: #BD1B09;
     --destructive-foreground: #FCD8D8;
-    --border: #302D53;
-    --input: #302D53;
-    --ring: #7B6EF7;
+    --border: #262B3A;
+    --input: #262B3A;
+    --ring: #9186F9;
     /* Floating surfaces (anchored menus) sit ON the flow, so they take the
        flow's own background. Defined as a var rather than a literal so an org's
        branded --background carries through: these menus portal to the body,
@@ -124,7 +123,7 @@
      self-contained regardless of the host app's :root or @theme overrides.
      Covers semantic color tokens, the Tailwind radius scale (host @theme inline
      often remaps rounded-* to var(--radius-*)), and font families. */
-  .kyc-root {
+  .verification-root {
     /* Containing block for anchored menus.
        use-dropdown-anchor measures a menu's coordinates RELATIVE to this
        element and portals it here with position: absolute. Without a position
@@ -136,19 +135,19 @@
 
     /* Semantic color tokens */
     --background: #FFFFFF;
-    --foreground: #070330;
+    --foreground: #121522;
     --primary: #5645F5;
-    --primary-foreground: #F6F5FE;
-    --secondary: #F6F5FE;
-    --secondary-foreground: #070330;
-    --muted: #F6F5FE;
-    --muted-foreground: #5A5775;
-    --accent: #E9E7FE;
-    --accent-foreground: #070330;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F3F5F9;
+    --secondary-foreground: #121522;
+    --muted: #F3F5F9;
+    --muted-foreground: #646C7D;
+    --accent: #ECEFF5;
+    --accent-foreground: #121522;
     --destructive: #BD1B09;
     --destructive-foreground: #FCD8D8;
-    --border: #D3CFFC;
-    --input: #D3CFFC;
+    --border: #DFE3EA;
+    --input: #DFE3EA;
     --ring: #5645F5;
     /* Floating surfaces (anchored menus) sit ON the flow, so they take the
        flow's own background. Defined as a var rather than a literal so an org's
@@ -171,45 +170,43 @@
     --radius-full: 3.40282e+38px;
 
     /* Font families — prevent host @theme font remappings from bleeding in */
-    --font-sans: "Karla", system-ui, sans-serif;
-    --font-body: "Karla", system-ui, sans-serif;
-    --font-heading: "Space Grotesk", system-ui, sans-serif;
+    --font-sans: "Geist", system-ui, sans-serif;
+    --font-body: "Geist", system-ui, sans-serif;
+    --font-heading: "Bricolage Grotesque", system-ui, sans-serif;
+    --font-copy: "Bricolage Grotesque", system-ui, sans-serif;
     --font-mono: ui-monospace, monospace;
 
     /* Status colors */
-    --kyc-success: #0DA211;
-    --kyc-success-light: #D8F4DC;
-    --kyc-warning: #FFC107;
-    --kyc-warning-light: #FFF1D6;
-    --kyc-error: #BD1B09;
-    --kyc-error-light: #FCD8D8;
-    --kyc-info: #004FAF;
-    --kyc-info-light: #C8E9FF;
+    --verification-success: #0DA211;
+    --verification-success-light: #D8F4DC;
+    --verification-warning: #FFC107;
+    --verification-warning-light: #FFF1D6;
+    --verification-error: #BD1B09;
+    --verification-error-light: #FCD8D8;
+    --verification-info: #004FAF;
+    --verification-info-light: #C8E9FF;
   }
 
-  .dark .kyc-root {
-    --background: #040218;
+  .dark .verification-root {
+    --background: #080A12;
     --foreground: #F6F5FE;
     --primary: #7B6EF7;
-    --primary-foreground: #F6F5FE;
-    /* The dark card surface, NOT the border's colour. These were both #302D53,
-       so anything bordered ON a card drew its edge in the card's own colour and
-       vanished — the upload dropzone's dashed outline and the divider above it
-       among them. #0F0C2E is what the React Native and Flutter SDKs already use
-       for this surface (their `backgroundSecondary`), against the same #302D53
-       border, so the three now agree. Light mode never had the collision
-       (#F6F5FE surface vs #D3CFFC border). */
-    --secondary: #0F0C2E;
+    --primary-foreground: #FFFFFF;
+    /* The dark card surface, NOT the border's colour. When the two shared one
+       value, anything bordered ON a card drew its edge in the card's own colour
+       and vanished (the upload dropzone's dashed outline, the divider above
+       it). The React Native and Flutter SDKs use the same pair. */
+    --secondary: #191E2E;
     --secondary-foreground: #F6F5FE;
-    --muted: #0F0C2E;
-    --muted-foreground: #ACABBA;
-    --accent: #302D53;
+    --muted: #191E2E;
+    --muted-foreground: #858B9F;
+    --accent: #232A3D;
     --accent-foreground: #F6F5FE;
     --destructive: #BD1B09;
     --destructive-foreground: #FCD8D8;
-    --border: #302D53;
-    --input: #302D53;
-    --ring: #7B6EF7;
+    --border: #262B3A;
+    --input: #262B3A;
+    --ring: #9186F9;
     /* Floating surfaces (anchored menus) sit ON the flow, so they take the
        flow's own background. Defined as a var rather than a literal so an org's
        branded --background carries through: these menus portal to the body,
@@ -222,14 +219,37 @@
      (e.g. h1-h6 { letter-spacing: -0.02em; font-weight: 600 }).
      SDK utility classes (font-semibold, text-2xl, etc.) have higher specificity
      and still win — this only neutralises bare element rules. */
-  .kyc-root h1, .kyc-root h2, .kyc-root h3,
-  .kyc-root h4, .kyc-root h5, .kyc-root h6 {
+  .verification-root h1, .verification-root h2, .verification-root h3,
+  .verification-root h4, .verification-root h5, .verification-root h6 {
     letter-spacing: normal;
     font-size: revert;
   }
 
+  /* The brand's type rule: text at 16px and up is Bricolage Grotesque
+     (--font-copy); 14px and below, and anything in a form or a table, is Geist
+     (--font-body). Headings stay in the heading font at any size.
+
+     The choice travels in --verification-type, an inherited custom property, because
+     `*` sets font-family on every element directly (host isolation), so
+     font-family itself never inherits here. A size class or a form element
+     sets the property; everything inside follows its nearest such ancestor.
+     An org's own body font replaces both (see fontVars). In the base layer, so
+     a font utility on the element still wins. */
   * {
-    font-family: var(--font-body);
+    font-family: var(--verification-type, var(--font-copy));
+  }
+
+  :is(
+    .text-xs, .text-sm,
+    [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"],
+    [class*="text-[12px]"], [class*="text-[13px]"], [class*="text-[14px]"],
+    small, figcaption, label, table, input, select, textarea
+  ) {
+    --verification-type: var(--font-body);
+  }
+
+  :is(.text-base, .text-lg, .text-xl, .text-2xl, .text-3xl, .text-4xl, .text-5xl) {
+    --verification-type: var(--font-copy);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -403,28 +423,28 @@
    These are intentionally OUTSIDE any @layer so they sit above @layer
    utilities in the CSS cascade — meaning they win over any host-app Tailwind
    CSS that maps rounded-* to var(--radius-*) via @theme inline, regardless
-   of which stylesheet loads last. The compound selector (.kyc-root .rounded-*)
+   of which stylesheet loads last. The compound selector (.verification-root .rounded-*)
    also has higher specificity than the host's bare (.rounded-*) rule.
    Fallbacks match Tailwind v4's built-in defaults for each suffix.
 
-   Each rung reads --kyc-radius-* FIRST so `appearance.borderRadius` can still
+   Each rung reads --verification-radius-* FIRST so `appearance.borderRadius` can still
    configure the SDK. The namespace is load-bearing: these rules used to hardcode
    the literal, which locked the corners — and they cannot simply read
    --radius-* instead, because that is precisely the variable a host's
    `@theme inline` defines, so inheriting it would reopen the bleed this block
-   exists to close. --kyc-radius-* is ours alone and only buildThemeVars sets it.
+   exists to close. --verification-radius-* is ours alone and only buildThemeVars sets it.
 
    rounded-full/none stay literal on purpose: `full` renders avatars, badges and
    the camera oval, and must never scale into a squircle. */
-.kyc-root .rounded-sm, .kyc-root.rounded-sm { border-radius: var(--kyc-radius-sm, 0.125rem); }
-.kyc-root .rounded,    .kyc-root.rounded    { border-radius: var(--kyc-radius-md, 0.25rem); }
-.kyc-root .rounded-md, .kyc-root.rounded-md { border-radius: var(--kyc-radius-md, 0.375rem); }
-.kyc-root .rounded-lg, .kyc-root.rounded-lg { border-radius: var(--kyc-radius-lg, 0.5rem); }
-.kyc-root .rounded-xl, .kyc-root.rounded-xl { border-radius: var(--kyc-radius-xl, 0.75rem); }
-.kyc-root .rounded-2xl, .kyc-root.rounded-2xl { border-radius: var(--kyc-radius-2xl, 1rem); }
-.kyc-root .rounded-3xl, .kyc-root.rounded-3xl { border-radius: var(--kyc-radius-3xl, 1.5rem); }
-.kyc-root .rounded-full, .kyc-root.rounded-full { border-radius: 3.40282e+38px; }
-.kyc-root .rounded-none, .kyc-root.rounded-none { border-radius: 0; }
+.verification-root .rounded-sm, .verification-root.rounded-sm { border-radius: var(--verification-radius-sm, 0.125rem); }
+.verification-root .rounded,    .verification-root.rounded    { border-radius: var(--verification-radius-md, 0.25rem); }
+.verification-root .rounded-md, .verification-root.rounded-md { border-radius: var(--verification-radius-md, 0.375rem); }
+.verification-root .rounded-lg, .verification-root.rounded-lg { border-radius: var(--verification-radius-lg, 0.5rem); }
+.verification-root .rounded-xl, .verification-root.rounded-xl { border-radius: var(--verification-radius-xl, 0.75rem); }
+.verification-root .rounded-2xl, .verification-root.rounded-2xl { border-radius: var(--verification-radius-2xl, 1rem); }
+.verification-root .rounded-3xl, .verification-root.rounded-3xl { border-radius: var(--verification-radius-3xl, 1.5rem); }
+.verification-root .rounded-full, .verification-root.rounded-full { border-radius: 3.40282e+38px; }
+.verification-root .rounded-none, .verification-root.rounded-none { border-radius: 0; }
 
 /* ─── Reduced motion ──────────────────────────────────────────────────────────
    The SDK is a full-screen identity flow on someone else's device, so honouring
@@ -440,21 +460,21 @@
    Functional indicators (spinners, progress) are deliberately left alone: they
    communicate that work is happening, and freezing them would read as a hang. */
 @media (prefers-reduced-motion: reduce) {
-  .kyc-root .animate-pulse-ring,
-  .kyc-root .animate-nfc-wave,
-  .kyc-root .animate-caret-blink,
-  .kyc-root .animate-avatar-nod,
-  .kyc-root .animate-avatar-turn,
-  .kyc-root .animate-avatar-blink,
-  .kyc-root .animate-avatar-smile {
+  .verification-root .animate-pulse-ring,
+  .verification-root .animate-nfc-wave,
+  .verification-root .animate-caret-blink,
+  .verification-root .animate-avatar-nod,
+  .verification-root .animate-avatar-turn,
+  .verification-root .animate-avatar-blink,
+  .verification-root .animate-avatar-smile {
     animation: none;
   }
 
-  .kyc-root .animate-fade-in,
-  .kyc-root .animate-slide-up,
-  .kyc-root .animate-lighting-in,
-  .kyc-root .animate-checkmark,
-  .kyc-root .animate-avatar-slide-in {
+  .verification-root .animate-fade-in,
+  .verification-root .animate-slide-up,
+  .verification-root .animate-lighting-in,
+  .verification-root .animate-checkmark,
+  .verification-root .animate-avatar-slide-in {
     animation-duration: 1ms;
     animation-iteration-count: 1;
   }
@@ -464,16 +484,16 @@
    The liveness step holds the flow on its light palette while the camera is
    on (lib/forced-light-theme.ts). The switch is a class change on the theme
    root, so without help every surface snaps from dark to light at once. The
-   hook adds `kyc-theme-fade` to the theme root for the length of the switch,
+   hook adds `verification-theme-fade` to the theme root for the length of the switch,
    and this turns on a short colour-only transition for the SDK's surfaces.
    Longhands, colour properties only, so a transform or opacity transition in
    flight is left alone apart from its property list for those 300ms.
    Behind no-preference: reduced motion gets an instant switch. */
 @media (prefers-reduced-motion: no-preference) {
-  .kyc-theme-fade .kyc-root,
-  .kyc-theme-fade .kyc-root *,
-  .kyc-theme-fade .kyc-root *::before,
-  .kyc-theme-fade .kyc-root *::after {
+  .verification-theme-fade .verification-root,
+  .verification-theme-fade .verification-root *,
+  .verification-theme-fade .verification-root *::before,
+  .verification-theme-fade .verification-root *::after {
     transition-property: background-color, border-color, color, fill, stroke, outline-color;
     transition-duration: 300ms;
     transition-timing-function: ease-out;

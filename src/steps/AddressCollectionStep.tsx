@@ -8,7 +8,7 @@ import { StepHeader } from '../components/StepHeader';
 import { Button } from '../components/ui/button';
 import { StickyActions } from '../components/StickyActions';
 import { LineSkeleton } from '../components/LineSkeleton';
-import { useKYCContext } from '../context/KYCContext';
+import { useVerificationContext } from '../context/VerificationContext';
 import { useAddressFlow } from './address/use-address-flow';
 import { useAddressIntroGate } from './address/AddressIntroGate';
 import { DetailsSheet } from './address/DetailsSheet';
@@ -30,7 +30,7 @@ import { useText } from '../i18n';
 let autoLocateAttempted = false;
 
 export function AddressCollectionStep() {
-  const { state, dispatch } = useKYCContext();
+  const { state, dispatch } = useVerificationContext();
   const t = useText();
   const flow = useAddressFlow();
   const [sheetOpen, setSheetOpen] = useState(false);

@@ -37,7 +37,7 @@ function DrawerContent({
    */
   direction?: 'bottom' | 'right';
 }) {
-  // kyc-root only restores the DEFAULT tokens inside the portal; the brand
+  // verification-root only restores the DEFAULT tokens inside the portal; the brand
   // overrides are inline vars on the modal root, so re-apply them here.
   const themeVars = useThemeVars();
   // SdkFrame mounts portal into the SDK's shadow frame; null = document.body.
@@ -51,7 +51,7 @@ function DrawerContent({
           // host reset (`all: initial`) severs inherited page colour, so a
           // surface that only sets its background renders BLACK text — on a
           // dark theme, black on near-black. Same pattern as DialogContent.
-          'kyc-root fixed z-50 flex flex-col bg-background text-foreground',
+          'verification-root fixed z-50 flex flex-col bg-background text-foreground',
           direction === 'right'
             ? // A plain full-height panel — no rounded corners, no border;
               // the overlay alone separates it from the page.

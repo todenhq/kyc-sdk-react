@@ -8,10 +8,10 @@
 //
 // This mirrors the Flutter SDK's `withRetry` (services/retry.dart) so both
 // platforms behave identically. After retries are exhausted the original error
-// is rethrown — the caller maps it to a typed KYCError for `onError`.
+// is rethrown — the caller maps it to a typed VerificationError for `onError`.
 // ---------------------------------------------------------------------------
 
-import { KYCApiError } from '../services/api';
+import { VerificationApiError } from '../services/api';
 
 export interface RetryOptions {
   /** Total attempts including the first try. Default 3. */
@@ -30,13 +30,13 @@ export interface RetryOptions {
 }
 
 /**
- * Whether an error is transient (worth retrying). A `KYCApiError` is transient
+ * Whether an error is transient (worth retrying). A `VerificationApiError` is transient
  * only for 5xx; 4xx are terminal. A `TypeError` from `fetch()` is a network
  * failure (offline / DNS / CORS) — transient. Anything else is treated as
  * transient (best-effort) up to the retry cap.
  */
 export function isTransientError(err: unknown): boolean {
-  if (err instanceof KYCApiError) {
+  if (err instanceof VerificationApiError) {
     return err.statusCode >= 500 || err.statusCode === 0;
   }
   // fetch() rejects with a TypeError on network failure.

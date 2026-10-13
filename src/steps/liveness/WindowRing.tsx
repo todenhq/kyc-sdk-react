@@ -93,7 +93,7 @@ export function WindowRing({
               linesRef.current[i] = el;
             }}
             d={part.d}
-            stroke="var(--kyc-success)"
+            stroke="var(--verification-success)"
             strokeWidth={STROKE}
             strokeLinecap={cap}
             strokeDasharray={`${span} ${span + STROKE * 2}`}

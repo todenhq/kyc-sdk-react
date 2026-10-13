@@ -16,7 +16,7 @@ import { useText } from '../i18n';
 // Phone input with a searchable dial-code country picker + as-you-type
 // national formatting (libphonenumber-js). Emits the E.164 value and validity.
 //
-// The dropdown is portaled to the dialog root (`.kyc-root`) — NOT to
+// The dropdown is portaled to the dialog root (`.verification-root`) — NOT to
 // document.body, which is where a Radix popover would land: Radix Dialog sets
 // `pointer-events: none` on the body while open, so a menu there cannot be
 // scrolled or clicked. Staying inside the dialog keeps pointer events and the

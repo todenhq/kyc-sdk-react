@@ -8,6 +8,8 @@ import { randomId } from './random-id';
 import { fnv1a } from './fnv1a';
 import { entropySnapshot, type FingerprintEntropy } from './fingerprint-entropy';
 
+import { FINGERPRINT_CANVAS_TEXT } from './fingerprint-canvas-text';
+
 const DEVICE_ID_KEY = 'myaza-kyc-did';
 
 export interface FingerprintComponents {
@@ -79,7 +81,7 @@ function canvasHash(): string | undefined {
     ctx.fillRect(100, 5, 80, 30);
     ctx.fillStyle = '#069';
     ctx.font = '15px Arial';
-    ctx.fillText('Myaza KYC 🛡 fingerprint', 4, 35);
+    ctx.fillText(FINGERPRINT_CANVAS_TEXT, 4, 35);
     ctx.strokeStyle = 'rgba(120, 60, 200, 0.7)';
     ctx.beginPath();
     ctx.arc(60, 30, 20, 0, Math.PI * 1.5);

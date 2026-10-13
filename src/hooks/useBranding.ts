@@ -1,6 +1,6 @@
 'use client';
 
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 
 export interface ResolvedBranding {
   /**
@@ -15,7 +15,7 @@ export interface ResolvedBranding {
 
 /** Resolves the effective branding (logo + company name) for the current org. */
 export function useBranding(): ResolvedBranding {
-  const config = useKYCConfig();
+  const config = useVerificationConfig();
   const serverBranding = config.serverConfig.branding;
   const configuredLogo = config.appearance?.logo;
 

@@ -2,33 +2,33 @@
 
 import React, { useEffect, useState } from 'react';
 import { Check } from './components/icons';
-import { createKYCApi, type CompletedSessionSummary, type HandoffBootstrapResponse, type KYCApi } from './services/api';
+import { createVerificationApi, type CompletedSessionSummary, type HandoffBootstrapResponse, type VerificationApi } from './services/api';
 import { HostedCompleted } from './hosted/HostedCompleted';
 import { HostedFlow } from './hosted/HostedFlow';
 import { HostedLoadingScreen, HostedScreen } from './hosted/HostedScreen';
 import { HANDOFF_TOKEN_PREFIX } from './hosted/token';
 import { SdkFrame } from './lib/sdk-frame';
-import type { MyazaKYCHostedProps } from './hosted/hosted-props';
+import type { HostedVerificationProps } from './hosted/hosted-props';
 import { setFaceMeshOrigin } from './liveness/face-mesh';
-import type { KYCAppearance } from './types/config';
+import type { VerificationAppearance } from './types/config';
 import {
   isSessionCancelledError,
   sessionCancelledMessage,
   summaryIsCancelled,
   SESSION_CANCELLED_MESSAGE,
 } from './lib/session-cancelled';
-import { KYCError } from './types/verification';
+import { VerificationError } from './types/verification';
 
-export type { MyazaKYCHostedProps, MyazaKYCHostedReadyInfo } from './hosted/hosted-props';
+export type { HostedVerificationProps, HostedVerificationReadyInfo } from './hosted/hosted-props';
 
 /**
  * Hosted "continue on your phone" entry point. Rendered by the Myaza-hosted
  * verification page (`/verify/<token>`), NOT by customers directly. It bootstraps
- * the flow from the session token and runs the SAME steps as `<MyazaKYC />`,
+ * the flow from the session token and runs the SAME steps as `<Verification />`,
  * authenticating every upload/verify with the session token (relative base URL,
  * so requests go through the hosting origin's API proxy).
  */
-export function MyazaKYCHosted({
+export function HostedVerification({
   token,
   serverUrl = '',
   embedded = false,
@@ -41,14 +41,14 @@ export function MyazaKYCHosted({
   onResult,
   onError,
   onCompleted,
-}: MyazaKYCHostedProps) {
+}: HostedVerificationProps) {
   // Direct to the API when the page names it; '' keeps the old same-origin
-  // proxy path (see MyazaKYCHostedProps.serverUrl for why direct is right).
-  const [api] = useState<KYCApi>(() => {
+  // proxy path (see HostedVerificationProps.serverUrl for why direct is right).
+  const [api] = useState<VerificationApi>(() => {
     // The face mesh comes from the same server, with the public CDN behind it.
     // Set here, before the flow mounts and starts loading it.
     setFaceMeshOrigin({ serverUrl });
-    return createKYCApi(serverUrl, `${HANDOFF_TOKEN_PREFIX}${token}`);
+    return createVerificationApi(serverUrl, `${HANDOFF_TOKEN_PREFIX}${token}`);
   });
   const [phase, setPhase] = useState<'loading' | 'ready' | 'completed' | 'cancelled' | 'error'>('loading');
   const [bootstrap, setBootstrap] = useState<HandoffBootstrapResponse | null>(null);
@@ -63,7 +63,7 @@ export function MyazaKYCHosted({
       setError(message);
       setPhase('cancelled');
       try {
-        onError?.(new KYCError('session_cancelled', message));
+        onError?.(new VerificationError('session_cancelled', message));
       } catch {
         /* a host's handler must never break the page */
       }
@@ -136,9 +136,9 @@ export function MyazaKYCHosted({
   const frame = (body: React.ReactNode) => <SdkFrame isolate={embedded}>{body}</SdkFrame>;
   // The screens around the flow wear the workflow's colours: the page's
   // server-read appearance before the bootstrap, the snapshot's after (the
-  // same data — see MyazaKYCHostedProps.appearance).
+  // same data — see HostedVerificationProps.appearance).
   const screenAppearance =
-    (bootstrap?.configSnapshot as { appearance?: KYCAppearance } | null)?.appearance ?? appearance;
+    (bootstrap?.configSnapshot as { appearance?: VerificationAppearance } | null)?.appearance ?? appearance;
 
   if (phase === 'loading') {
     return frame(<HostedLoadingScreen appearance={appearance} compact={embedded} />);

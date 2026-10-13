@@ -8,7 +8,7 @@
 // one exists (it carries digits/pattern validation and hand-tuned labels for
 // the five curated countries); otherwise one is SYNTHESIZED from the server
 // row's `label` / `requiresDocumentCapture` / `scanSides`. Steps consult this
-// (via `useKYCConfig().getIdTypeDefinition`) instead of `ID_TYPES` directly.
+// (via `useVerificationConfig().getIdTypeDefinition`) instead of `ID_TYPES` directly.
 // ---------------------------------------------------------------------------
 
 import { ID_TYPES } from './countries';

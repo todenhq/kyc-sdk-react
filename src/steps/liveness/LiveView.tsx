@@ -102,8 +102,8 @@ export function LiveView(p: LiveViewProps) {
               </div>
             )}
             {p.phase === 'challenge_passed' && (
-              <div className="absolute inset-0 flex items-center justify-center bg-[var(--kyc-success)]/20 animate-fade-in">
-                <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[var(--kyc-success)] animate-checkmark-pop">
+              <div className="absolute inset-0 flex items-center justify-center bg-[var(--verification-success)]/20 animate-fade-in">
+                <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[var(--verification-success)] animate-checkmark-pop">
                   <svg className="h-9 w-9 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                     <path d="M5 13l4 4L19 7" style={{ strokeDasharray: 30, strokeDashoffset: 0 }} className="animate-checkmark" />
                   </svg>
@@ -116,7 +116,7 @@ export function LiveView(p: LiveViewProps) {
                 <div className="pointer-events-none absolute inset-0 bg-white animate-capture-flash" />
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute inset-x-0 h-1.5 -translate-y-1/2 bg-[var(--kyc-success)] opacity-0 shadow-[0_0_12px_2px_var(--kyc-success)] animate-liveness-scan"
+                  className="pointer-events-none absolute inset-x-0 h-1.5 -translate-y-1/2 bg-[var(--verification-success)] opacity-0 shadow-[0_0_12px_2px_var(--verification-success)] animate-liveness-scan"
                 />
               </>
             )}

@@ -5,8 +5,8 @@ import { StepHeader } from '../components/StepHeader';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { stepAfterCapture } from '../lib/post-capture';
 import { multiIdPlan } from '../lib/multi-id';
 import { verifiedIdsFromState } from '../lib/supporting-documents';
@@ -19,8 +19,8 @@ interface IdInputStepProps {
 }
 
 export function IdInputStep({ country }: IdInputStepProps = {}) {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
 
   const resolvedCountry: AnyCountry = country ?? config.country ?? 'NG';

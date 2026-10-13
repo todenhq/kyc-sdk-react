@@ -10,8 +10,8 @@ import { readFileSync } from 'node:fs';
 // type definitions here, so the path comes off the URL itself.
 const read = (p: string) => readFileSync(new URL(p, import.meta.url).pathname, 'utf8');
 
-describe('MyazaKYCHosted lifecycle', () => {
-  const entry = read('../MyazaKYCHosted.tsx');
+describe('HostedVerification lifecycle', () => {
+  const entry = read('../HostedVerification.tsx');
   const flow = read('./HostedFlow.tsx');
 
   it('forwards every flow callback to HostedFlow', () => {

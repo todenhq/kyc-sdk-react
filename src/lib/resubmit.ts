@@ -10,7 +10,7 @@
 // this simply does not read the key and runs the whole flow, which is the safe
 // degradation: asking for too much is recoverable, silently skipping a step the
 // reviewer wanted is not.
-import type { KYCStep } from '../types/config';
+import type { VerificationStep } from '../types/config';
 
 export interface ResubmitConfig {
   /** Steps to redo, in flow order. Never empty — the server omits the key instead. */
@@ -34,7 +34,7 @@ export interface ResubmitConfig {
  * Neither is something the applicant is being asked to redo — they are the
  * frame around what is.
  */
-const ALWAYS: KYCStep[] = ['consent', 'submitted'];
+const ALWAYS: VerificationStep[] = ['consent', 'submitted'];
 
 /**
  * One ID's evidence — a FAMILY, not alternatives a reviewer picks between.
@@ -49,7 +49,7 @@ const ALWAYS: KYCStep[] = ['consent', 'submitted'];
  *
  * Asking for one member asks for whichever this flow turns out to have.
  */
-const EVIDENCE: KYCStep[] = ['id-input', 'document-capture', 'nfc'];
+const EVIDENCE: VerificationStep[] = ['id-input', 'document-capture', 'nfc'];
 
 /**
  * Steps a narrowed flow keeps regardless, because without them it cannot
@@ -63,8 +63,8 @@ const EVIDENCE: KYCStep[] = ['id-input', 'document-capture', 'nfc'];
  * two-screen flow that collects a photo and then fails to submit is worse than
  * one extra screen.
  */
-const INDIVIDUAL_REQUIRED: KYCStep[] = ['id-type', ...EVIDENCE];
-const BUSINESS_REQUIRED: KYCStep[] = ['business-details'];
+const INDIVIDUAL_REQUIRED: VerificationStep[] = ['id-type', ...EVIDENCE];
+const BUSINESS_REQUIRED: VerificationStep[] = ['business-details'];
 
 /**
  * The ID type a redo keeps, or null when the applicant chooses it again: the
@@ -80,7 +80,7 @@ export function keptIdType(resubmit: ResubmitConfig | undefined | null): string 
 /** The redo keeps the ID's evidence as well: nothing about the ID was asked for. */
 export function keepsIdEvidence(resubmit: ResubmitConfig | undefined | null): boolean {
   if (keptIdType(resubmit) === null) return false;
-  return !resubmit!.steps.some((step) => EVIDENCE.includes(step as KYCStep));
+  return !resubmit!.steps.some((step) => EVIDENCE.includes(step as VerificationStep));
 }
 
 /**
@@ -96,20 +96,20 @@ export function keepsIdEvidence(resubmit: ResubmitConfig | undefined | null): bo
  * collects nothing.
  */
 export function applyResubmitSteps(
-  order: KYCStep[],
+  order: VerificationStep[],
   resubmit: ResubmitConfig | undefined | null,
-): KYCStep[] {
+): VerificationStep[] {
   const asked = resubmit?.steps;
   if (!asked?.length) return order;
 
-  const wantsEvidence = asked.some((step) => EVIDENCE.includes(step as KYCStep));
+  const wantsEvidence = asked.some((step) => EVIDENCE.includes(step as VerificationStep));
 
   // Does the instruction name anything this flow actually has? If not, it came
   // from a server that knows a step name this SDK does not — and narrowing on it
   // would quietly drop whatever was really asked for. Checked BEFORE the
   // required steps are added, or those alone would make every unknown plan look
   // recognised and turn the safety net below into dead code.
-  const recognised = wantsEvidence || asked.some((step) => order.includes(step as KYCStep));
+  const recognised = wantsEvidence || asked.some((step) => order.includes(step as VerificationStep));
   if (!recognised) return order;
 
   const wanted = new Set<string>(asked);

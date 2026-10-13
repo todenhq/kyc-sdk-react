@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { KeyPeopleAwaitList, type AwaitRow } from './KeyPeopleAwaitList';
 import { SubmitSuccessScreen } from './SubmittedScreens';
 import { successAction, successDescription, successTitle } from './success-copy';
@@ -45,7 +45,7 @@ export function toAwaitRows(people: AwaitingPersonPayload[]): AwaitRow[] {
 }
 
 export function CompletedStep() {
-  const config = useKYCConfig();
+  const config = useVerificationConfig();
   const t = useText();
   const summary = config.completedSummary;
 
@@ -69,7 +69,7 @@ export function CompletedStep() {
   // Cancelled first: its `outcome` reads `error` (kept for older clients), and
   // the screen must say what happened, not "something went wrong". Reached on a
   // refresh that finds the application cancelled while this screen was open;
-  // a FIRST load of a cancelled summary never gets here (MyazaKYCHosted).
+  // a FIRST load of a cancelled summary never gets here (HostedVerification).
   const decided = summaryIsCancelled(summary) ? cancelledCopy(t) : decidedCopy(outcome, {
     isBusiness,
     scope: configScope(config),

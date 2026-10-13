@@ -3,8 +3,8 @@
 import React from 'react';
 import { ChevronRight } from '../components/icons';
 import { cn } from '../lib/utils';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { StepHeader } from '../components/StepHeader';
 import { CountryFlag } from '../components/CountryFlag';
 import { CountryRegionPicker } from '../components/CountryRegionPicker';
@@ -28,8 +28,8 @@ const SEARCH_THRESHOLD = 5;
  * `Intl.DisplayNames` and `CountryFlag` renders the matching SVG flag.
  */
 export function CountrySelectStep() {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
 
   // Multi-region flows (and a mapped applicant workflow's overlay) carry

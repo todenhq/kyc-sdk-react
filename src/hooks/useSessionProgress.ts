@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import type { KYCApi } from '../services/api';
-import type { KYCState } from '../context/types';
+import type { VerificationApi } from '../services/api';
+import type { VerificationState } from '../context/types';
 import { progressFromState, progressFingerprint, isUntouchedProgress } from '../lib/session-progress';
 import { progressSaveStopsFlow, sessionCancelledMessage } from '../lib/session-cancelled';
 
@@ -21,8 +21,8 @@ const SAVE_DEBOUNCE_MS = 800;
  * save and the submission would be refused too, so `onCancelled` stops the flow.
  */
 export function useSessionProgress(
-  api: KYCApi,
-  state: KYCState,
+  api: VerificationApi,
+  state: VerificationState,
   onCancelled?: (message: string | null) => void,
 ): void {
   const lastSaved = useRef<string | null>(null);

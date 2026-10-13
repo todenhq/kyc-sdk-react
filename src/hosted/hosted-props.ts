@@ -1,19 +1,19 @@
 import type { CompletedSessionSummary, HandoffBootstrapResponse } from '../services/api';
-import type { KYCAppearance, KYCStep } from '../types/config';
-import type { KYCError, KYCResult, KYCSubmission } from '../types/verification';
+import type { VerificationAppearance, VerificationStep } from '../types/config';
+import type { VerificationError, VerificationResult, VerificationSubmission } from '../types/verification';
 
-// The hosted entry point's public props, split out of MyazaKYCHosted.tsx
+// The hosted entry point's public props, split out of HostedVerification.tsx
 // (200-line rule). Re-exported from there, so the public surface is unchanged.
 
 /** What a hosted flow knows about its session once it has bootstrapped. */
-export interface MyazaKYCHostedReadyInfo {
+export interface HostedVerificationReadyInfo {
   sessionId: string;
   environment: HandoffBootstrapResponse['environment'];
   subjectType?: string;
   scope?: string;
 }
 
-export interface MyazaKYCHostedProps {
+export interface HostedVerificationProps {
   /**
    * The raw handoff session token from the hosted-page URL
    * (`/verify/<token>`). The SDK presents it as a `hs_<token>` bearer.
@@ -44,29 +44,29 @@ export interface MyazaKYCHostedProps {
   /**
    * The workflow's appearance, when the hosting PAGE already knows it. The
    * hosted pages read it on the server from
-   * `GET /api/kyc/session/by-token/:token/appearance` (or the link's twin) and
+   * `GET /api/v1/session/by-token/:token/appearance` (or the link's twin) and
    * pass it here, so the loading and terminal screens paint in the org's
    * colours from the first frame. Without it those screens wore the SDK
    * default (Myaza purple) until the bootstrap answered, then repainted: a
    * brand flash on every hosted open. Once the bootstrap arrives its
    * snapshot's appearance takes over; the two are the same data.
    */
-  appearance?: KYCAppearance;
+  appearance?: VerificationAppearance;
   /** Embedded mounts: the modal was closed or the flow's Done was pressed. */
   onClose?: () => void;
   /**
    * The hosted page's lifecycle, for a HOST that wants to listen — the hosted
    * page forwards these to a native WebView or an embedding iframe. Mirrors
-   * `<MyazaKYC/>`'s callbacks; `onReady` and `onCompleted` are hosted-only.
+   * `<Verification/>`'s callbacks; `onReady` and `onCompleted` are hosted-only.
    * Everything they carry is PII-light: ids, step names, error codes.
    */
-  onReady?: (info: MyazaKYCHostedReadyInfo) => void;
+  onReady?: (info: HostedVerificationReadyInfo) => void;
   onStart?: () => void;
-  onStepChange?: (step: KYCStep) => void;
-  onSubmit?: (submission: KYCSubmission) => void;
+  onStepChange?: (step: VerificationStep) => void;
+  onSubmit?: (submission: VerificationSubmission) => void;
   /** The verdict, on a session that waits for it in the flow (a biometric re-authentication). */
-  onResult?: (result: KYCResult) => void;
-  onError?: (error: KYCError) => void;
+  onResult?: (result: VerificationResult) => void;
+  onError?: (error: VerificationError) => void;
   /** A returning applicant opened a link whose verification was already submitted. */
   onCompleted?: (summary: CompletedSessionSummary | null) => void;
 }

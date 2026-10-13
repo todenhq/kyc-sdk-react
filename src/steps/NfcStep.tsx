@@ -5,8 +5,8 @@ import { Smartphone } from '../components/icons';
 import { StepHeader } from '../components/StepHeader';
 import { NfcScanIllustration } from '../components/NfcScanIllustration';
 import { Button } from '../components/ui/button';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { stepAfterCapture } from '../lib/post-capture';
 import { verifiedIdsFromState } from '../lib/supporting-documents';
 import { useText } from '../i18n';
@@ -20,8 +20,8 @@ import { useText } from '../i18n';
  * screen, so what the builder shows is what end users get.
  */
 export function NfcStep() {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
 
   const hasLiveness =

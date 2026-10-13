@@ -1,4 +1,4 @@
-import type { KYCStep } from '../../types/config';
+import type { VerificationStep } from '../../types/config';
 
 // The address flow as REAL steps (user decision 2026-08-29 — the progress bar
 // advances through them and back/forward is ordinary step navigation, not a
@@ -22,8 +22,8 @@ export interface AddressFlowOptions {
 }
 
 /** The individual flow's address steps, in order. */
-export function addressFlowSteps(o: AddressFlowOptions): KYCStep[] {
-  const steps: KYCStep[] = [];
+export function addressFlowSteps(o: AddressFlowOptions): VerificationStep[] {
+  const steps: VerificationStep[] = [];
   if (o.searchAvailable) steps.push('address-search');
   steps.push('address-collection');
   if (o.photoMode !== 'off' || o.streetViewOffered) steps.push('address-entrance');
@@ -31,12 +31,12 @@ export function addressFlowSteps(o: AddressFlowOptions): KYCStep[] {
   return steps;
 }
 
-export function nextAddressStep(steps: KYCStep[], current: KYCStep): KYCStep | null {
+export function nextAddressStep(steps: VerificationStep[], current: VerificationStep): VerificationStep | null {
   const i = steps.indexOf(current);
   return i >= 0 && i + 1 < steps.length ? steps[i + 1]! : null;
 }
 
-export function prevAddressStep(steps: KYCStep[], current: KYCStep): KYCStep | null {
+export function prevAddressStep(steps: VerificationStep[], current: VerificationStep): VerificationStep | null {
   const i = steps.indexOf(current);
   return i > 0 ? steps[i - 1]! : null;
 }

@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes } from 'react';
 import type { SdkTrustAttribution } from '../services/api';
 import type { WorkflowTexts } from '../i18n/types';
 
-import type { KYCSubmission, KYCError, KYCResult } from './verification';
+import type { VerificationSubmission, VerificationError, VerificationResult } from './verification';
 
 // ---------------------------------------------------------------------------
 // Supported countries & ID types
@@ -81,7 +81,7 @@ export type IdTypesByCountry = {
 // KYC flow steps
 // ---------------------------------------------------------------------------
 
-export type KYCStep =
+export type VerificationStep =
   | 'consent'
   // Contact-verification OTP steps — right after consent (cheap pre-filter
   // before document/liveness spend). Present when the workflow/props enable them.
@@ -116,7 +116,7 @@ export type KYCStep =
   | 'questionnaire'
   | 'submitted';
 
-/** How flow progress is drawn — see {@link KYCConfig.progressStyle}. */
+/** How flow progress is drawn — see {@link VerificationConfig.progressStyle}. */
 export type ProgressStyle = 'steps' | 'bar' | 'none';
 
 // ---------------------------------------------------------------------------
@@ -394,7 +394,7 @@ export type QuestionnaireAnswerValue = string | number | boolean | string[];
 // Appearance / theming
 // ---------------------------------------------------------------------------
 
-export interface KYCAppearance {
+export interface VerificationAppearance {
   /** Brand color — drives buttons, selected states, focus rings (`--primary`/`--ring`). */
   primaryColor?: string;
   /** Text/icon color rendered on top of `primaryColor` (e.g. button labels) (`--primary-foreground`). */
@@ -449,7 +449,7 @@ export interface KYCAppearance {
    * typography fields are ignored here.
    */
   dark?: Pick<
-    KYCAppearance,
+    VerificationAppearance,
     | 'primaryColor'
     | 'primaryTextColor'
     | 'accentColor'
@@ -468,7 +468,7 @@ export interface KYCAppearance {
 // Consent screen content
 // ---------------------------------------------------------------------------
 
-export interface KYCConsentContent {
+export interface VerificationConsentContent {
   /**
    * Heading on the consent (welcome) screen. Supports `{firstName}` /
    * `{lastName}` tokens (from `userData`) and, for KYB flows, `{businessName}`
@@ -489,7 +489,7 @@ export interface KYCConsentContent {
 // Success (submitted) screen content
 // ---------------------------------------------------------------------------
 
-export interface KYCSuccessContent {
+export interface VerificationSuccessContent {
   /**
    * Heading on the success screen shown after a verification is submitted.
    * Supports `{firstName}` / `{lastName}` tokens (from `userData`) and, for KYB
@@ -552,10 +552,10 @@ export interface VoiceGuidanceConfig {
 export type VoiceGuidanceOption = boolean | VoiceGuidanceConfig;
 
 // ---------------------------------------------------------------------------
-// Client-side SDK config  (<MyazaKYC /> props & useMyazaKYC options)
+// Client-side SDK config  (<Verification /> props & useVerification options)
 // ---------------------------------------------------------------------------
 
-export interface MyazaKYCConfig<C extends AnyCountry = AnyCountry> {
+export interface VerificationConfig<C extends AnyCountry = AnyCountry> {
   /**
    * Bearer token sent as the Authorization header. The key prefix is the single
    * source of truth for the environment — the SDK derives it (and the base URL)
@@ -847,7 +847,7 @@ export interface MyazaKYCConfig<C extends AnyCountry = AnyCountry> {
    * Hide the close (X) button and block all user-initiated dismissal of the
    * modal — backdrop tap, Escape key, and (on mobile) swipe-down. When `true`,
    * the flow can only be closed programmatically via the `close()` returned by
-   * {@link useMyazaKYC}. Default `false`. The terminal "Submitted" step is
+   * {@link useVerification}. Default `false`. The terminal "Submitted" step is
    * already non-dismissible regardless of this flag.
    */
   disableClose?: boolean;
@@ -883,16 +883,16 @@ export interface MyazaKYCConfig<C extends AnyCountry = AnyCountry> {
    * of the right kind) is seeded automatically so mid-flow steps render.
    * Ignored when unset.
    */
-  previewStep?: KYCStep | null;
+  previewStep?: VerificationStep | null;
 
   /** Visual customisation */
-  appearance?: KYCAppearance;
+  appearance?: VerificationAppearance;
 
   /** Override the consent (welcome) screen copy. */
-  consent?: KYCConsentContent;
+  consent?: VerificationConsentContent;
 
   /** Override the success (submitted) screen copy. */
-  success?: KYCSuccessContent;
+  success?: VerificationSuccessContent;
 
   /**
    * Custom copy for any text the SDK shows, by language then key, e.g.
@@ -1016,12 +1016,12 @@ export interface MyazaKYCConfig<C extends AnyCountry = AnyCountry> {
 
   // Callbacks
   onStart?: () => void;
-  onStepChange?: (step: KYCStep) => void;
+  onStepChange?: (step: VerificationStep) => void;
   /**
    * Fires immediately after the user submits their verification.
    * The submission is always status: 'processing' — results arrive async via webhook.
    */
-  onSubmit?: (submission: KYCSubmission) => void;
+  onSubmit?: (submission: VerificationSubmission) => void;
   /**
    * Fires once with the verdict when the flow WAITS for it in-app (a
    * biometric re-authentication on `resultDelivery: 'both'`, the default, or
@@ -1029,23 +1029,23 @@ export interface MyazaKYCConfig<C extends AnyCountry = AnyCountry> {
    * timed out: the webhook stays the record either way. Carries state and
    * reason only, never result data.
    */
-  onResult?: (result: KYCResult) => void;
+  onResult?: (result: VerificationResult) => void;
   onClose?: () => void;
   /**
-   * Fires for technical errors only. Receives a {@link KYCError} — a real
+   * Fires for technical errors only. Receives a {@link VerificationError} — a real
    * `Error` that also carries a typed `code` (e.g. `camera_permission_denied`,
    * `upload_failed`, `network_error`). Verification *outcomes* never come
    * through here — they arrive via webhook / status polling.
    */
-  onError?: (error: KYCError) => void;
+  onError?: (error: VerificationError) => void;
 }
 
 // ---------------------------------------------------------------------------
-// <MyazaKYC /> component props
+// <Verification /> component props
 // ---------------------------------------------------------------------------
 
 /**
- * Props for the `<MyazaKYC />` component: the full SDK config plus standard
+ * Props for the `<Verification />` component: the full SDK config plus standard
  * `<button>` attributes for the built-in trigger button.
  *
  * The trigger renders a real `<button>`, so you can:
@@ -1056,20 +1056,20 @@ export interface MyazaKYCConfig<C extends AnyCountry = AnyCountry> {
  * - forward any other button attribute (`disabled`, `aria-*`, `type`, …).
  *
  * `onClick` is owned by the SDK (it opens the modal) and is therefore omitted.
- * To build your own trigger element instead, use the `useMyazaKYC()` hook and
+ * To build your own trigger element instead, use the `useVerification()` hook and
  * wire its `open()` to whatever you render.
  */
-export type MyazaKYCProps<C extends AnyCountry = AnyCountry> =
-  MyazaKYCConfig<C> &
-    Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof MyazaKYCConfig<C> | 'onClick'>;
+export type VerificationProps<C extends AnyCountry = AnyCountry> =
+  VerificationConfig<C> &
+    Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof VerificationConfig<C> | 'onClick'>;
 
 // ---------------------------------------------------------------------------
 // Hook return type
 // ---------------------------------------------------------------------------
 
-export interface UseMyazaKYCReturn {
+export interface UseVerificationReturn {
   open: () => void;
   close: () => void;
   isOpen: boolean;
-  currentStep: KYCStep | null;
+  currentStep: VerificationStep | null;
 }

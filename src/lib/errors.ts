@@ -1,13 +1,13 @@
 // ---------------------------------------------------------------------------
-// mapToKycError — turn a raw network/API error into a typed KYCError
+// mapToVerificationError — turn a raw network/API error into a typed VerificationError
 //
 // Used at every call site that talks to the server (upload, verify) so the
 // `onError` callback always receives a documented, typed `code`. Mirrors the
-// Flutter SDK's `_mapToKycError` so the two platforms surface the same codes.
+// Flutter SDK's `_mapToVerificationError` so the two platforms surface the same codes.
 // ---------------------------------------------------------------------------
 
-import { KYCApiError } from '../services/api';
-import { KYCError, type KYCErrorCode } from '../types/verification';
+import { VerificationApiError } from '../services/api';
+import { VerificationError, type VerificationErrorCode } from '../types/verification';
 import { isSessionCancelledError, sessionCancelledMessage } from './session-cancelled';
 import { BUSINESS_DOCUMENT_LABELS } from './business-application';
 import type { BusinessDocumentKey } from '../types/business';
@@ -24,15 +24,15 @@ export type ErrorContext = 'upload' | 'verify';
  * the error boundary. Swallows the throw and warns instead.
  */
 export function safeReportError(
-  onError: ((error: KYCError) => void) | undefined,
-  error: KYCError,
+  onError: ((error: VerificationError) => void) | undefined,
+  error: VerificationError,
 ): void {
   if (!onError) return;
   try {
     onError(error);
   } catch (err) {
     if (typeof console !== 'undefined') {
-      console.warn('[MyazaKYC] onError handler threw and was ignored:', err);
+      console.warn('[Verification] onError handler threw and was ignored:', err);
     }
   }
 }
@@ -52,7 +52,7 @@ function toNum(v: unknown): number | undefined {
  * the generic status-code branches so e.g. a 500 `pricing_not_configured`
  * doesn't read as a transient server blip.
  */
-const CODED_ERRORS: Record<string, { code: KYCErrorCode; key: string }> = {
+const CODED_ERRORS: Record<string, { code: VerificationErrorCode; key: string }> = {
   workflow_not_found: { code: 'invalid_workflow', key: 'general.error.workflowNotFound' },
   workflow_subject_mismatch: { code: 'invalid_workflow', key: 'general.error.workflowSubjectMismatch' },
   business_verifications_disabled: { code: 'feature_disabled', key: 'general.error.businessVerificationsDisabled' },
@@ -64,18 +64,18 @@ const CODED_ERRORS: Record<string, { code: KYCErrorCode; key: string }> = {
 };
 
 /**
- * Maps an unknown error thrown by the API client to a typed {@link KYCError}
+ * Maps an unknown error thrown by the API client to a typed {@link VerificationError}
  * with a user-facing message. `context` selects the fallback code when the
  * failure isn't a specific HTTP status (e.g. a bare network failure during an
  * upload becomes `upload_failed`, during verify becomes `network_error`).
  * The messages come from the text catalogue (`general.error.*`) through `t`.
  */
-export function mapToKycError(err: unknown, context: ErrorContext, t: TextFn = defaultText): KYCError {
-  if (err instanceof KYCApiError) {
+export function mapToVerificationError(err: unknown, context: ErrorContext, t: TextFn = defaultText): VerificationError {
+  if (err instanceof VerificationApiError) {
     // A cancelled session is terminal until an admin uncancels it: its own code,
     // never a generic "try again" (lib/session-cancelled.ts).
     if (isSessionCancelledError(err)) {
-      return new KYCError('session_cancelled', sessionCancelledMessage(err) ?? t('general.sessionCancelled.description'));
+      return new VerificationError('session_cancelled', sessionCancelledMessage(err) ?? t('general.sessionCancelled.description'));
     }
     // 422 missing_documents carries the missing doc keys — name them so the
     // user knows exactly which required business documents to go back for.
@@ -84,7 +84,7 @@ export function mapToKycError(err: unknown, context: ErrorContext, t: TextFn = d
       const labels = missing.map(
         (key) => BUSINESS_DOCUMENT_LABELS[key as BusinessDocumentKey] ?? key,
       );
-      return new KYCError(
+      return new VerificationError(
         'unknown',
         labels.length > 0
           ? t('general.error.missingDocumentsNamed', { documents: labels.join(', ') })
@@ -93,10 +93,10 @@ export function mapToKycError(err: unknown, context: ErrorContext, t: TextFn = d
     }
     const coded = err.code ? CODED_ERRORS[err.code] : undefined;
     if (coded) {
-      return new KYCError(coded.code, t(coded.key));
+      return new VerificationError(coded.code, t(coded.key));
     }
     if (err.statusCode === 401) {
-      return new KYCError('invalid_api_key', t('general.error.invalidApiKey'));
+      return new VerificationError('invalid_api_key', t('general.error.invalidApiKey'));
     }
     if (err.statusCode === 402) {
       const body = err.body ?? {};
@@ -107,7 +107,7 @@ export function mapToKycError(err: unknown, context: ErrorContext, t: TextFn = d
         required !== undefined && balance !== undefined
           ? t('general.error.insufficientCreditsAmounts', { required: required.toFixed(2), balance: balance.toFixed(2) })
           : t('general.error.insufficientCredits');
-      return new KYCError('insufficient_credits', message, { required, balance, currency });
+      return new VerificationError('insufficient_credits', message, { required, balance, currency });
     }
     if (err.statusCode === 403) {
       const feature = typeof err.body?.feature === 'string' ? err.body.feature : null;
@@ -119,21 +119,21 @@ export function mapToKycError(err: unknown, context: ErrorContext, t: TextFn = d
             : feature === 'gov_db_check'
               ? t('general.error.govDbCheckDisabled')
               : err.message || t('general.error.featureDisabled');
-      return new KYCError('feature_disabled', message);
+      return new VerificationError('feature_disabled', message);
     }
     if (err.statusCode >= 500 || err.statusCode === 0) {
       // Transient server error that survived retries.
-      const code: KYCErrorCode = context === 'upload' ? 'upload_failed' : 'network_error';
-      return new KYCError(code, t('general.error.server'));
+      const code: VerificationErrorCode = context === 'upload' ? 'upload_failed' : 'network_error';
+      return new VerificationError(code, t('general.error.server'));
     }
     // Other 4xx — pass the server message through under the context's code.
-    const code: KYCErrorCode = context === 'upload' ? 'upload_failed' : 'unknown';
-    return new KYCError(code, err.message);
+    const code: VerificationErrorCode = context === 'upload' ? 'upload_failed' : 'unknown';
+    return new VerificationError(code, err.message);
   }
   // fetch() throws a TypeError on network failure (offline / DNS / CORS).
   if (err instanceof TypeError) {
-    return new KYCError('network_error', t('general.error.network'));
+    return new VerificationError('network_error', t('general.error.network'));
   }
-  const code: KYCErrorCode = context === 'upload' ? 'upload_failed' : 'unknown';
-  return new KYCError(code, err instanceof Error ? err.message : t('general.error.unknown'));
+  const code: VerificationErrorCode = context === 'upload' ? 'upload_failed' : 'unknown';
+  return new VerificationError(code, err instanceof Error ? err.message : t('general.error.unknown'));
 }

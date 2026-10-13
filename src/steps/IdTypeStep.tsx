@@ -12,8 +12,8 @@ import {
 import { StepHeader } from '../components/StepHeader';
 import { Card } from '../components/ui/card';
 import { cn } from '../lib/utils';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { listIdTypeDefinitions } from '../utils/id-definitions';
 import { isBusinessFlow } from '../lib/business';
 import { multiIdEvidenceStep, multiIdPlan } from '../lib/multi-id';
@@ -46,8 +46,8 @@ interface IdTypeStepProps {
 }
 
 export function IdTypeStep({ country, allowedIdTypes }: IdTypeStepProps = {}) {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
   const { serverConfig } = config;
 

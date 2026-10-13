@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest';
 // errors when either is dropped, and the only symptom is a lost caret in a
 // different application.
 describe('the preview dialog', () => {
-  const modal = readFileSync(join(new URL('.', import.meta.url).pathname, 'KYCModal.tsx'), 'utf8');
+  const modal = readFileSync(join(new URL('.', import.meta.url).pathname, 'VerificationModal.tsx'), 'utf8');
 
   it('is not modal in preview mode, and is in every real flow', () => {
     expect(modal).toContain('<Dialog modal={!config.previewMode}');

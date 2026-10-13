@@ -10,7 +10,7 @@ import { CurrentLocationRow } from './CurrentLocationRow';
 import { eventPathIncludes } from '../../lib/event-path';
 import { randomId } from '../../lib/random-id';
 import { useDropdownAnchor } from '../../lib/use-dropdown-anchor';
-import { useKYCConfig } from '../../context/KYCConfigContext';
+import { useVerificationConfig } from '../../context/VerificationConfigContext';
 import type { PlaceSuggestion } from '../../services/api';
 import { useText } from '../../i18n';
 
@@ -55,7 +55,7 @@ export function SearchScreen({
   onUseMyLocation: () => void;
   onPinInstead: () => void;
 }) {
-  const config = useKYCConfig();
+  const config = useVerificationConfig();
   const t = useText();
   const autocomplete = config.serverConfig?.addressSearchMode === 'autocomplete';
   const [query, setQuery] = useState('');
@@ -65,7 +65,7 @@ export function SearchScreen({
   const debounce = useRef<number | null>(null);
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  // The house dropdown mechanics (MyazaSelect's): the panel portals OUT of the
+  // The house dropdown mechanics (UiSelect's): the panel portals OUT of the
   // dialog and fixes to viewport coordinates, so it floats over everything —
   // the location row, the footer, the modal's own edge — instead of being
   // clipped by the step body's overflow or growing its scroll area.

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 // ─── A test that reads another package goes through __tests__/monorepo ───────
 //
 // The public mirror carries this package alone; a suite that reaches into
-// kyc-sdk-flutter or kyc-sdk-react-native by a relative path passes here and
+// sdk-flutter or sdk-react-native by a relative path passes here and
 // fails there with ENOENT. monorepo.ts skips such suites outside the
 // monorepo; this pins that every cross-package read uses it.
 

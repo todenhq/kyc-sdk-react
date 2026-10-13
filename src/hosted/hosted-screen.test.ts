@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 const read = (p: string) => readFileSync(new URL(p, import.meta.url).pathname, 'utf8');
 
 describe('hosted screens are themed from the page-supplied appearance', () => {
-  const entry = read('../MyazaKYCHosted.tsx');
+  const entry = read('../HostedVerification.tsx');
   const screen = read('./HostedScreen.tsx');
 
   it('the entry hands the appearance to the loading screen and the terminal screens', () => {

@@ -1,4 +1,4 @@
-// Device Intelligence setup for one mounted flow, called by KYCConfigProvider:
+// Device Intelligence setup for one mounted flow, called by VerificationConfigProvider:
 // tells the upload path whether to send `X-Myaza-Device-Id`, and starts the
 // async half of `fingerprint.entropy` early so the sync submit finds it ready.
 // Both follow the workflow's `deviceIntelligence` switch (on unless false),

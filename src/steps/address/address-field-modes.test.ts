@@ -8,14 +8,14 @@ import {
   type AddressFieldKey,
 } from './address-field-modes';
 import type { AddressCollectionConfig } from '../../types/config';
-import type { KYCState } from '../../context/types';
+import type { VerificationState } from '../../context/types';
 
 // LOCKSTEP with the server's lib/workflows/address-fields.ts (kyc-core) —
 // the resolution rule must agree or the SDK gates what the server accepts.
 // The RN and Flutter mirrors replay the SAME vector file below, so a rule
 // changed in one mirror fails in all three.
 
-type Address = NonNullable<KYCState['address']>;
+type Address = NonNullable<VerificationState['address']>;
 const address = (over: Partial<Address> = {}): Address =>
   ({
     lat: 4.94,
@@ -67,7 +67,7 @@ describe('requiredPrefillSubmission', () => {
   });
 });
 
-// ─── The shared vectors (kyc-sdk-flutter/test/address_field_modes_vectors.json)
+// ─── The shared vectors (sdk-flutter/test/address_field_modes_vectors.json)
 interface Vector {
   name: string;
   config: AddressCollectionConfig | null;
@@ -77,7 +77,7 @@ interface Vector {
   expectPrefill: Record<string, string>;
 }
 const shared = sharedVectors<{ address: Record<string, unknown>; vectors: Vector[] }>(
-  'kyc-sdk-flutter/test/address_field_modes_vectors.json',
+  'sdk-flutter/test/address_field_modes_vectors.json',
   { address: {}, vectors: [] },
 );
 

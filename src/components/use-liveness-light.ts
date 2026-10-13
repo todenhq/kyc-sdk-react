@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { livenessBrightScreenOn, shouldForceLightTheme } from '../lib/liveness-bright-screen';
 import { useForcedLightTheme } from '../lib/forced-light-theme';
-import type { KYCStep } from '../types/config';
+import type { VerificationStep } from '../types/config';
 
 interface LivenessLightInput {
   livenessBrightScreen?: boolean;
   configuredTheme?: 'light' | 'dark' | 'system';
   open: boolean;
   /** The step the modal is actually rendering. */
-  step: KYCStep;
+  step: VerificationStep;
   themeRoot: HTMLElement | null;
 }
 

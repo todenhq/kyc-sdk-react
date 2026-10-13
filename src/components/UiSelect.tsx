@@ -10,7 +10,7 @@ import { eventPathIncludes } from '../lib/event-path';
 import { DropdownSurface } from './DropdownSurface';
 
 // A plain single-choice select — the web counterpart of the RN and Flutter
-// SDKs' MyazaSelect, so a field rendered as a dropdown on a phone is a dropdown
+// SDKs' UiSelect, so a field rendered as a dropdown on a phone is a dropdown
 // here too rather than a column of tappable cards.
 //
 // Deliberately NOT shadcn's Radix Select: it portals to document.body, and
@@ -18,17 +18,17 @@ import { DropdownSurface } from './DropdownSurface';
 // the list becomes unclickable and taps fall through to whatever sits behind
 // it. This anchors into the dialog root instead. See lib/use-dropdown-anchor.
 
-export interface MyazaSelectOption<T extends string> {
+export interface UiSelectOption<T extends string> {
   value: T;
   label: string;
   /** Optional leading visual (e.g. a currency's flag). */
   icon?: React.ReactNode;
 }
 
-export interface MyazaSelectProps<T extends string> {
+export interface UiSelectProps<T extends string> {
   id?: string;
   value: T | undefined;
-  options: MyazaSelectOption<T>[];
+  options: UiSelectOption<T>[];
   onChange: (value: T) => void;
   placeholder?: string;
   /** False renders it inert — e.g. locked once a document is attached. */
@@ -44,7 +44,7 @@ export interface MyazaSelectProps<T extends string> {
   'aria-label'?: string;
 }
 
-export function MyazaSelect<T extends string>({
+export function UiSelect<T extends string>({
   id,
   value,
   options,
@@ -53,7 +53,7 @@ export function MyazaSelect<T extends string>({
   enabled = true,
   searchable = false,
   'aria-label': ariaLabel,
-}: MyazaSelectProps<T>) {
+}: UiSelectProps<T>) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);

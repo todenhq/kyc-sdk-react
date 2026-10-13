@@ -40,9 +40,9 @@ const config: Config = {
         "text-light": "#F6F5FE",  // Text White-ish
       },
       fontFamily: {
-        heading: ['"Space Grotesk"', "system-ui", "sans-serif"],
-        body: ["Karla", "system-ui", "sans-serif"],
-        sans: ["Karla", "system-ui", "sans-serif"],
+        heading: ['"Bricolage Grotesque"', "system-ui", "sans-serif"],
+        body: ['"Geist"', "system-ui", "sans-serif"],
+        sans: ['"Geist"', "system-ui", "sans-serif"],
       },
       keyframes: {
         "slide-up": {

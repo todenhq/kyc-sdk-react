@@ -1,4 +1,4 @@
-import type { KYCStep } from '../types/config';
+import type { VerificationStep } from '../types/config';
 
 /**
  * Bright screen during the selfie (workflow `livenessBrightScreen`).
@@ -22,7 +22,7 @@ export interface ForceLightInput {
   /** The flow is open (a closed modal never holds the page light). */
   open: boolean;
   /** The step the modal is actually rendering. */
-  step: KYCStep;
+  step: VerificationStep;
   /**
    * The liveness step has reached its camera screen (latched for the step).
    * The builder preview reports its camera stand-in the same way, so the

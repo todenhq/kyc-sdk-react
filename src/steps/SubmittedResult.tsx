@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useKYCConfig } from '../context/KYCConfigContext';
-import { useKYCContext } from '../context/KYCContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
 import { isCancelledStatus } from '../lib/session-cancelled';
 import { awaitVerificationOutcome, type VerificationOutcome } from '../lib/result-wait';
 import { describeOutcome, describeWaiting } from '../lib/result-copy';
@@ -39,8 +39,8 @@ export function SubmittedResult({
   retryInfo: { attempt: number; total: number } | null;
   action?: SubmitSuccessAction;
 }) {
-  const config = useKYCConfig();
-  const { dispatch } = useKYCContext();
+  const config = useVerificationConfig();
+  const { dispatch } = useVerificationContext();
   const t = useText();
   const [outcome, setOutcome] = useState<VerificationOutcome | null>(null);
 

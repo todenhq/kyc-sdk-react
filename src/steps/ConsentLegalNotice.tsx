@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { useOptionalKYCConfig } from '../context/KYCConfigContext';
+import { useOptionalVerificationConfig } from '../context/VerificationConfigContext';
 import { useText } from '../i18n';
 import { PRIVACY_URL, TERMS_URL } from '../lib/brand';
-import { effectiveTrustAttribution, myazaProviderName, needsMyazaDisclosure } from '../lib/trust-attribution';
+import { effectiveTrustAttribution, myazaProviderName, needsProcessorDisclosure } from '../lib/trust-attribution';
 
 const LINK_CLASS = 'font-medium text-foreground underline underline-offset-2 hover:text-primary';
 
@@ -28,14 +28,14 @@ export function ConsentLegalNotice({
   recordsVideo: boolean;
 }) {
   const t = useText();
-  const config = useOptionalKYCConfig();
+  const config = useOptionalVerificationConfig();
   const branding = config?.serverConfig?.branding;
   const attribution = effectiveTrustAttribution(
     branding?.trustAttribution,
     config?.previewTrustAttribution,
     config?.previewMode,
   );
-  const namesMyaza = needsMyazaDisclosure(attribution);
+  const namesMyaza = needsProcessorDisclosure(attribution);
   const org = namesMyaza
     ? myazaProviderName(attribution, config?.appearance?.companyName, branding?.companyName)
     : '';

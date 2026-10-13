@@ -23,13 +23,13 @@ import {
   withSilentCaptureMetadata,
 } from './submit-helpers';
 import { settleLivenessVideo } from '../lib/integrity-signals';
-import type { KYCConfigValue } from '../context/KYCConfigContext';
-import type { KYCState } from '../context/types';
+import type { VerificationConfigValue } from '../context/VerificationConfigContext';
+import type { VerificationState } from '../context/types';
 import type { VerifyRequest } from '../services/api';
 
 interface SubmitBusinessOptions {
-  config: KYCConfigValue;
-  state: KYCState;
+  config: VerificationConfigValue;
+  state: VerificationState;
   requestId: string;
   onRetry: (attempt: number, total: number) => void;
 }
@@ -143,7 +143,7 @@ export async function submitBusinessApplication({
     void submitApplicantVerification(config, state, country, result.applicantKeyPersonId).catch(
       (err) => {
         console.warn(
-          '[MyazaKYC] Applicant identity submission failed — the organization can re-invite the applicant from the dashboard:',
+          '[Verification] Applicant identity submission failed — the organization can re-invite the applicant from the dashboard:',
           err,
         );
       },
@@ -154,7 +154,7 @@ export async function submitBusinessApplication({
 }
 
 /** Whether the applicant capture leg actually produced something to submit. */
-function applicantMediaCaptured(state: KYCState): boolean {
+function applicantMediaCaptured(state: VerificationState): boolean {
   return Boolean(
     state.selectedIdType &&
       (state.mediaIds.selfie || state.mediaIds.documentFront || state.idNumber.trim() !== ''),
@@ -171,8 +171,8 @@ function applicantMediaCaptured(state: KYCState): boolean {
  * the mapped workflow's gates, pricing and decision graph.
  */
 async function submitApplicantVerification(
-  config: KYCConfigValue,
-  state: KYCState,
+  config: VerificationConfigValue,
+  state: VerificationState,
   country: string,
   applicantKeyPersonId: string,
 ): Promise<void> {

@@ -9,7 +9,7 @@ import { AddressDirectionsField } from '../../components/AddressDirectionsField'
 import { AreaFields, Field, SectionHeading, type DetailPatch, type DetailValues } from './DetailsSheetFields';
 import { addressFieldModes, type AddressFieldKey, type AddressFieldMode } from './address-field-modes';
 import type { AddressCollectionConfig } from '../../types/config';
-import type { KYCState } from '../../context/types';
+import type { VerificationState } from '../../context/types';
 import { useText } from '../../i18n';
 
 /**
@@ -21,7 +21,7 @@ import { useText } from '../../i18n';
  * House sheet pattern: draggable bottom drawer on mobile, right-side sheet
  * on desktop.
  */
-type Parts = NonNullable<NonNullable<KYCState['address']>['parts']>;
+type Parts = NonNullable<NonNullable<VerificationState['address']>['parts']>;
 
 export function DetailsSheet({
   open,

@@ -6,7 +6,7 @@
 // the run's IDs the screen is about and how many remain.
 
 import { Check } from './icons';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { cn } from '../lib/utils';
 import type { MultiIdPlan } from '../lib/multi-id';
 import { useText } from '../i18n';
@@ -18,7 +18,7 @@ export function MultiIdProgress({
   plan: MultiIdPlan;
   slots: Array<{ idType: string }>;
 }) {
-  const config = useKYCConfig();
+  const config = useVerificationConfig();
   const t = useText();
   const labelFor = (idType: string) =>
     config.getIdTypeDefinition(idType)?.label ?? idType.toUpperCase();

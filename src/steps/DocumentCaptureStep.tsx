@@ -20,8 +20,8 @@ import { DocumentReview } from "./DocumentReview";
 import { Button } from "../components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import { CameraPermissionPrimer } from "../components/CameraPermissionPrimer";
-import { useKYCContext } from "../context/KYCContext";
-import { useKYCConfig } from "../context/KYCConfigContext";
+import { useVerificationContext } from "../context/VerificationContext";
+import { useVerificationConfig } from "../context/VerificationConfigContext";
 import { stepAfterCapture } from "../lib/post-capture";
 import { multiIdPlan } from "../lib/multi-id";
 import { useCamera } from "../hooks/useCamera";
@@ -54,8 +54,8 @@ import {
 import { useLightLevel } from "../hooks/useLightLevel";
 import { primeSpeech } from "../liveness/speech";
 import { withRetry } from "../lib/retry";
-import { mapToKycError, safeReportError } from "../lib/errors";
-import { KYCError } from "../types/verification";
+import { mapToVerificationError, safeReportError } from "../lib/errors";
+import { VerificationError } from "../types/verification";
 import { cn } from "../lib/utils";
 import {
 	DOCUMENT_CAPTURE_WIDTH,
@@ -120,8 +120,8 @@ function grabFrameSnapshot(
 }
 
 export function DocumentCaptureStep() {
-	const { state, dispatch } = useKYCContext();
-	const config = useKYCConfig();
+	const { state, dispatch } = useVerificationContext();
+	const config = useVerificationConfig();
 	const t = useText();
 
 	// How the user may supply each side: scanned live with the camera, picked
@@ -364,7 +364,7 @@ export function DocumentCaptureStep() {
 			permissionReportedRef.current = true;
 			safeReportError(
 				config.onError,
-				new KYCError(
+				new VerificationError(
 					"camera_permission_denied",
 					"Camera access is required to photograph your document. Please allow camera access to continue.",
 				),
@@ -820,9 +820,9 @@ export function DocumentCaptureStep() {
 			// Retries exhausted — show the inline error AND report a typed error once.
 			setRetryInfo(null);
 			setIsUploading(false);
-			const kycError = mapToKycError(err, "upload");
-			setUploadError(kycError.message);
-			safeReportError(config.onError, kycError);
+			const verificationError = mapToVerificationError(err, "upload");
+			setUploadError(verificationError.message);
+			safeReportError(config.onError, verificationError);
 		}
 	}, [
 		frontPreview,

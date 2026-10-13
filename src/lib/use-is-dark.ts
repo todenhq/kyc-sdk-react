@@ -9,7 +9,7 @@ import { themeRootOrDocument, useThemeRoot } from './sdk-frame-context';
  * page) — and re-renders ITSELF, so anything computing styles from the theme
  * higher up the tree never heard about it. That was fine while dark mode was
  * pure CSS — but org colours are applied as INLINE custom properties, and an
- * inline style beats the `.dark .kyc-root` rules, so a branded flow kept its
+ * inline style beats the `.dark .verification-root` rules, so a branded flow kept its
  * light background after toggling to dark. Observing the class is what lets
  * the dark palette be swapped in on toggle.
  */

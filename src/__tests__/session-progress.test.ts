@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { progressFromState, progressFingerprint } from '../lib/session-progress';
-import { initialKYCState } from '../context/KYCContext';
-import type { KYCState } from '../context/types';
+import { initialVerificationState } from '../context/VerificationContext';
+import type { VerificationState } from '../context/types';
 
-const state = (over: Partial<KYCState> = {}): KYCState => ({ ...initialKYCState, ...over });
+const state = (over: Partial<VerificationState> = {}): VerificationState => ({ ...initialVerificationState, ...over });
 
 describe('progressFromState', () => {
   it('never carries the base64 previews or video blobs', () => {
@@ -24,14 +24,14 @@ describe('progressFromState', () => {
 
   it('carries the media references, which is what makes a slot count as captured', () => {
     const payload = progressFromState(
-      state({ mediaIds: { documentFront: 'm_front', selfie: 'm_selfie' } as KYCState['mediaIds'] }),
+      state({ mediaIds: { documentFront: 'm_front', selfie: 'm_selfie' } as VerificationState['mediaIds'] }),
     );
     expect(payload.mediaIds).toEqual({ documentFront: 'm_front', selfie: 'm_selfie' });
   });
 
   it('drops empty media slots rather than storing nulls', () => {
     const payload = progressFromState(
-      state({ mediaIds: { documentFront: 'm_1', selfie: undefined } as unknown as KYCState['mediaIds'] }),
+      state({ mediaIds: { documentFront: 'm_1', selfie: undefined } as unknown as VerificationState['mediaIds'] }),
     );
     expect(payload.mediaIds).toEqual({ documentFront: 'm_1' });
   });
@@ -40,7 +40,7 @@ describe('progressFromState', () => {
     const payload = progressFromState(
       state({
         idNumber: '12345678901',
-        questionnaireAnswers: { source_of_funds: 'salary' } as KYCState['questionnaireAnswers'],
+        questionnaireAnswers: { source_of_funds: 'salary' } as VerificationState['questionnaireAnswers'],
       }),
     );
     expect(payload.data?.idNumber).toBe('12345678901');

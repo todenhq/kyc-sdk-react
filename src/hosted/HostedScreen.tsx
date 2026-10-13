@@ -7,7 +7,7 @@ import { applyConfiguredTheme } from '../lib/apply-theme';
 import { useThemeRoot } from '../lib/sdk-frame-context';
 import { cn } from '../lib/utils';
 import { useText } from '../i18n';
-import type { KYCAppearance } from '../types/config';
+import type { VerificationAppearance } from '../types/config';
 
 /**
  * The centred screen the hosted entry shows AROUND the flow — loading, link
@@ -35,7 +35,7 @@ export function HostedScreen({
   compact,
   children,
 }: {
-  appearance?: KYCAppearance;
+  appearance?: VerificationAppearance;
   /** An embedded mount sits inside a host panel, where a min-h-screen block
    *  would blow the layout open. */
   compact?: boolean;
@@ -48,7 +48,7 @@ export function HostedScreen({
   const screen = (
     <div
       className={cn(
-        'kyc-root flex flex-col items-center justify-center gap-4 bg-background text-foreground',
+        'verification-root flex flex-col items-center justify-center gap-4 bg-background text-foreground',
         compact ? 'rounded-2xl px-6 py-12' : 'min-h-screen p-6',
       )}
       style={buildThemeVars(appearance, dark)}
@@ -70,7 +70,7 @@ export function HostedLoadingScreen({
   compact,
   message,
 }: {
-  appearance?: KYCAppearance;
+  appearance?: VerificationAppearance;
   compact?: boolean;
   message?: string;
 }) {

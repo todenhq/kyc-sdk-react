@@ -10,13 +10,13 @@
 // None of that is something the applicant can fix by trying again, so it must
 // never reach the generic "Something went wrong / Try again" screen. These
 // helpers are the one place that recognises it. Duck-typed on `code` rather
-// than `instanceof KYCApiError`, so this module stays import-free (the API
+// than `instanceof VerificationApiError`, so this module stays import-free (the API
 // client depends on it, not the other way round).
 
 /** The server's error token for a refused, cancelled session. */
 export const SESSION_CANCELLED_CODE = 'session_cancelled';
 
-/** The status `GET /api/kyc/status/:id` answers for a cancelled verification. */
+/** The status `GET /api/v1/status/:id` answers for a cancelled verification. */
 export const CANCELLED_STATUS = 'cancelled';
 
 /** What the screen says when the server sent no sentence of its own. Mirrors

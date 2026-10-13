@@ -1,10 +1,10 @@
-// Device Intelligence: the per-install id on every `POST /api/kyc/upload`
+// Device Intelligence: the per-install id on every `POST /api/v1/upload`
 // (`X-Myaza-Device-Id`, wire contract 2026-10-01). The server records it on
 // each upload to tell whether one session's captures came from more than one
 // device. The value is EXACTLY the submission's `fingerprint.deviceId`.
 //
 // The API client is built before the workflow resolves, so it cannot see the
-// workflow's `deviceIntelligence` switch itself. KYCConfigProvider writes the
+// workflow's `deviceIntelligence` switch itself. VerificationConfigProvider writes the
 // switch here (`setUploadDeviceIdEnabled`) and the upload reads it. Module
 // state, so two SDK mounts on one page share the switch; the default is on,
 // matching the fingerprint's own default.

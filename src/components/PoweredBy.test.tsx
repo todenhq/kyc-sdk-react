@@ -5,7 +5,7 @@ import { PRODUCT_URL } from '../lib/brand';
 import { PoweredBy, TrustAttributionMark } from './PoweredBy';
 
 describe('TrustAttributionMark', () => {
-  it.each(['#070330', '#F6F5FE'])(
+  it.each(['#080A12', '#F6F5FE'])(
     'places the custom logo directly on the surface (%s)',
     (markColor) => {
       const html = renderToStaticMarkup(
@@ -24,7 +24,7 @@ describe('TrustAttributionMark', () => {
     },
   );
 
-  it.each(['#070330', '#F6F5FE'])(
+  it.each(['#080A12', '#F6F5FE'])(
     'keeps the name fallback readable on the active surface (%s)',
     (markColor) => {
       const html = renderToStaticMarkup(
@@ -37,21 +37,21 @@ describe('TrustAttributionMark', () => {
     },
   );
 
-  it('uses Myaza Trust when an older server sends no attribution', () => {
+  it('uses the Toden logo when an older server sends no attribution', () => {
     const html = renderToStaticMarkup(<TrustAttributionMark markColor="#111827" />);
     expect(html).toContain('Protected by');
-    expect(html).toContain('Myaza Trust');
+    expect(html).toContain('aria-label="Toden"');
     expect(html).toContain(PRODUCT_URL);
     expect(html).not.toContain('Secured by');
   });
 
   it('renders without a KYC config provider', () => {
     const html = renderToStaticMarkup(<PoweredBy />);
-    expect(html).toContain('Myaza Trust');
+    expect(html).toContain('aria-label="Toden"');
     expect(html).toContain('safe-area-inset-bottom');
   });
 
-  it('shows only the organisation in custom mode, with no Myaza mark or link', () => {
+  it('shows only the organisation in custom mode, with no Toden mark or link', () => {
     const html = renderToStaticMarkup(
       <TrustAttributionMark
         markColor="#111827"
@@ -65,7 +65,7 @@ describe('TrustAttributionMark', () => {
     expect(html).not.toContain(PRODUCT_URL);
   });
 
-  it('never falls back to Myaza for a malformed custom attribution', () => {
+  it('never falls back to Toden for a malformed custom attribution', () => {
     const html = renderToStaticMarkup(
       <TrustAttributionMark
         markColor="#111827"

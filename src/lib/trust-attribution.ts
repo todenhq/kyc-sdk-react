@@ -21,7 +21,7 @@ export function effectiveTrustAttribution(
  * Myaza's in the footer, Myaza still processes the applicant's data, so one
  * line on the consent screen keeps it disclosed with a link to its terms.
  */
-export function needsMyazaDisclosure(attribution: SdkTrustAttribution | undefined): boolean {
+export function needsProcessorDisclosure(attribution: SdkTrustAttribution | undefined): boolean {
   return attribution?.mode === 'custom';
 }
 

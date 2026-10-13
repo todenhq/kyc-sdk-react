@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { Dispatch } from 'react';
-import type { KYCAction, KYCState } from '../../context/types';
-import type { KYCConfigValue } from '../../context/KYCConfigContext';
+import type { VerificationAction, VerificationState } from '../../context/types';
+import type { VerificationConfigValue } from '../../context/VerificationConfigContext';
 import { pickedAddressState } from '../address-helpers';
 import {
   KEEP_PICKED_LABEL_RADIUS_M,
@@ -25,9 +25,9 @@ import { useText } from '../../i18n';
 const REVERSE_DEBOUNCE_MS = 700;
 
 interface PinActionDeps {
-  config: KYCConfigValue;
-  state: KYCState;
-  dispatch: Dispatch<KYCAction>;
+  config: VerificationConfigValue;
+  state: VerificationState;
+  dispatch: Dispatch<VerificationAction>;
   setError: (message: string | null) => void;
 }
 

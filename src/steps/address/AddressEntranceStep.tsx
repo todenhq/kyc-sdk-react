@@ -5,7 +5,7 @@ import { StepHeader } from '../../components/StepHeader';
 import { Button } from '../../components/ui/button';
 import { StickyActions } from '../../components/StickyActions';
 import { AddressPhotoUpload } from '../../components/AddressPhotoUpload';
-import { useKYCContext } from '../../context/KYCContext';
+import { useVerificationContext } from '../../context/VerificationContext';
 import { useAddressFlow } from './use-address-flow';
 import { StreetViewFramer } from './StreetViewFramer';
 import { FramedStreetView } from './FramedStreetView';
@@ -22,7 +22,7 @@ import { useText } from '../../i18n';
  * ride the framed /embed/street-view page (same chrome, same capture).
  */
 export function AddressEntranceStep() {
-  const { state, dispatch } = useKYCContext();
+  const { state, dispatch } = useVerificationContext();
   const t = useText();
   const flow = useAddressFlow();
   const svFrameUrl = !flow.googleKey && flow.mapsFrameUrl ? streetViewFrameUrlOf(flow.mapsFrameUrl) : null;

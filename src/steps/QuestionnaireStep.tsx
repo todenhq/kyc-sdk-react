@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { StepHeader } from '../components/StepHeader';
 import { Button } from '../components/ui/button';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { hasProofOfAddressStep, hasAddressCollectionStep, addressReturnStep } from '../lib/post-capture';
 import { hasSupportingDocumentsStep, verifiedIdsFromState } from '../lib/supporting-documents';
 import { isBusinessFlow } from '../lib/business';
@@ -21,8 +21,8 @@ import { useText } from '../i18n';
  * keys: `<key>` (amount) + `<key>_currency`.
  */
 export function QuestionnaireStep() {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
   const [errors, setErrors] = useState<Record<string, string>>({});
 

@@ -1,12 +1,12 @@
-import type { KYCStep, AnyIdType, AnyCountry, QuestionnaireAnswerValue, PoaDocumentType } from '../types/config';
-import type { ApiStatus, KYCError } from '../types/verification';
+import type { VerificationStep, AnyIdType, AnyCountry, QuestionnaireAnswerValue, PoaDocumentType } from '../types/config';
+import type { ApiStatus, VerificationError } from '../types/verification';
 import type { ApplicantRole, BusinessDocumentKey, KeyPersonRole } from '../types/business';
 
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
 
-export interface KYCUserData {
+export interface VerificationUserData {
   firstName: string;
   lastName: string;
   dateOfBirth: string;
@@ -185,15 +185,15 @@ export interface MediaIds {
   addressPhoto?: string;
 }
 
-export interface KYCState {
-  currentStep: KYCStep;
+export interface VerificationState {
+  currentStep: VerificationStep;
   /**
    * The step this flow OPENS on: 'consent', or the first real step when the
-   * workflow switched the consent screen off. Published by KYCModal from the
+   * workflow switched the consent screen off. Published by VerificationModal from the
    * built step order (the one place that knows it), read by the progress
    * saver so a consent-less flow is not written as "started" on mount.
    */
-  openingStep: KYCStep;
+  openingStep: VerificationStep;
   status: ApiStatus;
   isOpen: boolean;
 
@@ -263,7 +263,7 @@ export interface KYCState {
 
   // Step 3b – ID input (number-only IDs)
   idNumber: string;
-  userData: KYCUserData;
+  userData: VerificationUserData;
 
   // Step 4 – Liveness / selfie
   selfieImage: string | null;
@@ -398,18 +398,18 @@ export interface KYCState {
   verificationId: string | null;
   /**
    * Last technical error (submission failures). Carries the typed `code` so the
-   * consumer's `onError` receives a `KYCError`, not a bare string. Capture-step
+   * consumer's `onError` receives a `VerificationError`, not a bare string. Capture-step
    * errors (camera permission, upload-after-retries) report to `onError`
    * directly and do not set this — they have their own inline UI.
    */
-  error: KYCError | null;
+  error: VerificationError | null;
 }
 
 // ---------------------------------------------------------------------------
 // Actions (discriminated union)
 // ---------------------------------------------------------------------------
 
-export type KYCAction =
+export type VerificationAction =
   | { type: 'OPEN_MODAL' }
   | { type: 'SET_SESSION_ID'; payload: string }
   | { type: 'SET_SESSION_CANCELLED'; payload: { message: string | null } }
@@ -423,25 +423,25 @@ export type KYCAction =
       };
     }
   | { type: 'CLOSE_MODAL' }
-  | { type: 'SET_STEP'; payload: KYCStep }
-  | { type: 'SET_OPENING_STEP'; payload: KYCStep }
+  | { type: 'SET_STEP'; payload: VerificationStep }
+  | { type: 'SET_OPENING_STEP'; payload: VerificationStep }
   | { type: 'SET_COUNTRY'; payload: AnyCountry }
   | { type: 'SET_COUNTRY_AUTO'; payload: AnyCountry }
   | { type: 'SELECT_ID_TYPE'; payload: AnyIdType }
   // Multi-ID: commit the current slot's evidence (ID type + number/documents)
   // and move to nextStep — the next slot's picker, or liveness after the last.
-  | { type: 'COMMIT_MULTI_ID_SLOT'; payload: { nextStep: KYCStep } }
+  | { type: 'COMMIT_MULTI_ID_SLOT'; payload: { nextStep: VerificationStep } }
   // Multi-ID: step BACK into the last committed slot — pops it and restores its
   // evidence, so the applicant can change an ID they already did.
-  | { type: 'UNCOMMIT_MULTI_ID_SLOT'; payload: { step: KYCStep } }
+  | { type: 'UNCOMMIT_MULTI_ID_SLOT'; payload: { step: VerificationStep } }
   | { type: 'SET_ID_NUMBER'; payload: string }
-  | { type: 'SET_USER_DATA'; payload: Partial<KYCUserData> }
+  | { type: 'SET_USER_DATA'; payload: Partial<VerificationUserData> }
   // Business (KYB) details
   | { type: 'SET_BUSINESS_DETAILS'; payload: Partial<BusinessDetails> }
   | { type: 'SET_BUSINESS_CHECK'; payload: Partial<BusinessCheckState> }
   // KYB application extras (key people / documents / applicant role+name)
   | { type: 'SET_BUSINESS_APPLICATION'; payload: Partial<BusinessApplicationState> }
-  | { type: 'SET_SUPPORTING_DOCUMENTS'; payload: KYCState['supportingDocuments'] }
+  | { type: 'SET_SUPPORTING_DOCUMENTS'; payload: VerificationState['supportingDocuments'] }
   // Document capture
   | { type: 'SET_DOCUMENT_FRONT'; payload: string }
   | { type: 'SET_DOCUMENT_BACK'; payload: string }
@@ -470,15 +470,15 @@ export type KYCAction =
   // Proof of Address
   | { type: 'SET_POA_DOCUMENT'; payload: { documentType: PoaDocumentType; fileName: string } }
   | { type: 'CLEAR_POA_DOCUMENT' }
-  | { type: 'SET_ADDRESS'; payload: NonNullable<KYCState['address']> }
+  | { type: 'SET_ADDRESS'; payload: NonNullable<VerificationState['address']> }
   | { type: 'SET_ADDRESS_PHOTO_PREVIEW'; payload: string | null }
   | { type: 'SET_ADDRESS_INTRO_SEEN' }
-  | { type: 'SET_ADDRESS_SANDBOX_OUTCOME'; payload: KYCState['addressSandboxOutcome'] }
+  | { type: 'SET_ADDRESS_SANDBOX_OUTCOME'; payload: VerificationState['addressSandboxOutcome'] }
   | { type: 'CLEAR_ADDRESS' }
   // Submission
   | { type: 'SUBMIT_VERIFICATION' }
   | { type: 'SUBMISSION_SUCCESS'; payload: string }
-  | { type: 'SET_ERROR'; payload: KYCError }
+  | { type: 'SET_ERROR'; payload: VerificationError }
   | { type: 'CLEAR_ERROR' }
   | { type: 'RETRY' }
   | { type: 'RESET' };

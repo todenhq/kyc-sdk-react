@@ -1,4 +1,4 @@
-import type { KYCState } from '../context/types';
+import type { VerificationState } from '../context/types';
 import { getStepLog } from './step-log';
 import { multiIdWireSlots } from './multi-id';
 
@@ -41,7 +41,7 @@ export interface SessionProgressPayload {
 }
 
 /** Build the payload from current flow state. */
-export function progressFromState(state: KYCState): SessionProgressPayload {
+export function progressFromState(state: VerificationState): SessionProgressPayload {
   const mediaIds = Object.fromEntries(
     Object.entries(state.mediaIds ?? {}).filter(([, v]) => typeof v === 'string' && v),
   ) as Record<string, string>;

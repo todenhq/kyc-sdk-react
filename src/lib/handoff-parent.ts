@@ -12,7 +12,7 @@ import type { HandoffSessionSnapshot, StartSessionResponse } from '../services/a
 // holding the verification.
 //
 // These rules decide, from what `/session/start` answered, whether that
-// attempt can stand behind a phone session. They are pure; MyazaKYC supplies
+// attempt can stand behind a phone session. They are pure; Verification supplies
 // the request.
 // ---------------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { KYCApi, HandoffSessionSnapshot } from '../services/api';
+import type { VerificationApi, HandoffSessionSnapshot } from '../services/api';
 
 /**
  * Lifecycle of the desktop side of a device handoff:
@@ -97,7 +97,7 @@ export function canMintDeviceHandoff(parent: DeviceHandoffParent): boolean {
  * dependency (it's a fresh object each render); regenerate via `regenerate()`.
  */
 export function useDeviceHandoff(
-  api: KYCApi,
+  api: VerificationApi,
   snapshot: HandoffSessionSnapshot,
   enabled: boolean,
   parent: DeviceHandoffParent = {},

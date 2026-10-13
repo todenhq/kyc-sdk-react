@@ -8,7 +8,7 @@ import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
 import { DateField } from '../components/DateField';
 import { CountryFlag, currencyFlagCode } from '../components/CountryFlag';
-import { MyazaSelect } from '../components/MyazaSelect';
+import { UiSelect } from '../components/UiSelect';
 import { cn } from '../lib/utils';
 import { useDropdownAnchor } from '../lib/use-dropdown-anchor';
 import type { QuestionnaireAnswerValue, QuestionnaireField as FieldDef } from '../types/config';
@@ -131,7 +131,7 @@ export function QuestionField({
         <div className="flex gap-2">
           {currencies.length > 1 ? (
             <div className="w-32 shrink-0">
-              <MyazaSelect
+              <UiSelect
                 aria-label="Currency"
                 value={currency || undefined}
                 options={currencies.map((code) => ({
@@ -159,7 +159,7 @@ export function QuestionField({
         <DateField inputId={inputId} value={value as string | undefined} placeholder={field.placeholder} onChange={onChange} />
       )}
       {field.type === 'select' && (
-        <MyazaSelect
+        <UiSelect
           id={inputId}
           value={(value as string) || undefined}
           placeholder={field.placeholder ?? t('questionnaire.selectPlaceholder')}

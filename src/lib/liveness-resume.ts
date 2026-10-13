@@ -9,10 +9,10 @@
 // Same rule as the React Native SDK's lib/livenessResume.ts and the Flutter
 // SDK's config/liveness_resume.dart. Change all three together.
 
-import type { KYCStep } from '../types/config';
+import type { VerificationStep } from '../types/config';
 
 /** Steps that, once a selfie exists, can only be reached after liveness. */
-const AFTER_LIVENESS: ReadonlySet<string> = new Set<KYCStep>([
+const AFTER_LIVENESS: ReadonlySet<string> = new Set<VerificationStep>([
   'supporting-documents',
   'proof-of-address',
   'address-search',

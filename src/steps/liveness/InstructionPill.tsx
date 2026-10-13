@@ -33,7 +33,7 @@ export function InstructionPill({
     tone === 'warning' ? (
       <TriangleAlert className="h-5 w-5 shrink-0 text-destructive" aria-hidden />
     ) : tone === 'done' ? (
-      <CircleCheck className="h-5 w-5 shrink-0 text-[var(--kyc-success)]" aria-hidden />
+      <CircleCheck className="h-5 w-5 shrink-0 text-[var(--verification-success)]" aria-hidden />
     ) : (
       (leading ?? null)
     );

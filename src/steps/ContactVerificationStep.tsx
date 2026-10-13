@@ -10,8 +10,8 @@ import { useText } from '../i18n';
 import { ContactDestinationField } from './ContactDestinationField';
 import { ContactCodePanel } from './ContactCodePanel';
 import { stepAfterContactVerified } from './contact-recovery';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { stepAfterContact } from '../lib/contact-steps';
 import { isBusinessFlow } from '../lib/business';
 import { describeSendError, describeCheckError } from '../lib/contact-errors';
@@ -24,8 +24,8 @@ import { defaultCountry } from '../lib/country-default';
 const DEFAULT_CODE_LENGTH = 6;
 
 export function ContactVerificationStep({ channel }: { channel: 'email' | 'phone' }) {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
   const isEmail = channel === 'email';
   const stepConfig = isEmail ? config.emailVerification : config.phoneVerification;

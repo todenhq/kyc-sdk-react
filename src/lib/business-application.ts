@@ -12,7 +12,7 @@ import type {
   KeyPersonRole,
   WorkflowBusinessConfig,
 } from '../types/business';
-import type { KYCStep, QuestionnaireConfig, AddressCollectionConfig } from '../types/config';
+import type { VerificationStep, QuestionnaireConfig, AddressCollectionConfig } from '../types/config';
 import type { KeyPersonEntry } from '../context/types';
 import { hasActiveQuestionnaire } from './questionnaire';
 import { isValidContactEmail } from './business';
@@ -164,7 +164,7 @@ export function nextBusinessStep(
     questionnaire?: QuestionnaireConfig;
     addressCollection?: AddressCollectionConfig;
   },
-): KYCStep {
+): VerificationStep {
   if (current === 'applicant-role') return 'id-type';
   const order = businessSectionSteps(
     config.business,
@@ -184,7 +184,7 @@ export function prevBusinessStep(
     questionnaire?: QuestionnaireConfig;
     addressCollection?: AddressCollectionConfig;
   },
-): KYCStep {
+): VerificationStep {
   const order = businessSectionSteps(
     config.business,
     hasActiveQuestionnaire(config.questionnaire),

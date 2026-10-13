@@ -9,7 +9,7 @@ import { themeRootOrDocument } from './sdk-frame-context';
  * previous theme back.
  *
  * The theme is the `.dark` class on the theme root (SdkFrame's shadow frame
- * when isolated, else documentElement), which drives both the `.dark .kyc-root`
+ * when isolated, else documentElement), which drives both the `.dark .verification-root`
  * tokens and Tailwind's `dark:` variants, and which `useIsDark` observes to
  * swap the org's inline palette. Removing the class is therefore the whole
  * switch: every surface, portals included, follows it, and the org's BASE
@@ -75,11 +75,11 @@ function systemPrefersDark(): boolean {
 
 /** Long enough for the 300 ms colour transition in globals.css to finish. */
 export const THEME_FADE_MS = 360;
-const FADE_CLASS = 'kyc-theme-fade';
+const FADE_CLASS = 'verification-theme-fade';
 const fadeTimers = new WeakMap<ThemeRootLike, ReturnType<typeof setTimeout>>();
 
 /**
- * Crossfade the switch: `kyc-theme-fade` turns on a short colour transition for
+ * Crossfade the switch: `verification-theme-fade` turns on a short colour transition for
  * the SDK's surfaces (globals.css), only while the theme changes, so it never
  * slows an ordinary hover. The CSS sits behind `prefers-reduced-motion:
  * no-preference`, so a person who asked for less motion gets an instant switch.

@@ -42,7 +42,7 @@ function ErrorFallbackCopy({ onReset }: { onReset: () => void }) {
   );
 }
 
-export class KYCErrorBoundary extends Component<Props, State> {
+export class VerificationErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -56,7 +56,7 @@ export class KYCErrorBoundary extends Component<Props, State> {
     // Surface the real error — without this the boundary silently hides what
     // actually threw, making bugs (e.g. on liveness retake) undiagnosable.
     // eslint-disable-next-line no-console
-    console.error('[MyazaKYC] Uncaught error in KYC flow:', error, info.componentStack);
+    console.error('[Verification] Uncaught error in KYC flow:', error, info.componentStack);
     this.props.onError?.(error);
   }
 

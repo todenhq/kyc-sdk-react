@@ -4,7 +4,7 @@
 // device's hash. Best-effort and SSR-safe; a signal that can't be read is
 // omitted, and nothing here throws.
 //
-// The audio render is async, so it is PRIMED early (KYCConfigProvider, on
+// The audio render is async, so it is PRIMED early (VerificationConfigProvider, on
 // mount) and read from a cache at submit; the submit path stays sync. A submit
 // that beats the render simply sends no `audioHash`.
 

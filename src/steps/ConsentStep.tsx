@@ -4,8 +4,8 @@ import { configScope, isFaceScope } from '../lib/scope';
 import React from 'react';
 import { ShieldCheck, Lock, RotateCcw } from '../components/icons';
 import { Button } from '../components/ui/button';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { useText } from '../i18n';
 import { isBusinessFlow } from '../lib/business';
 import { firstStepAfterConsent } from '../lib/contact-steps';
@@ -17,8 +17,8 @@ import { consentDescription, consentProcessSteps, consentTitle } from './consent
 import { ConsentLegalNotice } from './ConsentLegalNotice';
 
 export function ConsentStep() {
-  const { dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const isBusiness = isBusinessFlow(config);
   const scope = isBusiness ? null : configScope(config);
   const faceScope = isFaceScope(scope);

@@ -20,7 +20,7 @@ describe('bright screen during the selfie is wired', () => {
   });
 
   it('the modal holds the light theme and hides the toggle meanwhile', () => {
-    const modal = read('components/KYCModal.tsx');
+    const modal = read('components/VerificationModal.tsx');
     expect(modal).toContain('useLivenessLight(');
     expect(modal).toContain('<LivenessCameraContext.Provider value={reportCameraShown}>');
     expect(modal).toContain('showThemeToggle={forceLight ? false : showThemeToggle}');

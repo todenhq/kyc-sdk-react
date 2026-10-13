@@ -1,7 +1,7 @@
 import type {
   AddressCollectionConfig,
   EmailVerificationConfig,
-  KYCStep,
+  VerificationStep,
   PhoneVerificationConfig,
   ProofOfAddressConfig,
   QuestionnaireConfig,
@@ -38,7 +38,7 @@ interface ContactStepConfig {
 }
 
 /** The step that follows the flow's contact section (or consent when none). */
-function stepAfterContactSection(config: ContactStepConfig): KYCStep {
+function stepAfterContactSection(config: ContactStepConfig): VerificationStep {
   if (config.subjectTypeIsBusiness) return 'business-details';
   // Scoped flows have no identity section — each goes straight to its
   // headline step. The biometric scopes run the liveness capture; the
@@ -61,7 +61,7 @@ function stepAfterContactSection(config: ContactStepConfig): KYCStep {
 export function lastContactStep(config: {
   emailVerification?: EmailVerificationConfig;
   phoneVerification?: PhoneVerificationConfig;
-}): KYCStep {
+}): VerificationStep {
   if (hasPhoneVerificationStep(config.phoneVerification)) return 'phone-verification';
   if (hasEmailVerificationStep(config.emailVerification)) return 'email-verification';
   return 'consent';
@@ -87,20 +87,20 @@ export function stepBeforeLiveness(
     scope?: import('./scope').WorkflowScope | string;
   },
   evidence: 'document-capture' | 'id-input',
-): KYCStep {
+): VerificationStep {
   if (isFaceScope(configScope(config))) return lastContactStep(config);
   return evidence;
 }
 
 /** Where Continue on the consent step goes. */
-export function firstStepAfterConsent(config: ContactStepConfig): KYCStep {
+export function firstStepAfterConsent(config: ContactStepConfig): VerificationStep {
   if (hasEmailVerificationStep(config.emailVerification)) return 'email-verification';
   if (hasPhoneVerificationStep(config.phoneVerification)) return 'phone-verification';
   return stepAfterContactSection(config);
 }
 
 /** Where Continue on a contact step goes. */
-export function stepAfterContact(config: ContactStepConfig, current: 'email-verification' | 'phone-verification'): KYCStep {
+export function stepAfterContact(config: ContactStepConfig, current: 'email-verification' | 'phone-verification'): VerificationStep {
   if (current === 'email-verification' && hasPhoneVerificationStep(config.phoneVerification)) {
     return 'phone-verification';
   }

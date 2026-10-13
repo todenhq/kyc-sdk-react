@@ -1,4 +1,4 @@
-import { KYCApiError } from '../services/api';
+import { VerificationApiError } from '../services/api';
 import { defaultText } from '../i18n/translate';
 import type { TextFn } from '../i18n/types';
 
@@ -19,7 +19,7 @@ const SEND_ERRORS: Record<string, string> = {
 };
 
 function describe(err: unknown, map: Record<string, string>, t: TextFn): string {
-  if (err instanceof KYCApiError && err.code && map[err.code]) return t(map[err.code]!);
+  if (err instanceof VerificationApiError && err.code && map[err.code]) return t(map[err.code]!);
   if (err instanceof TypeError) return t('contact.error.network');
   return t('contact.error.generic');
 }

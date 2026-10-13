@@ -5,14 +5,14 @@ import { recordStep } from '../lib/step-log';
 import { normalizeRestoredKeyPeople } from '../lib/key-person-normalize';
 import { withoutUnrecordedSelfie } from '../lib/liveness-resume';
 import { primeDeviceHints } from '../utils/device-metadata';
-import type { KYCState, KYCAction } from './types';
+import type { VerificationState, VerificationAction } from './types';
 import { IDLE_SELFIE_UPLOAD } from '../lib/selfie-upload-wait';
 
 // ---------------------------------------------------------------------------
 // Initial state
 // ---------------------------------------------------------------------------
 
-export const initialKYCState: KYCState = {
+export const initialVerificationState: VerificationState = {
   currentStep: 'consent',
   openingStep: 'consent',
   status: 'idle',
@@ -55,7 +55,7 @@ export const initialKYCState: KYCState = {
 // Reducer
 // ---------------------------------------------------------------------------
 
-export function kycReducer(state: KYCState, action: KYCAction): KYCState {
+export function verificationReducer(state: VerificationState, action: VerificationAction): VerificationState {
   switch (action.type) {
     case 'OPEN_MODAL':
       return { ...state, isOpen: true };
@@ -84,10 +84,10 @@ export function kycReducer(state: KYCState, action: KYCAction): KYCState {
         mediaIds: action.payload.mediaIds as Record<string, unknown> | undefined,
       }) as { step: typeof action.payload.step; mediaIds: typeof action.payload.mediaIds };
       const { data } = action.payload;
-      const d = (data ?? {}) as Partial<KYCState>;
+      const d = (data ?? {}) as Partial<VerificationState>;
       return {
         ...state,
-        ...(step ? { currentStep: step as KYCState['currentStep'] } : {}),
+        ...(step ? { currentStep: step as VerificationState['currentStep'] } : {}),
         ...(mediaIds ? { mediaIds: { ...state.mediaIds, ...mediaIds } } : {}),
         ...(d.selectedCountry ? { selectedCountry: d.selectedCountry } : {}),
         ...(d.selectedIdType ? { selectedIdType: d.selectedIdType } : {}),
@@ -223,7 +223,7 @@ export function kycReducer(state: KYCState, action: KYCAction): KYCState {
     }
 
     case 'CLOSE_MODAL':
-      return { ...initialKYCState };
+      return { ...initialVerificationState };
 
     case 'SET_STEP':
       return { ...state, currentStep: action.payload, error: null };
@@ -538,7 +538,7 @@ export function kycReducer(state: KYCState, action: KYCAction): KYCState {
     case 'RESET':
       // A cancellation is the server's answer about this attempt; reopening the
       // modal cannot undo it, only an admin's uncancel can.
-      return { ...initialKYCState, sessionCancelled: state.sessionCancelled };
+      return { ...initialVerificationState, sessionCancelled: state.sessionCancelled };
   }
 }
 
@@ -546,18 +546,18 @@ export function kycReducer(state: KYCState, action: KYCAction): KYCState {
 // Context
 // ---------------------------------------------------------------------------
 
-interface KYCContextValue {
-  state: KYCState;
-  dispatch: React.Dispatch<KYCAction>;
+interface VerificationContextValue {
+  state: VerificationState;
+  dispatch: React.Dispatch<VerificationAction>;
 }
 
-const KYCContext = createContext<KYCContextValue | null>(null);
+const VerificationContext = createContext<VerificationContextValue | null>(null);
 
 // ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
 
-export function KYCProvider({
+export function VerificationProvider({
   children,
   initialStep,
 }: {
@@ -567,9 +567,9 @@ export function KYCProvider({
    * ON the terminal step: dispatching it after mount would paint the consent
    * screen (and a "step 1 of N" progress bar) for a frame first.
    */
-  initialStep?: KYCState['currentStep'];
+  initialStep?: VerificationState['currentStep'];
 }) {
-  const [state, dispatch] = useReducer(kycReducer, initialKYCState, (base) =>
+  const [state, dispatch] = useReducer(verificationReducer, initialVerificationState, (base) =>
     initialStep ? { ...base, currentStep: initialStep } : base,
   );
 
@@ -595,16 +595,16 @@ export function KYCProvider({
     primeDeviceHints();
   }, []);
 
-  const value = useMemo<KYCContextValue>(() => ({ state, dispatch }), [state]);
-  return <KYCContext.Provider value={value}>{children}</KYCContext.Provider>;
+  const value = useMemo<VerificationContextValue>(() => ({ state, dispatch }), [state]);
+  return <VerificationContext.Provider value={value}>{children}</VerificationContext.Provider>;
 }
 
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useKYCContext(): KYCContextValue {
-  const ctx = useContext(KYCContext);
-  if (!ctx) throw new Error('useKYCContext must be used within a <KYCProvider>');
+export function useVerificationContext(): VerificationContextValue {
+  const ctx = useContext(VerificationContext);
+  if (!ctx) throw new Error('useVerificationContext must be used within a <VerificationProvider>');
   return ctx;
 }

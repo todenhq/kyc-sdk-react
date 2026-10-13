@@ -2,12 +2,12 @@
 
 import { configScope, SCOPE_ID_TYPES } from '../lib/scope';
 import { useEffect, useRef, useState } from "react";
-import { useKYCContext } from "../context/KYCContext";
-import { useKYCConfig } from "../context/KYCConfigContext";
+import { useVerificationContext } from "../context/VerificationContext";
+import { useVerificationConfig } from "../context/VerificationConfigContext";
 import { withRetry } from "../lib/retry";
-import { mapToKycError } from "../lib/errors";
+import { mapToVerificationError } from "../lib/errors";
 import { isBusinessFlow } from "../lib/business";
-import { KYCError } from "../types/verification";
+import { VerificationError } from "../types/verification";
 import {
 	generateRequestId,
 	buildSubmitMetadata,
@@ -18,7 +18,7 @@ import {
 import { contactStepFor, expiredContactChannels } from "./contact-recovery";
 import { recoveryStepFor, serverRefusalOf } from "../lib/submit-recovery";
 import { isSessionCancelledError, sessionCancelledMessage } from "../lib/session-cancelled";
-import type { KYCStep } from "../types/config";
+import type { VerificationStep } from "../types/config";
 import { multiIdWireSlots } from "../lib/multi-id";
 import { keepsIdEvidence } from "../lib/resubmit";
 import { submitBusinessApplication } from "./submit-business";
@@ -35,23 +35,23 @@ import { requiredPrefillSubmission } from './address/address-field-modes';
 import { describeWaiting } from '../lib/result-copy';
 import { biometricCopyFor } from '../lib/biometric-copy';
 import { showsDoneButton, showsSelfieReview, waitsForResult } from '../lib/biometric-options';
-import { IDLE_SELFIE_UPLOAD } from '../lib/selfie-upload-wait';
+import { IDLE_SELFIE_UPLOAD, selfieUploadExpected } from '../lib/selfie-upload-wait';
 import { settleLivenessVideo } from '../lib/integrity-signals';
 import { useSelfieUploadGate } from './selfie-upload-gate';
 import { SubmittedResult } from './SubmittedResult';
 import { useText } from '../i18n';
 
 /**
- * `stepOrder` is this flow's current step order (KYCModal builds it), so a
+ * `stepOrder` is this flow's current step order (VerificationModal builds it), so a
  * refused submission can offer Go back to the step that fixes it.
  */
-export function SubmittedStep({ stepOrder = [] }: { stepOrder?: readonly KYCStep[] } = {}) {
-	const { state, dispatch } = useKYCContext();
-	const config = useKYCConfig();
+export function SubmittedStep({ stepOrder = [] }: { stepOrder?: readonly VerificationStep[] } = {}) {
+	const { state, dispatch } = useVerificationContext();
+	const config = useVerificationConfig();
 	const t = useText();
 	// Where Go back lands after a refusal (lib/submit-recovery.ts); null when
 	// going back cannot help.
-	const [recoverTo, setRecoverTo] = useState<KYCStep | null>(null);
+	const [recoverTo, setRecoverTo] = useState<VerificationStep | null>(null);
 
 	// Increment to trigger a (re-)submission; starts at 0 to fire on mount.
 	const [submitTrigger, setSubmitTrigger] = useState(0);
@@ -81,10 +81,16 @@ export function SubmittedStep({ stepOrder = [] }: { stepOrder?: readonly KYCStep
 	// The biometric scopes hand over BEFORE the selfie upload lands (the review
 	// is off, so nothing on the liveness step gated on it): wait for the
 	// upload's own record here, under the same loading screen. Settled from
-	// the start on every flow that shows the review. A failed upload was
-	// already reported to onError by the step that ran it.
+	// the start on every flow that shows the review, and on every flow with no
+	// selfie to upload (no liveness step). A failed upload was already
+	// reported to onError by the step that ran it.
 	const uploadGate = useSelfieUploadGate({
-		enabled: !showsSelfieReview(config),
+		enabled:
+			!showsSelfieReview(config) &&
+			selfieUploadExpected(
+				{ selfieUpload: state.selfieUpload, selfieMediaId: state.mediaIds.selfie },
+				stepOrder.includes('liveness'),
+			),
 		selfieUpload: state.selfieUpload,
 		selfieMediaId: state.mediaIds.selfie,
 	});
@@ -92,7 +98,7 @@ export function SubmittedStep({ stepOrder = [] }: { stepOrder?: readonly KYCStep
 	useEffect(() => {
 		if (uploadGate === 'waiting') return;
 		if (!uploadGate.ok) {
-			dispatch({ type: "SET_ERROR", payload: new KYCError("upload_failed", uploadGate.message) });
+			dispatch({ type: "SET_ERROR", payload: new VerificationError("upload_failed", uploadGate.message) });
 			return;
 		}
 		// Guard against React 18 Strict Mode double-invocation in dev — without
@@ -121,7 +127,7 @@ export function SubmittedStep({ stepOrder = [] }: { stepOrder?: readonly KYCStep
 		// A replay of an application that already committed is answered from
 		// the row that exists, whatever the restored form still holds.
 		if (!state.resumedApplication && !state.business.registrationNumber.trim()) {
-			dispatch({ type: "SET_ERROR", payload: new KYCError("unknown", t("result.error.missingRegistrationNumber")) });
+			dispatch({ type: "SET_ERROR", payload: new VerificationError("unknown", t("result.error.missingRegistrationNumber")) });
 			return;
 		}
 		const result = await submitBusinessApplication({ config, state, requestId, onRetry });
@@ -143,7 +149,7 @@ export function SubmittedStep({ stepOrder = [] }: { stepOrder?: readonly KYCStep
 				? multiSlots[0]!.idType
 				: state.selectedIdType;
 		if (!primaryIdType) {
-			dispatch({ type: "SET_ERROR", payload: new KYCError("unknown", t("result.error.missingIdType")) });
+			dispatch({ type: "SET_ERROR", payload: new VerificationError("unknown", t("result.error.missingIdType")) });
 			return;
 		}
 		const isNumberOnly = multiSlots
@@ -154,7 +160,7 @@ export function SubmittedStep({ stepOrder = [] }: { stepOrder?: readonly KYCStep
 		// number the earlier attempt gave.
 		const idKept = !multiSlots && keepsIdEvidence(config.resubmit);
 		if (!multiSlots && isNumberOnly && !idNumber && !idKept) {
-			dispatch({ type: "SET_ERROR", payload: new KYCError("unknown", t("result.error.missingIdNumber")) });
+			dispatch({ type: "SET_ERROR", payload: new VerificationError("unknown", t("result.error.missingIdNumber")) });
 			return;
 		}
 
@@ -404,7 +410,7 @@ export function SubmittedStep({ stepOrder = [] }: { stepOrder?: readonly KYCStep
 			setRecoverTo(
 				refusal ? recoveryStepFor(refusal.code, stepOrder, { mediaKey: refusal.mediaKey }) : null,
 			);
-			dispatch({ type: "SET_ERROR", payload: mapToKycError(err, "verify", t) });
+			dispatch({ type: "SET_ERROR", payload: mapToVerificationError(err, "verify", t) });
 		}
 	}
 

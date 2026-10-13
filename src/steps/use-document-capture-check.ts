@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useKYCConfig } from "../context/KYCConfigContext";
-import { useKYCContext } from "../context/KYCContext";
+import { useVerificationConfig } from "../context/VerificationConfigContext";
+import { useVerificationContext } from "../context/VerificationContext";
 import {
 	captureCheckProblems,
 	type CaptureProblem,
@@ -14,8 +14,8 @@ import {
  * side, and hold what the applicant is asked to fix until they retake or carry on.
  */
 export function useDocumentCaptureCheck() {
-	const config = useKYCConfig();
-	const { state } = useKYCContext();
+	const config = useVerificationConfig();
+	const { state } = useVerificationContext();
 	const [problems, setProblems] = useState<CaptureProblem[] | null>(null);
 	const clear = useCallback(() => setProblems(null), []);
 

@@ -17,26 +17,23 @@ describe('MYAZA_QR_LOGO', () => {
     // as an overlay.
     const s = svg();
     expect(s).toContain('#FFFFFF');
-    expect(s.match(/<rect/g)?.length).toBe(2);
+    expect(s.match(/<rect/g)?.length).toBe(3);
   });
 
-  it('reverses the mark for a saturated ground', () => {
-    // The mark's own indigo body is illegible on the brand gradient at 40px.
+  it('draws the mark in white on the logo ink', () => {
     const s = svg();
-    expect(s).toContain('#5645F5');
+    expect(s).toContain('#080A12');
     expect(s).not.toContain('linearGradient');
-    expect(s).not.toContain('#19156F');
   });
 
-  it('drops the outer blob and keeps the glyph', () => {
-    // At ~40px the faint outer shape muddied the mark rather than framing it,
-    // so what is left is the glyph alone: two paths, not the wordmark's three.
+  it('carries the mark alone, without the lettering', () => {
+    // The bar is the second rect inside the tile's group; the shield is two paths.
     expect(svg().match(/<path/g)?.length).toBe(2);
   });
 
   it('scales the glyph to fill the tile', () => {
     // Rendered at its native size inside the tile it read as a speck, which was
     // the whole complaint.
-    expect(svg()).toMatch(/scale\(1\.\d+\)/);
+    expect(svg()).toMatch(/scale\(0\.259\)/);
   });
 });

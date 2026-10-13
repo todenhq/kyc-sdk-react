@@ -37,7 +37,7 @@ export function faceMeshSources(origin: FaceMeshOrigin = {}): string[] {
   const server = trimmed(origin.serverUrl);
   const sources = [
     own ? `${own}/face-mesh/` : null,
-    server ? `${server}/api/kyc/assets/face-mesh/${FACE_MESH_VERSION}/` : null,
+    server ? `${server}/api/v1/assets/face-mesh/${FACE_MESH_VERSION}/` : null,
     `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@${FACE_MESH_VERSION}/`,
   ];
   return [...new Set(sources.filter((s): s is string => s !== null))];

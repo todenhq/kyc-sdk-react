@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { StepHeader } from '../components/StepHeader';
 import { supportingDocumentsIntro } from './supporting-documents-intro';
 import { Button } from '../components/ui/button';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { BUSINESS_DOC_ACCEPTED_MIMES } from './BusinessDocumentSlot';
 import { SupportingDocumentCard } from './SupportingDocumentCard';
 import { isPdfMime, uploadSizeError } from '../lib/upload-limits';
@@ -13,7 +13,7 @@ import { resolveSupportingDocuments, verifiedIdsFromState } from '../lib/support
 import { stepAfterSupportingDocuments } from '../lib/post-capture';
 import { stepBeforeSupportingDocuments } from '../lib/supporting-documents-nav';
 import { useText } from '../i18n';
-import { KYCApiError } from '../services/api';
+import { VerificationApiError } from '../services/api';
 import { hasSignature, type SignatureDrawing } from '../lib/signature';
 
 /**
@@ -30,11 +30,11 @@ import { hasSignature, type SignatureDrawing } from '../lib/signature';
  * title alone says nothing about what handing it over is FOR.
  *
  * Which documents are asked for depends on the ID they picked, so this step
- * only appears when that resolution produces something (see KYCModal).
+ * only appears when that resolution produces something (see VerificationModal).
  */
 export function SupportingDocumentsStep() {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
   const slots = resolveSupportingDocuments(
     config.supportingDocuments,
@@ -99,7 +99,7 @@ export function SupportingDocumentsStep() {
         payload: [...uploads.filter((d) => d.type !== key), { type: key, mediaId, method: 'drawn' }],
       });
     } catch (err) {
-      const empty = err instanceof KYCApiError && err.code === 'signature_empty';
+      const empty = err instanceof VerificationApiError && err.code === 'signature_empty';
       setError(key, t(empty ? 'supportingDocuments.error.signatureEmpty' : 'supportingDocuments.error.signatureFailed'));
     } finally {
       setUploadingKey(null);

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { KYCAppearance } from '../types/config';
+import type { VerificationAppearance } from '../types/config';
 import { fontVars, radiusVars } from './theme-tokens';
 
 /**
@@ -12,14 +12,14 @@ import { fontVars, radiusVars } from './theme-tokens';
  *
  * Tokens left unset fall back to the built-in light/dark values in globals.css.
  */
-export function buildThemeVars(appearance?: KYCAppearance, isDark = false): CSSProperties {
+export function buildThemeVars(appearance?: VerificationAppearance, isDark = false): CSSProperties {
   if (!appearance) return {};
 
   // The dark block overrides the base colours when the flow is in dark mode.
   // Without it a branded flow was stuck on its light palette after toggling,
   // because these are INLINE custom properties and an inline style outranks the
-  // `.dark .kyc-root` rules that would otherwise supply dark values.
-  const merged: KYCAppearance = isDark && appearance.dark ? { ...appearance, ...appearance.dark } : appearance;
+  // `.dark .verification-root` rules that would otherwise supply dark values.
+  const merged: VerificationAppearance = isDark && appearance.dark ? { ...appearance, ...appearance.dark } : appearance;
   appearance = merged;
 
   const vars: Record<string, string> = {};
@@ -68,7 +68,7 @@ export function buildThemeVars(appearance?: KYCAppearance, isDark = false): CSSP
  * merge as the vars). Returned as a value, not a CSS var: the overlay is a
  * portal sibling of the themed content, so inline vars never reach it.
  */
-export function resolveOverlayColor(appearance?: KYCAppearance, isDark = false): string | undefined {
+export function resolveOverlayColor(appearance?: VerificationAppearance, isDark = false): string | undefined {
   if (!appearance) return undefined;
   const merged = isDark && appearance.dark ? { ...appearance, ...appearance.dark } : appearance;
   return merged.overlayColor || undefined;

@@ -1,6 +1,6 @@
 // Reading the server's capture check into what the applicant is asked to fix.
 //
-// After a document is uploaded, `POST /api/kyc/document-capture/check` says
+// After a document is uploaded, `POST /api/v1/document-capture/check` says
 // whether the verification can read it: a face on the printed photo, a barcode
 // that decodes. `false` means a detector looked and found nothing, which is worth
 // a retake; `null` means it was not checked or could not look, which is not. A

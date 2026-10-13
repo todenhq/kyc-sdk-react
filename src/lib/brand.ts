@@ -1,37 +1,30 @@
 /**
  * Vendor brand constants for the SDK's own attribution — NOT the integrating
- * org's branding (that is `useBranding()`, driven by `/api/kyc/config`).
+ * org's branding (that is `useBranding()`, driven by `/api/v1/config`).
  *
- * The platform is **Myaza Trust**, a product of **Myaza** (the parent company).
- * Always the full product name here: bare "Myaza" is the company, and a pipe
- * ("Myaza | Trust") reads as a separator between two items rather than one
- * name — fragmenting the brand at the exact moment we are trying to establish
- * it. See the naming rule in kyc-dashboard/CLAUDE.md.
+ * The platform is **Toden** (it was Myaza Trust).
  */
-export const PRODUCT_NAME = 'Myaza Trust';
+export const PRODUCT_NAME = 'Toden';
 
 /** The product site — where "who are these people?" gets answered. */
-export const PRODUCT_URL = 'https://trust.myaza.co';
+export const PRODUCT_URL = 'https://toden.co';
 
 /**
- * The Myaza brand face, hardcoded — NOT `var(--font-heading)`.
+ * The Toden brand face, hardcoded — NOT `var(--font-heading)`.
  *
- * "TRUST" is half of the wordmark lockup, not UI copy, so it must survive an
+ * For text that is part of our own mark rather than UI copy, so it survives an
  * org's typography settings. Reading a token would defeat that: `--font-heading`
  * and `--font-sans` are exactly what `appearance.headingFontFamily` /
  * `fontFamily` overwrite, so an org choosing Poppins would silently restyle our
  * mark into their own brand.
  *
- * KARLA, matching the dashboard sidebar's lockup. Worth stating because the
- * obvious guess is wrong: the sidebar's "Trust" span sets no font-family, so it
- * inherits the dashboard BODY face (`--font-sans: var(--font-karla)`) — not the
- * Space Grotesk heading face the wordmark sits beside.
+ * BRICOLAGE GROTESQUE, the face the console and the Toden logo are set in.
  *
  * Named, not loaded — matching how the SDK treats its own defaults everywhere
  * else — so it falls back to `system-ui` on a page that lacks it rather than
  * costing a webfont fetch for one word.
  */
-export const BRAND_FONT_STACK = '"Karla", system-ui, sans-serif';
+export const BRAND_FONT_STACK = '"Bricolage Grotesque", system-ui, sans-serif';
 
 /**
  * End-user legal documents linked from the consent screen.
@@ -40,8 +33,8 @@ export const BRAND_FONT_STACK = '"Karla", system-ui, sans-serif';
  * to us processing their data as the verification provider, so the links must
  * not be org-overridable.
  */
-export const TERMS_URL = 'https://trust.myaza.co/legal/terms';
-export const PRIVACY_URL = 'https://trust.myaza.co/legal/privacy';
+export const TERMS_URL = 'https://toden.co/legal/terms';
+export const PRIVACY_URL = 'https://toden.co/legal/privacy';
 
 /**
  * Version of the consent wording shown on the Continue screen.
@@ -52,7 +45,7 @@ export const PRIVACY_URL = 'https://trust.myaza.co/legal/privacy';
  * verification — without it you cannot later prove which disclosure was on
  * screen when someone consented, which is the whole evidentiary value.
  */
-export const CONSENT_VERSION = '2026-08-06.1';
+export const CONSENT_VERSION = '2026-10-12.1';
 
 /**
  * Tones the footer mark may use — the design system's INK and LIGHT text
@@ -64,12 +57,18 @@ export const CONSENT_VERSION = '2026-08-06.1';
  * signature. Every comparable vendor mark (Stripe, Plaid, Persona) is monochrome
  * for the same reason.
  *
- * Nothing is lost by it — the logo ICON keeps its fixed brand fills, so the
- * Myaza identity is still carried by the mark itself while the text recedes.
- * These two are the design system's own text tones, so this stays on-brand
- * rather than arbitrary black-on-white.
+ * Nothing is lost by it — the shield keeps its purple half, so the Toden
+ * identity is still carried by the mark itself while the text recedes. These
+ * two are the design system's own text tones (the ink the Toden logo is drawn
+ * in, and the light text tone), so this stays on-brand rather than arbitrary
+ * black-on-white.
  */
-const MARK_TONES = ['#070330', '#F6F5FE'] as const;
+const MARK_TONES = ['#080A12', '#F6F5FE'] as const;
+
+/** Whether a tone from `brandMarkColor` is the light one (the mark sits on a dark surface). */
+export function brandMarkIsLight(tone: string): boolean {
+  return tone.toUpperCase() === MARK_TONES[1];
+}
 
 /** WCAG AA for the small text this renders at. */
 const MIN_MARK_CONTRAST = 4.5;

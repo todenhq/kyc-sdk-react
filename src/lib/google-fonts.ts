@@ -31,6 +31,8 @@ export const FONT_WEIGHTS = '400;500;600;700';
 export const GOOGLE_FONTS: readonly GoogleFontDef[] = [
   // The SDK's own defaults, listed so an org can state them explicitly rather
   // than discovering that "unset" happens to mean these.
+  { family: 'Bricolage Grotesque', group: 'Sans' },
+  // The earlier defaults, kept because published workflows name them.
   { family: 'Karla', group: 'Sans' },
   { family: 'Space Grotesk', group: 'Sans' },
 
@@ -121,7 +123,8 @@ function appendOnce(el: HTMLLinkElement, key: string): void {
 /**
  * Load a picked Google font into the page, once.
  *
- * The SDK does not load its OWN fonts (it names Karla/Space Grotesk and falls
+ * The SDK does not load its OWN fonts (it names Bricolage Grotesque for headings
+ * and Geist for body, and falls
  * back to system-ui if the host hasn't loaded them). This is the deliberate
  * exception: a font chosen from a picker is one the host page almost certainly
  * does NOT have, so applying the family without fetching it would make every

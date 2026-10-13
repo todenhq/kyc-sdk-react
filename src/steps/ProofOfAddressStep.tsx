@@ -6,8 +6,8 @@ import { PoaDropzone, PoaUploadedRow, poaKindCta, poaKindLabel } from './ProofOf
 import { StepHeader } from '../components/StepHeader';
 import { AddressCountryControl } from './address/AddressCountryControl';
 import { Button } from '../components/ui/button';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { poaNamePolicy, poaOfferedKinds, stepAfterProofOfAddress } from '../lib/post-capture';
 import { poaCountryDeclared, poaOfferedCountries } from '../lib/poa-country-gate';
 import { lastContactStep } from '../lib/contact-steps';
@@ -24,8 +24,8 @@ const ACCEPTED_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'application/pd
  * reads it asynchronously (name match + recency) — the SDK only collects it.
  */
 export function ProofOfAddressStep() {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);

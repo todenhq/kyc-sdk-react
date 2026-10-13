@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { AwaitingPersonPayload, KYCApi } from '../services/api';
+import type { AwaitingPersonPayload, VerificationApi } from '../services/api';
 
 // The SERVER's list of who a submitted KYB application is waiting on.
 //
@@ -50,7 +50,7 @@ export interface AwaitingPeople {
 }
 
 export function useAwaitingPeople(
-  api: KYCApi,
+  api: VerificationApi,
   ref: { token?: string; sessionId?: string | null },
   enabled: boolean,
 ): AwaitingPersonPayload[] | null {

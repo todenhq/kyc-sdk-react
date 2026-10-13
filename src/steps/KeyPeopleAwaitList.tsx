@@ -51,8 +51,8 @@ function countryName(code: string): string {
 
 /** Status pill per state: `label` is its text key. */
 const STATUS: Record<AwaitRow['status'], { label: string; className: string }> = {
-  verified: { label: 'keyPeople.await.status.verified', className: 'bg-[var(--kyc-success)]/10 text-[var(--kyc-success)]' },
-  submitted: { label: 'keyPeople.await.status.submitted', className: 'bg-[var(--kyc-success)]/10 text-[var(--kyc-success)]' },
+  verified: { label: 'keyPeople.await.status.verified', className: 'bg-[var(--verification-success)]/10 text-[var(--verification-success)]' },
+  submitted: { label: 'keyPeople.await.status.submitted', className: 'bg-[var(--verification-success)]/10 text-[var(--verification-success)]' },
   pending: { label: 'keyPeople.await.status.kycPending', className: 'bg-primary/10 text-primary' },
   // Their invite was voided because the application itself ended. Nothing is
   // pending; it was called off, and saying "pending" sent people chasing links

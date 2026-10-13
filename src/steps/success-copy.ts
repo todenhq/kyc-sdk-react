@@ -1,6 +1,6 @@
 import type { CopyTokens } from '../lib/tokens';
 import type { SubmitSuccessAction } from './SubmittedScreens';
-import type { KYCSuccessContent } from '../types/config';
+import type { VerificationSuccessContent } from '../types/config';
 import type { WorkflowScope } from '../lib/scope';
 import { defaultText } from '../i18n/translate';
 import type { TextFn } from '../i18n/types';
@@ -22,7 +22,7 @@ function tokenVars(tokens: CopyTokens) {
 }
 
 export function successTitle(
-  success: KYCSuccessContent | undefined,
+  success: VerificationSuccessContent | undefined,
   tokens: CopyTokens,
   t: TextFn = defaultText,
 ): string {
@@ -42,7 +42,7 @@ const SCOPE_DESCRIPTION_KEYS: Partial<Record<WorkflowScope, string>> = {
 };
 
 export function successDescription(
-  success: KYCSuccessContent | undefined,
+  success: VerificationSuccessContent | undefined,
   tokens: CopyTokens,
   isBusiness: boolean,
   scope?: WorkflowScope | null,
@@ -63,7 +63,7 @@ export function successDescription(
  */
 export function successAction(
   opts: {
-    success: KYCSuccessContent | undefined;
+    success: VerificationSuccessContent | undefined;
     hostedMode: boolean;
     tokens: CopyTokens;
     onClose: () => void;

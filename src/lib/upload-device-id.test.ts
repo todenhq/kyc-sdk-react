@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { DEVICE_ID_HEADER, setUploadDeviceIdEnabled, uploadDeviceIdHeader } from './upload-device-id';
-import { createKYCApi } from '../services/api';
+import { createVerificationApi } from '../services/api';
 
 /** localStorage stand-in holding (or refusing) the per-install id. */
 function stubStorage(stored: string | null, blocked = false) {
@@ -55,7 +55,7 @@ describe('api.upload', () => {
   it('sends X-Myaza-Device-Id on the upload', async () => {
     stubStorage('did-abc');
     const fetchMock = stubFetch();
-    const id = await createKYCApi('https://api.test', 'pk_test_x').upload(new Blob(['x'], { type: 'image/jpeg' }), 'selfie');
+    const id = await createVerificationApi('https://api.test', 'pk_test_x').upload(new Blob(['x'], { type: 'image/jpeg' }), 'selfie');
     expect(id).toBe('med_1');
     expect(headersOf(fetchMock)[DEVICE_ID_HEADER]).toBe('did-abc');
     expect(headersOf(fetchMock).Authorization).toBe('Bearer pk_test_x');
@@ -65,7 +65,7 @@ describe('api.upload', () => {
     stubStorage('did-abc');
     setUploadDeviceIdEnabled(false);
     const fetchMock = stubFetch();
-    await createKYCApi('https://api.test', 'pk_test_x').upload(new Blob(['x'], { type: 'image/jpeg' }), 'selfie');
+    await createVerificationApi('https://api.test', 'pk_test_x').upload(new Blob(['x'], { type: 'image/jpeg' }), 'selfie');
     expect(headersOf(fetchMock)).not.toHaveProperty(DEVICE_ID_HEADER);
   });
 });

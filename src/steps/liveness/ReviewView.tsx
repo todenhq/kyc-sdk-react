@@ -55,7 +55,7 @@ export function ReviewView(p: ReviewViewProps) {
       preview={<img src={p.preview} alt="" className="h-full w-full object-cover" />}
       cutout={(window) => (
         <div
-          className="relative h-full w-full overflow-hidden border-4 border-[var(--kyc-success)]"
+          className="relative h-full w-full overflow-hidden border-4 border-[var(--verification-success)]"
           style={{ borderRadius: window.width / 2, boxShadow: '0 0 22px rgba(0,0,0,0.32)' }}
         >
           {p.busy && (
@@ -68,7 +68,7 @@ export function ReviewView(p: ReviewViewProps) {
       above={() => (
         <div className="flex justify-center" role="status" aria-live="polite">
           <Pill opacity={0.92} className="gap-2 text-sm font-semibold text-foreground">
-            <CircleCheck className="h-[18px] w-[18px] shrink-0 text-[var(--kyc-success)]" aria-hidden />
+            <CircleCheck className="h-[18px] w-[18px] shrink-0 text-[var(--verification-success)]" aria-hidden />
             <span>{p.title}</span>
           </Pill>
         </div>

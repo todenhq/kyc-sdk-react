@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { adoptionDecision, geoDefaultCountry } from './country-adoption';
 import { describeInMonorepo, sharedVectors } from '../../__tests__/monorepo';
 
-// ─── The shared vectors (kyc-sdk-flutter/test/country_adoption_vectors.json)
+// ─── The shared vectors (sdk-flutter/test/country_adoption_vectors.json)
 //
 // One rule decides when a geocode or a picked address may change the declared
 // country, on all three SDKs. The vectors are the one place it is written
@@ -27,7 +27,7 @@ interface GeoVector {
 }
 
 const shared = sharedVectors<{ adoption: AdoptionVector[]; geoDefault: GeoVector[] }>(
-  'kyc-sdk-flutter/test/country_adoption_vectors.json',
+  'sdk-flutter/test/country_adoption_vectors.json',
   { adoption: [], geoDefault: [] },
 );
 

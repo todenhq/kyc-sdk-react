@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useKYCContext } from '../context/KYCContext';
+import { useVerificationContext } from '../context/VerificationContext';
 import { useSessionProgress } from '../hooks/useSessionProgress';
-import type { HandoffBootstrapResponse, KYCApi } from '../services/api';
-import type { KYCStep } from '../types/config';
+import type { HandoffBootstrapResponse, VerificationApi } from '../services/api';
+import type { VerificationStep } from '../types/config';
 import { resumedApplicationFrom } from '../lib/resumed-application';
 
 /**
@@ -13,7 +13,7 @@ import { resumedApplicationFrom } from '../lib/resumed-application';
  *
  * BOTH halves were missing. The reducer never learned the id (a hosted mount
  * holds only the token), and useSessionProgress was mounted solely in
- * <MyazaKYC/>, so hosted links — the one place someone is most likely to close
+ * <Verification/>, so hosted links — the one place someone is most likely to close
  * the tab and come back — persisted nothing at all.
  */
 export function HostedSessionSync({
@@ -27,9 +27,9 @@ export function HostedSessionSync({
   /** The bootstrap's resume facts for a KYB application whose business half
    *  already committed (lib/resumed-application.ts). */
   bootstrap?: Pick<HandoffBootstrapResponse, 'applicantKeyPersonId' | 'parentVerificationId' | 'parentRequestId'>;
-  api: KYCApi;
+  api: VerificationApi;
 }) {
-  const { state, dispatch } = useKYCContext();
+  const { state, dispatch } = useVerificationContext();
   const restored = useRef(false);
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export function HostedSessionSync({
 }
 
 /**
- * The hosted flow's lifecycle callbacks — what `<MyazaKYC/>` fires from its
+ * The hosted flow's lifecycle callbacks — what `<Verification/>` fires from its
  * own component, mounted here instead because a hosted page has no trigger
  * component to fire them from. `onStart` once, when the flow mounts; `onStep`
  * for the step the flow opens on (a restored session opens mid-flow, and a
@@ -67,11 +67,11 @@ export function HostedLifecycle({
   onStepChange,
 }: {
   onStart?: () => void;
-  onStepChange?: (step: KYCStep) => void;
+  onStepChange?: (step: VerificationStep) => void;
 }) {
-  const { state } = useKYCContext();
+  const { state } = useVerificationContext();
   const started = useRef(false);
-  const lastStep = useRef<KYCStep | null>(null);
+  const lastStep = useRef<VerificationStep | null>(null);
 
   useEffect(() => {
     if (started.current) return;

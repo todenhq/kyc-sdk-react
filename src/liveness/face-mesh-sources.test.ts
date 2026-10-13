@@ -8,7 +8,7 @@ const CDN = `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@${FACE_MESH_VERSI
 describe('faceMeshSources', () => {
   it('tries the KYC server first and the pinned public CDN last', () => {
     expect(faceMeshSources({ serverUrl: 'https://trust.myaza.app' })).toEqual([
-      `https://trust.myaza.app/api/kyc/assets/face-mesh/${FACE_MESH_VERSION}/`,
+      `https://trust.myaza.app/api/v1/assets/face-mesh/${FACE_MESH_VERSION}/`,
       CDN,
     ]);
   });
@@ -18,7 +18,7 @@ describe('faceMeshSources', () => {
       faceMeshSources({ serverUrl: 'http://localhost:3001/', assetsBasePath: '/kyc-assets/' }),
     ).toEqual([
       '/kyc-assets/face-mesh/',
-      `http://localhost:3001/api/kyc/assets/face-mesh/${FACE_MESH_VERSION}/`,
+      `http://localhost:3001/api/v1/assets/face-mesh/${FACE_MESH_VERSION}/`,
       CDN,
     ]);
   });

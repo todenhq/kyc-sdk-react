@@ -35,7 +35,7 @@ const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
 >(({ className, children, position = 'popper', style, ...props }, ref) => {
-  // kyc-root only restores the DEFAULT tokens inside the portal; the brand
+  // verification-root only restores the DEFAULT tokens inside the portal; the brand
   // overrides are inline vars on the modal root, so re-apply them here.
   const themeVars = useThemeVars();
   // SdkFrame mounts portal into the SDK's shadow frame; null = document.body.
@@ -46,7 +46,7 @@ const SelectContent = React.forwardRef<
       ref={ref}
       position={position}
       className={cn(
-        'kyc-root relative z-[70] max-h-72 min-w-[8rem] overflow-hidden rounded-xl border border-border bg-background text-foreground shadow-md data-[state=open]:animate-fade-in',
+        'verification-root relative z-[70] max-h-72 min-w-[8rem] overflow-hidden rounded-xl border border-border bg-background text-foreground shadow-md data-[state=open]:animate-fade-in',
         position === 'popper' && 'w-full min-w-[var(--radix-select-trigger-width)] translate-y-1',
         className,
       )}

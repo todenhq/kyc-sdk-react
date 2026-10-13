@@ -9,7 +9,7 @@ import React from 'react';
  * ring paints OUTSIDE the element, where 5% black vanishes against a dark
  * page; the border paints on the white disc's edge, visible on any theme.
  *
- * ONE component shared by every brand header (KYCModal, DeviceHandoffGate) so
+ * ONE component shared by every brand header (VerificationModal, DeviceHandoffGate) so
  * the chip can never drift apart between surfaces again.
  */
 export function BrandLogoChip({

@@ -10,11 +10,11 @@
 // about something the applicant can fix (a missing document, a required
 // field), so the error screen offers Go back to the step that owns it, and the
 // flow resubmits when they return to the end.
-import { KYCApiError } from '../services/api';
-import type { KYCStep } from '../types/config';
+import { VerificationApiError } from '../services/api';
+import type { VerificationStep } from '../types/config';
 
 /** The step that owns each refusal the server names. Add-only. */
-const STEP_FOR_CODE: Readonly<Record<string, KYCStep>> = {
+const STEP_FOR_CODE: Readonly<Record<string, VerificationStep>> = {
   missing_documents: 'business-documents',
   missing_company_info: 'business-details',
   key_people_required: 'business-key-people',
@@ -27,7 +27,7 @@ const STEP_FOR_CODE: Readonly<Record<string, KYCStep>> = {
 };
 
 /** A capture the server could not accept, by the key it names. */
-const STEP_FOR_MEDIA_KEY: Readonly<Record<string, KYCStep>> = {
+const STEP_FOR_MEDIA_KEY: Readonly<Record<string, VerificationStep>> = {
   documentFront: 'document-capture',
   documentBack: 'document-capture',
   selfie: 'liveness',
@@ -47,7 +47,7 @@ const NOT_RECOVERABLE = new Set([
   'session_cancelled',
 ]);
 
-const has = (map: Readonly<Record<string, KYCStep>>, key: string): boolean =>
+const has = (map: Readonly<Record<string, VerificationStep>>, key: string): boolean =>
   Object.prototype.hasOwnProperty.call(map, key);
 
 /**
@@ -58,9 +58,9 @@ const has = (map: Readonly<Record<string, KYCStep>>, key: string): boolean =>
  */
 export function recoveryStepFor(
   serverCode: string,
-  order: readonly KYCStep[],
+  order: readonly VerificationStep[],
   opts: { mediaKey?: string | null } = {},
-): KYCStep | null {
+): VerificationStep | null {
   if (NOT_RECOVERABLE.has(serverCode)) return null;
   const mediaKey = opts.mediaKey;
   const named = has(STEP_FOR_CODE, serverCode)
@@ -82,7 +82,7 @@ export function recoveryStepFor(
  * as the Flutter client does.
  */
 export function serverRefusalOf(err: unknown): { code: string; mediaKey: string | null } | null {
-  if (!(err instanceof KYCApiError)) return null;
+  if (!(err instanceof VerificationApiError)) return null;
   const code =
     err.statusCode === 401
       ? 'invalid_api_key'

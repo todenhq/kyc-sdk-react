@@ -50,7 +50,7 @@ interface Frames {
 function makeFrame(shadow: ShadowRoot): HTMLElement {
   applySdkStyles(shadow);
   const frame = document.createElement('div');
-  frame.setAttribute('data-kyc-frame', '');
+  frame.setAttribute('data-verification-frame', '');
   // Scroll events stop at the boundary. Radix's scroll lock
   // (react-remove-scroll) preventDefaults wheel/touchmove at the DOCUMENT
   // unless its own React capture handler vouched for the event first — and
@@ -88,7 +88,7 @@ export function SdkFrame({ isolate = true, children }: { isolate?: boolean; chil
     // detached), so reuse its frame; StrictMode's double-invoke lands here.
     const inlineShadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
     const inline =
-      inlineShadow.querySelector<HTMLElement>('[data-kyc-frame]') ?? makeFrame(inlineShadow);
+      inlineShadow.querySelector<HTMLElement>('[data-verification-frame]') ?? makeFrame(inlineShadow);
 
     const portalHost = document.createElement('div');
     portalHost.setAttribute('data-myaza-kyc-portal', '');

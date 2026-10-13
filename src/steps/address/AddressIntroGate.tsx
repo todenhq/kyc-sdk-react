@@ -5,9 +5,9 @@ import { BellRing, MapPinCheck, MapPinHouse, Radar } from '../../components/icon
 import { Button } from '../../components/ui/button';
 import { IntroDisclosures } from './IntroDisclosures';
 import { cn } from '../../lib/utils';
-import { useKYCContext } from '../../context/KYCContext';
-import { useKYCConfig } from '../../context/KYCConfigContext';
-import type { KYCStep } from '../../types/config';
+import { useVerificationContext } from '../../context/VerificationContext';
+import { useVerificationConfig } from '../../context/VerificationConfigContext';
+import type { VerificationStep } from '../../types/config';
 import { useText, type TextFn } from '../../i18n';
 import { showsPresencePromise } from '../../lib/presence-promise';
 
@@ -56,9 +56,9 @@ const milestonesFor = (
   },
 ];
 
-export function useAddressIntroGate(step: KYCStep, firstStep: KYCStep): React.ReactElement | null {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+export function useAddressIntroGate(step: VerificationStep, firstStep: VerificationStep): React.ReactElement | null {
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
   // Only in the builder preview: a browser flow starts no presence watch
   // (lib/presence-promise.ts), so the primer would promise a check that never runs.

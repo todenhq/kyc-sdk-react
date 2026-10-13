@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { StepHeader } from '../../components/StepHeader';
-import { useKYCContext } from '../../context/KYCContext';
+import { useVerificationContext } from '../../context/VerificationContext';
 import { pickedAddressState } from '../address-helpers';
 import { useAddressFlow } from './use-address-flow';
 import { useAddressIntroGate } from './AddressIntroGate';
@@ -13,7 +13,7 @@ import { useText } from '../../i18n';
  *  picked suggestion, the current location, or "place a pin instead" — lands
  *  on the pin step. */
 export function AddressSearchStep() {
-  const { state, dispatch } = useKYCContext();
+  const { state, dispatch } = useVerificationContext();
   const t = useText();
   const flow = useAddressFlow();
   const gate = useAddressIntroGate('address-search', flow.steps[0]!);

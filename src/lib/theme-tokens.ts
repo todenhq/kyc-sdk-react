@@ -4,7 +4,7 @@
  */
 
 /**
- * Tailwind v4's built-in radius ladder, in px, as pinned by `.kyc-root` in
+ * Tailwind v4's built-in radius ladder, in px, as pinned by `.verification-root` in
  * globals.css. `xl` (12px) is the BASE — it is what buttons, inputs and cards
  * use, so it is the rung a consumer is really choosing when they say "our
  * corners are 4px".
@@ -30,17 +30,17 @@ const MAX_RADIUS_PX = 32;
 /**
  * Scale the whole radius ladder from one consumer-facing number.
  *
- * Emits `--kyc-radius-*`, NOT `--radius-*`, and that is the whole reason this
+ * Emits `--verification-radius-*`, NOT `--radius-*`, and that is the whole reason this
  * works. globals.css carries a host-isolation block that overrides every
- * `rounded-*` utility inside `.kyc-root` with a literal — deliberately outside
+ * `rounded-*` utility inside `.verification-root` with a literal — deliberately outside
  * any `@layer` and at higher specificity, so a host app's `@theme inline` cannot
  * reach in. That block also beat US: setting `--radius-*` changed nothing on
  * screen because the utility never read it.
  *
- * Those rules now read `var(--kyc-radius-<rung>, <literal>)`. The private
+ * Those rules now read `var(--verification-radius-<rung>, <literal>)`. The private
  * namespace is required, not cosmetic — `--radius-*` is exactly what a host's
  * `@theme` defines, so reading that would reopen the bleed the block exists to
- * close. Only this function sets `--kyc-radius-*`.
+ * close. Only this function sets `--verification-radius-*`.
  *
  * Proportional rather than absolute, so the visual RELATIONSHIP between a card
  * (2xl) and an input (xl) survives: at 0 everything squares off together; at 24
@@ -57,7 +57,7 @@ export function radiusVars(borderRadius?: number): Record<string, string> {
   for (const [rung, px] of Object.entries(RADIUS_LADDER_PX)) {
     // Round to 0.5px: sub-pixel radii render inconsistently across browsers and
     // buy nothing visually.
-    vars[`--kyc-radius-${rung}`] = `${Math.round(px * ratio * 2) / 2}px`;
+    vars[`--verification-radius-${rung}`] = `${Math.round(px * ratio * 2) / 2}px`;
   }
   return vars;
 }
@@ -112,6 +112,9 @@ export function fontVars(fontFamily?: string, headingFontFamily?: string): Recor
     // system-ui, never on the browser's serif default.
     vars['--font-sans'] = `${body}, system-ui, sans-serif`;
     vars['--font-body'] = `${body}, system-ui, sans-serif`;
+    // Body text at 16px and up is the org's body font too. Without this it
+    // would stay on the SDK's own Bricolage Grotesque beside their font.
+    vars['--font-copy'] = `${body}, system-ui, sans-serif`;
   }
   if (heading) vars['--font-heading'] = `${heading}, system-ui, sans-serif`;
   return vars;

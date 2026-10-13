@@ -1,4 +1,4 @@
-import type { KYCApi, VerificationStatusResponse, VerifyResponse } from './api';
+import type { VerificationApi, VerificationStatusResponse, VerifyResponse } from './api';
 
 /**
  * Preview-mode API wrapper (builder live preview). Every WRITE is stubbed so
@@ -7,7 +7,7 @@ import type { KYCApi, VerificationStatusResponse, VerifyResponse } from './api';
  * Read-only calls (config/workflow resolution) pass through untouched: the
  * preview still reflects the org's real granted ID types and branding.
  */
-export function withPreviewMocks(api: KYCApi): KYCApi {
+export function withPreviewMocks(api: VerificationApi): VerificationApi {
   let mediaCounter = 0;
   const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 

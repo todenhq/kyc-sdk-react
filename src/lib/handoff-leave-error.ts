@@ -1,4 +1,4 @@
-import { KYCApiError } from '../services/api';
+import { VerificationApiError } from '../services/api';
 
 /**
  * Why returning the phone handoff failed, in the applicant's terms.
@@ -24,7 +24,7 @@ const DEFAULTS: Record<string, string> = {
 
 export function handoffLeaveErrorMessage(error: unknown, onPhone: boolean, t?: Translate): string {
   const say = (key: string) => (t ? t(key) : DEFAULTS[key]!);
-  if (error instanceof KYCApiError) {
+  if (error instanceof VerificationApiError) {
     // The server refused because the session genuinely moved or was spent.
     if (error.code === 'handoff_session_in_use' || error.code === 'handoff_session_used') {
       return say(onPhone ? 'handoff.leave.inUse.phone' : 'handoff.leave.inUse.otherDevice');

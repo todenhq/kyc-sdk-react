@@ -8,8 +8,8 @@ import { StepHeader } from '../../components/StepHeader';
 import { LineSkeleton } from '../../components/LineSkeleton';
 import { Button } from '../../components/ui/button';
 import { cn } from '../../lib/utils';
-import { useKYCContext } from '../../context/KYCContext';
-import { useKYCConfig } from '../../context/KYCConfigContext';
+import { useVerificationContext } from '../../context/VerificationContext';
+import { useVerificationConfig } from '../../context/VerificationConfigContext';
 import { useAddressFlow } from './use-address-flow';
 import { ADDRESS_LINE_PENDING, displayAddressLine } from './flow-steps';
 import { missingAddressFieldsMessage, missingRequiredAddressFields } from './address-field-modes';
@@ -24,8 +24,8 @@ import { AddressSandboxOutcome } from './AddressSandboxOutcome';
  * link. The presence story lives on the intro screen, not here.
  */
 export function AddressReviewStep() {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
   const flow = useAddressFlow();
   const { pin } = flow;

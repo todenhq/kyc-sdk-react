@@ -11,19 +11,19 @@
 // back to the contact step (their data is untouched), and once re-verified
 // the step routes straight back to 'submitted', which auto-submits with the
 // fresh token. No re-walking the flow, no dead end.
-import { KYCApiError } from '../services/api';
-import type { KYCStep } from '../types/config';
+import { VerificationApiError } from '../services/api';
+import type { VerificationStep } from '../types/config';
 
 export type ContactChannel = 'email' | 'phone';
 
 /** The channels a 422 `contact_verification_required` names as missing. */
 export function expiredContactChannels(err: unknown): ContactChannel[] {
-  if (!(err instanceof KYCApiError) || err.code !== 'contact_verification_required') return [];
+  if (!(err instanceof VerificationApiError) || err.code !== 'contact_verification_required') return [];
   const missing = Array.isArray(err.body?.missing) ? (err.body.missing as unknown[]) : [];
   return missing.filter((c): c is ContactChannel => c === 'email' || c === 'phone');
 }
 
-export function contactStepFor(channel: ContactChannel): KYCStep {
+export function contactStepFor(channel: ContactChannel): VerificationStep {
   return channel === 'email' ? 'email-verification' : 'phone-verification';
 }
 
@@ -37,8 +37,8 @@ export function stepAfterContactVerified(opts: {
   recovery: boolean;
   expired: ContactChannel[];
   channel: ContactChannel;
-  forward: KYCStep;
-}): KYCStep {
+  forward: VerificationStep;
+}): VerificationStep {
   if (!opts.recovery) return opts.forward;
   const remaining = opts.expired.find((c) => c !== opts.channel);
   return remaining ? contactStepFor(remaining) : 'submitted';

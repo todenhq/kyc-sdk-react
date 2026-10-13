@@ -11,8 +11,8 @@ import {
   DrawerDescription,
 } from './ui/drawer';
 import { Button } from './ui/button';
-import { useKYCConfig } from '../context/KYCConfigContext';
-import { useKYCContext } from '../context/KYCContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
 import { useDeviceHandoff } from '../hooks/useDeviceHandoff';
 import { HANDOFF_TOKEN_PREFIX } from '../hosted/token';
 import { isDesktopDevice } from '../lib/device';
@@ -27,8 +27,8 @@ import { handoffLeaveErrorMessage } from '../lib/handoff-leave-error';
  * handles that path instead).
  */
 export function MobileHandoffSheet() {
-  const config = useKYCConfig();
-  const { state, dispatch } = useKYCContext();
+  const config = useVerificationConfig();
+  const { state, dispatch } = useVerificationContext();
   const t = useText();
   const [isDesktop, setIsDesktop] = useState(true); // SSR-safe: assume desktop until after mount
   const [open, setOpen] = useState(false);
@@ -149,8 +149,8 @@ export function MobileHandoffSheet() {
             {/* QR / loading / error / submitted */}
             {handoff.phase === 'submitted' ? (
               <div className="flex flex-col items-center gap-2 py-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-(--kyc-success)/10">
-                  <svg className="h-8 w-8 text-(--kyc-success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-(--verification-success)/10">
+                  <svg className="h-8 w-8 text-(--verification-success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 12l5 5L20 6" strokeDasharray="100" strokeDashoffset="100" className="animate-checkmark" />
                   </svg>
                 </div>

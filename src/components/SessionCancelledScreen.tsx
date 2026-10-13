@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { useText } from '../i18n';
-import { KYCError } from '../types/verification';
+import { VerificationError } from '../types/verification';
 
 // ─── The cancelled screen ───────────────────────────────────────────────────
 //
@@ -18,7 +18,7 @@ import { KYCError } from '../types/verification';
  */
 export function useReportCancellation(
   cancelled: { message: string | null } | null,
-  onError: ((error: KYCError) => void) | undefined,
+  onError: ((error: VerificationError) => void) | undefined,
   fallback: string,
 ): void {
   const reported = useRef(false);
@@ -26,7 +26,7 @@ export function useReportCancellation(
     if (!cancelled || reported.current) return;
     reported.current = true;
     try {
-      onError?.(new KYCError('session_cancelled', cancelled.message ?? fallback));
+      onError?.(new VerificationError('session_cancelled', cancelled.message ?? fallback));
     } catch {
       /* a consumer's handler must never break the flow */
     }

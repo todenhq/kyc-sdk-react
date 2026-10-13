@@ -1,6 +1,6 @@
 import type {
   AddressCollectionConfig,
-  KYCStep,
+  VerificationStep,
   PoaDocumentType,
   PoaNameRule,
   ProofOfAddressConfig,
@@ -29,7 +29,7 @@ interface AddressFlowFacts {
 }
 
 /** The address flow's steps for THIS mount (KYB = the single premises step). */
-function flowStepsFor(config: AddressFlowFacts): KYCStep[] {
+function flowStepsFor(config: AddressFlowFacts): VerificationStep[] {
   if (isBusinessFlow(config)) return ['address-collection'];
   return addressFlowSteps(
     addressFlowOptions({
@@ -49,13 +49,13 @@ function flowStepsFor(config: AddressFlowFacts): KYCStep[] {
 /** Entering the address flow FORWARDS lands on its first step (search when a
  *  backend is on) — routing straight to the pin step skipped search entirely,
  *  which shipped. */
-export function addressEntryStep(config: AddressFlowFacts): KYCStep {
+export function addressEntryStep(config: AddressFlowFacts): VerificationStep {
   return flowStepsFor(config)[0]!;
 }
 
 /** Backing INTO the address flow (from the questionnaire) lands on its LAST
  *  step — the review — not the pin. */
-export function addressReturnStep(config: AddressFlowFacts): KYCStep {
+export function addressReturnStep(config: AddressFlowFacts): VerificationStep {
   const steps = flowStepsFor(config);
   return steps[steps.length - 1]!;
 }
@@ -173,7 +173,7 @@ export function stepAfterCapture(
   /** `"CC/idType"` composites this attempt has committed (verifiedIdsFor). */
   verifiedIds: string[],
 ): Extract<
-  KYCStep,
+  VerificationStep,
   | 'proof-of-address'
   | 'supporting-documents'
   | 'address-search'
@@ -202,7 +202,7 @@ export function stepAfterSupportingDocuments(
     questionnaire?: QuestionnaireConfig;
   } & AddressFlowFacts,
 ): Extract<
-  KYCStep,
+  VerificationStep,
   'proof-of-address' | 'address-search' | 'address-collection' | 'questionnaire' | 'submitted'
 > {
   if (hasProofOfAddressStep(config.proofOfAddress)) return 'proof-of-address';
@@ -217,9 +217,9 @@ export function stepAfterSupportingDocuments(
  */
 export function stepAfterProofOfAddress(
   config: { questionnaire?: QuestionnaireConfig } & AddressFlowFacts,
-): Extract<KYCStep, 'address-search' | 'address-collection' | 'questionnaire' | 'submitted'> {
+): Extract<VerificationStep, 'address-search' | 'address-collection' | 'questionnaire' | 'submitted'> {
   if (hasAddressCollectionStep(config.addressCollection)) {
-    return addressEntryStep(config) as Extract<KYCStep, 'address-search' | 'address-collection'>;
+    return addressEntryStep(config) as Extract<VerificationStep, 'address-search' | 'address-collection'>;
   }
   if (hasActiveQuestionnaire(config.questionnaire)) return 'questionnaire';
   return 'submitted';

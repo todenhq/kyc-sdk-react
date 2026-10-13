@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { BRAND_FONT_STACK, PRODUCT_URL, brandMarkColor } from '../lib/brand';
-import { useOptionalKYCConfig } from '../context/KYCConfigContext';
-import { MyazaWordmark } from './MyazaWordmark';
+import { PRODUCT_NAME, PRODUCT_URL, brandMarkColor, brandMarkIsLight } from '../lib/brand';
+import { useOptionalVerificationConfig } from '../context/VerificationConfigContext';
+import { TODEN_ACCENT, TODEN_ACCENT_ON_DARK, TodenWordmark } from './TodenWordmark';
 import { useIsDark } from '../lib/use-is-dark';
 import { effectiveTrustAttribution } from '../lib/trust-attribution';
 import type { SdkTrustAttribution } from '../services/api';
@@ -14,10 +14,10 @@ export { resolveTrustAttribution };
  * Vendor attribution, pinned to the bottom of the modal on every step.
  *
  * Two modes, chosen per workflow and resolved SERVER-side
- * (`branding.trustAttribution`): the Myaza Trust lockup (the default, and what
- * an older server that sends nothing resolves to), or the organisation's own
- * logo with no Myaza mark or link at all. A custom logo that fails to load
- * falls back to the organisation's name, never to Myaza.
+ * (`branding.trustAttribution`): the Toden logo (the default, and what an older
+ * server that sends nothing resolves to), or the organisation's own logo with
+ * no Toden mark or link at all. A custom logo that fails to load falls back to
+ * the organisation's name, never to Toden.
  *
  * Attribution, deliberately, not "Secured by". At the moment this is on screen
  * the user is handing over a passport and a live selfie to a company they have
@@ -29,11 +29,8 @@ export { resolveTrustAttribution };
  * precisely because it claims nothing (Stripe, Plaid and Persona all landed
  * here for the same reason).
  *
- * The lockup mirrors the dashboard's canonical treatment: [Myaza wordmark] then
- * a hairline rule then TRUST in tracked uppercase. The divider is a BORDER, not
- * a "|" character — a typed pipe sits on the text baseline, renders at whatever
- * weight the font gives it, and reads as a list separator between two names.
- * The rule is what makes it one brand: Myaza Trust.
+ * The mark is the Toden logo as the console draws it: the split-shield T beside
+ * the "toden" lettering, one piece with nothing after it.
  *
  * The link is the part that carries real weight: a user asked for their ID by an
  * unfamiliar third party should be one tap from finding out who we are — that is
@@ -45,8 +42,8 @@ export { resolveTrustAttribution };
  */
 export function PoweredBy() {
   // Optional on purpose: the biometric re-auth modal renders this footer with
-  // no KYCConfigProvider above it, and attribution must not require one.
-  const config = useOptionalKYCConfig();
+  // no VerificationConfigProvider above it, and attribution must not require one.
+  const config = useOptionalVerificationConfig();
   const isDark = useIsDark();
 
   // The background the mark will ACTUALLY sit on — which is not simply
@@ -62,11 +59,10 @@ export function PoweredBy() {
   // this has to hold for an arbitrary org background, not just light vs dark.
   const appearance = config?.appearance;
   const background = isDark
-    ? (appearance?.dark?.backgroundColor ?? appearance?.backgroundColor ?? '#040218')
+    ? (appearance?.dark?.backgroundColor ?? appearance?.backgroundColor ?? '#080A12')
     : (appearance?.backgroundColor ?? '#FFFFFF');
-  // ONE colour for the whole mark — label, wordmark lettering and TRUST. Split
-  // colours made it read as two things sitting next to each other rather than
-  // one lockup.
+  // ONE colour for the label and the logo's ink. Split colours made it read as
+  // two things sitting next to each other rather than one line.
   const markColor = brandMarkColor(background);
 
   // Compact on a phone: the footer sat 28px below the lockup on a surface
@@ -107,7 +103,7 @@ export function TrustAttributionMark({
 
   // The ROW is not the link — only the mark is. As a block-level flex child
   // the anchor used to span the footer's full width, so the empty space either
-  // side of the lockup opened myaza.co too. A link's hit area should be the
+  // side of the logo opened the product site too. A link's hit area should be the
   // thing it points at, and the label is not a destination.
   return (
     <div className="flex min-h-8 items-center justify-center gap-2.5">
@@ -137,43 +133,22 @@ export function TrustAttributionMark({
           ) : null}
         </span>
       ) : (
-        // The lockup, spaced TIGHTER than the gap that precedes it so it reads
-        // as one mark rather than three evenly-spaced items. This is the link:
-        // wordmark, rule and TRUST are one brand, so the whole lockup is the
-        // target — but nothing beyond it is.
+        // The logo is the link, and nothing beyond it is.
         <a
           href={PRODUCT_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded-sm opacity-90 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2"
-          aria-label="Myaza Trust"
+          className="flex items-center rounded-sm opacity-90 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-2"
+          aria-label={PRODUCT_NAME}
+          style={{ color: markColor }}
         >
-          {/* The icon keeps its brand colours; only the wordmark flips, and it
-              does so by inheriting this text colour — one render, both themes. */}
-          <span className="flex items-center" style={{ color: markColor }}>
-            <MyazaWordmark height={24} />
-          </span>
-
-          {/* The rule is part of the mark too, so it follows the same colour
-            rather than the org's border token. */}
-          <span
-            aria-hidden
-            className="h-5 w-px shrink-0"
-            style={{ backgroundColor: markColor, opacity: 0.35 }}
+          {/* The ink inherits this text colour, so one render serves both
+              themes. The shield's purple half steps lighter when the ink is
+              the light tone, as the console's own dark logo does. */}
+          <TodenWordmark
+            height={20}
+            accent={brandMarkIsLight(markColor) ? TODEN_ACCENT_ON_DARK : TODEN_ACCENT}
           />
-
-          {/* ~half the wordmark's height, which is the ratio the dashboard's own
-              lockup uses (12px TRUST against a 24px logo). Set it level with the
-              logo and TRUST stops reading as a suffix and starts competing. */}
-          {/* Pinned to the brand face rather than inheriting: this word is part
-              of the MARK, and the font tokens it would otherwise read are the
-              ones an org's typography settings overwrite. */}
-          <span
-            style={{ fontFamily: BRAND_FONT_STACK, color: markColor }}
-            className="text-xs font-semibold uppercase leading-none tracking-[0.14em]"
-          >
-            Trust
-          </span>
         </a>
       )}
     </div>

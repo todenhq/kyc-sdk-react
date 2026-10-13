@@ -7,7 +7,7 @@
 import { collectFingerprint } from '../lib/fingerprint';
 import { collectWebDeviceMetadata } from '../utils/device-metadata';
 import { withRetry } from '../lib/retry';
-import type { KYCApi, VerifyRequest } from '../services/api';
+import type { VerificationApi, VerifyRequest } from '../services/api';
 import { withSilentCaptureDevice, type SilentCaptureSubmission } from '../lib/silent-capture';
 import { settleSilentUploads, silentCaptureSubmission } from '../lib/silent-capture-store';
 
@@ -53,7 +53,7 @@ export interface UploadedVideoIds {
  * swallowed.
  */
 export async function uploadCaptureVideos(
-	api: KYCApi,
+	api: VerificationApi,
 	blobs: {
 		documentFrontVideoBlob: Blob | null;
 		documentBackVideoBlob: Blob | null;

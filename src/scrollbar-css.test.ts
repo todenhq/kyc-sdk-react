@@ -46,7 +46,7 @@ describe('SDK scrollbar sheet', () => {
     const selectors = ruleSelectors(sheet);
     expect(selectors.length).toBeGreaterThan(0);
     for (const selector of selectors) {
-      expect(selector, selector).toMatch(/^(\.kyc-root|\[data-kyc-frame\])/);
+      expect(selector, selector).toMatch(/^(\.verification-root|\[data-verification-frame\])/);
     }
   });
 

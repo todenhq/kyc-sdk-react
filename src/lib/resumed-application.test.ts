@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resumedApplicationFrom, submissionRequestId } from './resumed-application';
-import { kycReducer, initialKYCState } from '../context/KYCContext';
+import { verificationReducer, initialVerificationState } from '../context/VerificationContext';
 
 // A KYB applicant whose phone died between the business submission and their
 // own verification reopened the flow and was told "Start or resume this
@@ -52,12 +52,12 @@ describe('submissionRequestId', () => {
 describe('reducer', () => {
   it('holds the resumed application beside the session id, and survives a restore', () => {
     const resumed = resumedApplicationFrom(RESUME);
-    let state = kycReducer(initialKYCState, { type: 'SET_SESSION_ID', payload: 'sess_1' });
-    state = kycReducer(state, { type: 'RESTORE_PROGRESS', payload: { step: 'submitted' } });
-    state = kycReducer(state, { type: 'SET_RESUMED_APPLICATION', payload: resumed });
+    let state = verificationReducer(initialVerificationState, { type: 'SET_SESSION_ID', payload: 'sess_1' });
+    state = verificationReducer(state, { type: 'RESTORE_PROGRESS', payload: { step: 'submitted' } });
+    state = verificationReducer(state, { type: 'SET_RESUMED_APPLICATION', payload: resumed });
     expect(state.resumedApplication).toEqual(resumed);
     expect(state.sessionId).toBe('sess_1');
-    expect(kycReducer(state, { type: 'RESET' }).resumedApplication).toBeNull();
+    expect(verificationReducer(state, { type: 'RESET' }).resumedApplication).toBeNull();
   });
 });
 
@@ -67,7 +67,7 @@ describe('wiring', () => {
   const read = (p: string) => readFileSync(new URL(p, import.meta.url).pathname, 'utf8');
 
   it('the embedded mount records the resumed application from session start', () => {
-    expect(read('../MyazaKYC.tsx')).toContain('resumedApplicationFrom(started)');
+    expect(read('../Verification.tsx')).toContain('resumedApplicationFrom(started)');
   });
 
   it('the hosted flow passes the bootstrap facts to the session sync', () => {

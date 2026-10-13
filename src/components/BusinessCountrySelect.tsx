@@ -17,7 +17,7 @@ import { useText } from '../i18n';
  * dropdown grouped by continent, with SVG flags (emoji flags render
  * inconsistently across platforms).
  *
- * The menu is portaled to the dialog root (`.kyc-root`) rather than to
+ * The menu is portaled to the dialog root (`.verification-root`) rather than to
  * document.body: Radix Dialog sets `pointer-events: none` on the body while
  * open, so a menu there is unclickable. Staying inside the dialog keeps focus,
  * clicks and scrolling working while clearing the step body's

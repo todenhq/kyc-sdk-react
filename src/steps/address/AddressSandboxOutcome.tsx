@@ -2,9 +2,9 @@
 
 import React from 'react';
 import { BadgeCheck, CircleDashed, ShieldCheck, CircleX, type AppIconComponent } from '../../components/icons';
-import { useKYCContext } from '../../context/KYCContext';
-import { useKYCConfig } from '../../context/KYCConfigContext';
-import type { KYCState } from '../../context/types';
+import { useVerificationContext } from '../../context/VerificationContext';
+import { useVerificationConfig } from '../../context/VerificationConfigContext';
+import type { VerificationState } from '../../context/types';
 
 // The address flow's "Test result" box — the business flow's sandbox toggle
 // (BusinessDetailsStep), for the address RESULT. Shown only off-production,
@@ -17,7 +17,7 @@ import type { KYCState } from '../../context/types';
 // SENT until the operator clicks; unclicked keeps the server default, which
 // the resting position mirrors.
 
-type Outcome = NonNullable<KYCState['addressSandboxOutcome']>;
+type Outcome = NonNullable<VerificationState['addressSandboxOutcome']>;
 
 // Icons + colours mirror the dashboard's tier/verdict language exactly
 // (address-card-bits.tsx TIER_META / VERDICT_META), so the outcome an
@@ -63,8 +63,8 @@ const OPTIONS: Array<{
 ];
 
 export function AddressSandboxOutcome() {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const isSandbox = config.serverConfig?.environment !== 'PRODUCTION';
   if (!isSandbox || config.previewMode) return null;
 

@@ -11,7 +11,7 @@ import { ProgressBar } from './ProgressBar';
 import { StepIndicator } from './StepIndicator';
 
 // The modal's chrome: org brand, window controls, and the flow's progress
-// indicator. Extracted from KYCModal, which owns the flow state and the step
+// indicator. Extracted from VerificationModal, which owns the flow state and the step
 // switch and had no business also owning three presentational widgets.
 
 // ---------------------------------------------------------------------------
@@ -70,7 +70,7 @@ function HeaderBrand() {
   );
 }
 
-export interface KYCHeaderProps {
+export interface VerificationHeaderProps {
   /** Show the light/dark toggle. Default true (only `false` hides it). */
   showThemeToggle?: boolean;
   /** Close is suppressed (submitted step, or `disableClose`). */
@@ -92,7 +92,7 @@ export interface KYCHeaderProps {
   titleSlotRef: (el: HTMLDivElement | null) => void;
 }
 
-export function KYCHeader({
+export function VerificationHeader({
   showThemeToggle,
   dismissBlocked,
   onClose,
@@ -104,19 +104,20 @@ export function KYCHeader({
   stepFraction,
   stepCount,
   titleSlotRef,
-}: KYCHeaderProps): React.ReactElement {
+}: VerificationHeaderProps): React.ReactElement {
   return (
-    // A subtle surface tint plus a full-width bottom border set the header
-    // apart from the body — the same treatment as the RN and Flutter sheets.
-    // Dark mode tints with the brand rather than going grey, matching Flutter's
-    // kycHeaderSurface (primary at 18% over the background).
+    // The flow's own surface colour plus a full-width bottom border set the
+    // header apart from the body, the same treatment as the RN and Flutter
+    // sheets. Both themes use the surface token, so the header and the cards
+    // below it are one colour. Dark mode used a wash of the brand colour (18%
+    // over the background), which read as a pale purple band above grey cards.
     <div
       className={cn(
         // pb-4 (md) is the header's own bottom breathing room, matching RN's
         // paddingBottom on the header container. It applies in BAR mode too:
         // the bar is absolutely positioned on the edge, so without this the
         // description would sit right on top of it.
-        'relative shrink-0 bg-muted pb-3 sm:pb-4 dark:bg-primary/[0.18]',
+        'relative shrink-0 bg-muted pb-3 sm:pb-4',
         // The bar sits ON this edge and paints its own track, so the border
         // would double it.
         !(showProgress && asBar) && 'border-b border-border',

@@ -1,7 +1,7 @@
 {
   "name": "@myazahq/kyc-sdk-react",
-  "version": "3.7.0",
-  "description": "Myaza KYC SDK for React — drop-in identity verification: ID capture, document scan, and active liveness detection",
+  "version": "3.8.0",
+  "description": "Toden SDK for React: drop-in identity verification with ID capture, document scan and active liveness detection",
   "license": "MIT",
   "author": "Flitstack Technologies Inc.",
   "keywords": [
@@ -17,15 +17,16 @@
     "aml",
     "onboarding",
     "react",
-    "myaza"
+    "myaza",
+    "toden"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/myazahq/kyc-sdk-react.git"
+    "url": "git+https://github.com/todenhq/kyc-sdk-react.git"
   },
-  "homepage": "https://github.com/myazahq/kyc-sdk-react#readme",
+  "homepage": "https://github.com/todenhq/kyc-sdk-react#readme",
   "bugs": {
-    "url": "https://github.com/myazahq/kyc-sdk-react/issues"
+    "url": "https://github.com/todenhq/kyc-sdk-react/issues"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

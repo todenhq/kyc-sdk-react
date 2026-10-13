@@ -41,10 +41,10 @@ describe('holdLightTheme', () => {
   });
 
   it('touches no other class on the root', () => {
-    const root = fakeRoot(['dark', 'kyc-frame']);
+    const root = fakeRoot(['dark', 'verification-frame']);
     const release = holdLightTheme(root, undefined);
-    expect(root.has('kyc-frame')).toBe(true);
+    expect(root.has('verification-frame')).toBe(true);
     release();
-    expect(root.has('kyc-frame')).toBe(true);
+    expect(root.has('verification-frame')).toBe(true);
   });
 });

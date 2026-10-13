@@ -14,9 +14,9 @@ import { useEffect, useState } from 'react';
 import { Search, Loader2, Building2, TriangleAlert, PenLine, Filter } from './icons';
 import { Button } from './ui/button';
 import { CountryFlag } from './CountryFlag';
-import { MyazaSelect } from './MyazaSelect';
+import { UiSelect } from './UiSelect';
 import { Label } from './ui/label';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { useText } from '../i18n';
 
 export interface BusinessHit {
@@ -47,7 +47,7 @@ export function BusinessSearch({
   onManualEntry: () => void;
   disabled?: boolean;
 }) {
-  const config = useKYCConfig();
+  const config = useVerificationConfig();
   const t = useText();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('');
@@ -129,7 +129,7 @@ export function BusinessSearch({
             {/* Searchable: fifty US states unfiltered is a scroll-and-hunt for
                 a word the person already knows how to spell. The flag is the
                 country's, because every option here belongs to it. */}
-            <MyazaSelect
+            <UiSelect
               id="business-region"
               value={region || undefined}
               options={regions.map((r) => ({

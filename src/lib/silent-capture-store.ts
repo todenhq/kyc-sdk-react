@@ -4,7 +4,7 @@
 // capture-integrity signals and the step log: a retake, a step revisit or a
 // RETRY keeps frames already taken (they are evidence of who was there), and
 // the cap has to be decided synchronously at the moment a frame is grabbed.
-// Reset where a new session starts (the modal-open handlers in MyazaKYC).
+// Reset where a new session starts (the modal-open handlers in Verification).
 //
 // Uploads run in the background and fail silently; only frames whose upload
 // succeeded are submitted (see buildSilentCaptureSubmission).

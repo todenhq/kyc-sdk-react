@@ -2,7 +2,7 @@ import { SDK_VERSION } from '../utils/device-metadata';
 import { uploadDeviceIdHeader } from '../lib/upload-device-id';
 import { compactDrawing, type SignatureDrawing } from '../lib/signature';
 
-export class KYCApiError extends Error {
+export class VerificationApiError extends Error {
   constructor(
     message: string,
     public statusCode: number,
@@ -10,7 +10,7 @@ export class KYCApiError extends Error {
     public body?: Record<string, unknown>,
   ) {
     super(message);
-    this.name = 'KYCApiError';
+    this.name = 'KYCApiError'; // the earlier name, kept: callers may match on it;
   }
 }
 
@@ -37,7 +37,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
     const errObj = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {};
     const message = String(errObj.message ?? errObj.error ?? `Request failed with status ${res.status}`);
     const code = typeof errObj.error === 'string' ? errObj.error : undefined;
-    throw new KYCApiError(message, res.status, code, errObj);
+    throw new VerificationApiError(message, res.status, code, errObj);
   }
   return data as T;
 }
@@ -64,12 +64,12 @@ export type MediaUploadType =
   // (lib/silent-capture.ts). Image only.
   | 'silent_capture';
 
-/** Response from `POST /api/kyc/upload` — the stored mediaId. */
+/** Response from `POST /api/v1/upload` — the stored mediaId. */
 export interface UploadResponse {
   mediaId: string;
 }
 
-/** Body of `POST /api/kyc/document-capture/check`: one uploaded document side. */
+/** Body of `POST /api/v1/document-capture/check`: one uploaded document side. */
 export interface DocumentCaptureCheckRequest {
   mediaId: string;
   side: 'front' | 'back';
@@ -251,16 +251,16 @@ export interface VerifyResponse {
 }
 
 /**
- * Minimal, publishable-safe status from `GET /api/kyc/status/:id`.
+ * Minimal, publishable-safe status from `GET /api/v1/status/:id`.
  *
  * Because this is reachable with the publishable (`pk_`) key the SDK carries, it
  * intentionally contains NO PII, match scores, or result data — only the
  * lifecycle state and (on non-success) the org-safe failure reason. To read the
- * full result + extracted biodata, call `GET /api/kyc/verifications/:id` from
+ * full result + extracted biodata, call `GET /api/v1/verifications/:id` from
  * your backend with a SECRET (`sk_`) key — never ship a secret key in the SDK.
  */
 /**
- * The one status vocabulary, shared by `GET /api/kyc/status/:id`, the
+ * The one status vocabulary, shared by `GET /api/v1/status/:id`, the
  * secret-key result route and every verification webhook.
  *
  * `status` is what happened; `checkStatus` beside it is what the CHECKS found.
@@ -516,7 +516,7 @@ export interface WorkflowConfigPayload {
   assetsBasePath?: string;
 }
 
-/** Response from `GET /api/kyc/workflows/:workflowId` — one round trip hydrates the SDK. */
+/** Response from `GET /api/v1/workflows/:workflowId` — one round trip hydrates the SDK. */
 /**
  * A KYB workflow's mapped APPLICANT workflow (business.applicant.workflowId),
  * resolved server-side: the individual workflow whose capture template overlays
@@ -652,8 +652,8 @@ export interface HandoffSessionSnapshot {
   assetsBasePath?: string;
 }
 
-/** Response from `POST /api/kyc/session`. */
-/** Response from `POST /api/kyc/session/start` for embedded attempts. */
+/** Response from `POST /api/v1/session`. */
+/** Response from `POST /api/v1/session/start` for embedded attempts. */
 export interface StartSessionResponse {
   sessionId: string;
   expiresAt: string;
@@ -694,14 +694,14 @@ export interface CreateHandoffSessionResponse {
 
 export type HandoffSessionStatus = 'pending' | 'opened' | 'submitted' | 'expired';
 
-/** Response from `GET /api/kyc/session/:sessionId` (desktop poll, no PII). */
+/** Response from `GET /api/v1/session/:sessionId` (desktop poll, no PII). */
 export interface HandoffSessionStatusResponse {
   status: HandoffSessionStatus;
   verificationId?: string;
   verificationStatus?: VerificationStatusResponse['status'];
 }
 
-/** Response from `GET /api/kyc/session/by-token/:token/bootstrap` (phone side). */
+/** Response from `GET /api/v1/session/by-token/:token/bootstrap` (phone side). */
 export interface HandoffBootstrapResponse {
   /**
    * The session's own id.
@@ -861,8 +861,8 @@ function toUploadFile(file: Blob, type: MediaUploadType): File {
 // Factory
 // ---------------------------------------------------------------------------
 
-export function createKYCApi(baseUrl: string, apiKey: string) {
-  const base = `${baseUrl}/api/kyc`;
+export function createVerificationApi(baseUrl: string, apiKey: string) {
+  const base = `${baseUrl}/api/v1`;
   const headers = baseHeaders(apiKey);
 
   // JSON request to our own server (verify, status, config). Adds the
@@ -1264,4 +1264,4 @@ export function createKYCApi(baseUrl: string, apiKey: string) {
   };
 }
 
-export type KYCApi = ReturnType<typeof createKYCApi>;
+export type VerificationApi = ReturnType<typeof createVerificationApi>;

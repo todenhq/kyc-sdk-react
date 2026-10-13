@@ -12,8 +12,8 @@
 // actually settled on one, and never automatically as they type.
 import { useCallback } from 'react';
 import type { BusinessCheckState } from '../context/types';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 
 export interface BusinessCheckResult {
   /** Whether the flow may continue. Only a register outage stops it. */
@@ -39,8 +39,8 @@ export function useBusinessCheck(): {
   }) => Promise<BusinessCheckResult>;
   reset: () => void;
 } {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
 
   const reset = useCallback(() => {
     dispatch({

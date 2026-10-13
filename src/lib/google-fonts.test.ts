@@ -27,9 +27,11 @@ describe('isGoogleFont — the allowlist', () => {
   });
 
   it('lists the SDK defaults so they can be chosen explicitly', () => {
-    // Otherwise "Karla" is only reachable by leaving the field blank, which
+    // Otherwise the default is only reachable by leaving the field blank, which
     // makes the default undiscoverable in the picker.
     const families = GOOGLE_FONTS.map((f) => f.family);
+    expect(families).toContain('Bricolage Grotesque');
+    // The earlier defaults stay, since published workflows name them.
     expect(families).toContain('Karla');
     expect(families).toContain('Space Grotesk');
   });

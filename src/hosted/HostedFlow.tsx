@@ -1,22 +1,22 @@
 'use client';
 
 import React from 'react';
-import { KYCProvider } from '../context/KYCContext';
+import { VerificationProvider } from '../context/VerificationContext';
 import { HostedLifecycle, HostedSessionSync } from './HostedSessionSync';
-import { KYCConfigProvider, type ServerSdkConfig } from '../context/KYCConfigContext';
+import { VerificationConfigProvider, type ServerSdkConfig } from '../context/VerificationConfigContext';
 import { overlayApplicantWorkflow } from '../lib/workflow-merge';
 import { documentCaptureNeedsCamera } from '../lib/document-capture-methods';
 import { HostedFlowInner } from './HostedFlowInner';
 import { HANDOFF_TOKEN_PREFIX } from './token';
-import type { HandoffBootstrapResponse, KYCApi } from '../services/api';
-import type { KYCError, KYCSubmission, KYCResult } from '../types/verification';
+import type { HandoffBootstrapResponse, VerificationApi } from '../services/api';
+import type { VerificationError, VerificationSubmission, VerificationResult } from '../types/verification';
 import type {
   AnyCountry,
   AnyIdType,
   EmailVerificationConfig,
-  KYCAppearance,
-  KYCConsentContent,
-  KYCSuccessContent,
+  VerificationAppearance,
+  VerificationConsentContent,
+  VerificationSuccessContent,
   PhoneVerificationConfig,
   QuestionnaireConfig,
   ProofOfAddressConfig,
@@ -29,8 +29,8 @@ import type {
 import type { SubjectType, WorkflowBusinessConfig } from '../types/business';
 import { handoffCaptureNeeded } from '../lib/handoff-capture';
 // The hosted flow itself: providers seeded from the session's config snapshot,
-// wrapping the same steps an embedded <MyazaKYC/> runs. Split out of
-// MyazaKYCHosted.tsx, which is now just the entry point and its three terminal
+// wrapping the same steps an embedded <Verification/> runs. Split out of
+// HostedVerification.tsx, which is now just the entry point and its three terminal
 // screens (loading, already-completed, unavailable).
 
 
@@ -50,16 +50,16 @@ export function HostedFlow({
   onError,
 }: {
   token: string;
-  api: KYCApi;
+  api: VerificationApi;
   bootstrap: HandoffBootstrapResponse;
-  /** Mounted inside a host application (see MyazaKYCHosted.embedded). */
+  /** Mounted inside a host application (see HostedVerification.embedded). */
   embedded?: boolean;
   onClose?: () => void;
   onStart?: () => void;
-  onStepChange?: (step: import('../types/config').KYCStep) => void;
-  onSubmit?: (submission: KYCSubmission) => void;
-  onResult?: (result: KYCResult) => void;
-  onError?: (error: KYCError) => void;
+  onStepChange?: (step: import('../types/config').VerificationStep) => void;
+  onSubmit?: (submission: VerificationSubmission) => void;
+  onResult?: (result: VerificationResult) => void;
+  onError?: (error: VerificationError) => void;
 }) {
   const snap = bootstrap.configSnapshot;
   const isBusiness = snap.subjectType === 'business' && !!snap.business;
@@ -71,7 +71,7 @@ export function HostedFlow({
     snap as unknown as Record<string, unknown>,
   ) as typeof snap & { applicantWorkflowId?: string };
   // Offer "continue on your phone" only when the flow has a capture/upload step
-  // a phone camera actually helps with (mirrors <MyazaKYC/>). Individual flows:
+  // a phone camera actually helps with (mirrors <Verification/>). Individual flows:
   // liveness or document capture. KYB flows: the applicant's in-flow KYC or
   // company-document uploads (photograph on a phone) — a bare registry lookup
   // (all typed) gains nothing. The workflow/hosted-link can also switch handoff
@@ -93,14 +93,14 @@ export function HostedFlow({
   };
 
   return (
-    <KYCProvider>
+    <VerificationProvider>
       {/* A hosted flow is ALREADY in a session — the token names it — but the
           reducer does not know that, and progress saving keys off the id. Without
           this seed every hosted applicant's work was dropped, and a refresh sent
           them back to the first step. */}
       <HostedSessionSync sessionId={bootstrap.sessionId} progress={bootstrap.progress} bootstrap={bootstrap} api={api} />
       <HostedLifecycle onStart={onStart} onStepChange={onStepChange} />
-      <KYCConfigProvider
+      <VerificationConfigProvider
         apiKey={`${HANDOFF_TOKEN_PREFIX}${token}`}
         apiOverride={api}
         serverConfigOverride={serverConfigOverride}
@@ -146,9 +146,9 @@ export function HostedFlow({
         biometric={snap.biometric}
         progressStyle={snap.progressStyle as ProgressStyle | undefined}
         requireMobileDevice={snap.requireMobileDevice}
-        appearance={snap.appearance as KYCAppearance | undefined}
-        consent={snap.consent as KYCConsentContent | undefined}
-        success={snap.success as KYCSuccessContent | undefined}
+        appearance={snap.appearance as VerificationAppearance | undefined}
+        consent={snap.consent as VerificationConsentContent | undefined}
+        success={snap.success as VerificationSuccessContent | undefined}
         texts={snap.texts}
         emailVerification={snap.emailVerification as EmailVerificationConfig | undefined}
         phoneVerification={snap.phoneVerification as PhoneVerificationConfig | undefined}
@@ -179,8 +179,8 @@ export function HostedFlow({
           embedded={embedded}
           onClose={onClose}
         />
-      </KYCConfigProvider>
-    </KYCProvider>
+      </VerificationConfigProvider>
+    </VerificationProvider>
   );
 }
 

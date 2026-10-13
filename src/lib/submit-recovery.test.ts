@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { KYCApiError } from '../services/api';
-import type { KYCStep } from '../types/config';
+import { VerificationApiError } from '../services/api';
+import type { VerificationStep } from '../types/config';
 import { recoveryStepFor, serverRefusalOf } from './submit-recovery';
 
 // Mirrors the Flutter SDK's business_documents_resume_test.dart cases for
 // submit_recovery.dart, and the React Native SDK's submitRecovery.test.ts.
 
-const kyb: KYCStep[] = [
+const kyb: VerificationStep[] = [
   'consent',
   'business-details',
   'business-documents',
@@ -27,7 +27,7 @@ describe('recoveryStepFor', () => {
   it('reads the capture an invalid_media refusal names', () => {
     expect(recoveryStepFor('invalid_media', kyb, { mediaKey: 'selfie' })).toBe('liveness');
     expect(recoveryStepFor('invalid_media', kyb, { mediaKey: 'documentBack' })).toBe('document-capture');
-    const address: KYCStep[] = ['consent', 'address-collection', 'address-entrance', 'address-review', 'submitted'];
+    const address: VerificationStep[] = ['consent', 'address-collection', 'address-entrance', 'address-review', 'submitted'];
     expect(recoveryStepFor('invalid_media', address, { mediaKey: 'addressPhoto' })).toBe('address-entrance');
     // A mediaKey only counts on invalid_media, and an unknown one falls back.
     expect(recoveryStepFor('invalid_media', kyb, { mediaKey: 'somethingNew' })).toBe('liveness');
@@ -60,19 +60,19 @@ describe('recoveryStepFor', () => {
 
 describe('serverRefusalOf', () => {
   it('reads the raw server code and mediaKey, not a mapped client code', () => {
-    expect(serverRefusalOf(new KYCApiError('x', 422, 'missing_documents', { missing: ['memart'] }))).toEqual({
+    expect(serverRefusalOf(new VerificationApiError('x', 422, 'missing_documents', { missing: ['memart'] }))).toEqual({
       code: 'missing_documents',
       mediaKey: null,
     });
-    expect(serverRefusalOf(new KYCApiError('x', 400, 'invalid_media', { mediaKey: 'selfie' }))).toEqual({
+    expect(serverRefusalOf(new VerificationApiError('x', 400, 'invalid_media', { mediaKey: 'selfie' }))).toEqual({
       code: 'invalid_media',
       mediaKey: 'selfie',
     });
   });
 
   it('reads 401 and 402 as the client does, whatever the body says', () => {
-    expect(serverRefusalOf(new KYCApiError('x', 401, 'unauthorized'))?.code).toBe('invalid_api_key');
-    expect(serverRefusalOf(new KYCApiError('x', 402))?.code).toBe('insufficient_credits');
+    expect(serverRefusalOf(new VerificationApiError('x', 401, 'unauthorized'))?.code).toBe('invalid_api_key');
+    expect(serverRefusalOf(new VerificationApiError('x', 402))?.code).toBe('insufficient_credits');
   });
 
   it('is null for anything that is not a server refusal', () => {

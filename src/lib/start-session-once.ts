@@ -1,6 +1,6 @@
 // Collapses concurrent session starts into ONE request per launch.
 //
-// The per-instance ref guard in MyazaKYC is not enough: React StrictMode
+// The per-instance ref guard in Verification is not enough: React StrictMode
 // remounts the component with fresh refs, so each launch fired /session/start
 // twice ~600ms apart. Without an externalUserId the server has nothing to
 // resume by, so the second call minted a SECOND session — the flow adopted one

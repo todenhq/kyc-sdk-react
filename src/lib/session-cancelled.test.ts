@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { KYCApiError, type VerificationStatusResponse } from '../services/api';
-import { mapToKycError } from './errors';
+import { VerificationApiError, type VerificationStatusResponse } from '../services/api';
+import { mapToVerificationError } from './errors';
 import { awaitVerificationOutcome, isPendingStatus } from './result-wait';
 import { describeOutcome } from './result-copy';
 import { recoveryStepFor } from './submit-recovery';
-import { kycReducer, initialKYCState } from '../context/KYCContext';
+import { verificationReducer, initialVerificationState } from '../context/VerificationContext';
 import {
   classifySessionStartFailure,
   isCancelledStatus,
@@ -22,12 +22,12 @@ import {
 
 const SERVER = 'This verification was cancelled. Contact the organisation that sent it if you think this is a mistake.';
 const cancelled = (message: string = SERVER) =>
-  new KYCApiError(message, 409, 'session_cancelled', { error: 'session_cancelled', message });
+  new VerificationApiError(message, 409, 'session_cancelled', { error: 'session_cancelled', message });
 
 describe('reading the refusal', () => {
   it('recognises a session_cancelled refusal and nothing else', () => {
     expect(isSessionCancelledError(cancelled())).toBe(true);
-    expect(isSessionCancelledError(new KYCApiError('used', 409, 'handoff_session_used'))).toBe(false);
+    expect(isSessionCancelledError(new VerificationApiError('used', 409, 'handoff_session_used'))).toBe(false);
     expect(isSessionCancelledError(new TypeError('Failed to fetch'))).toBe(false);
     expect(isSessionCancelledError(null)).toBe(false);
   });
@@ -40,20 +40,20 @@ describe('reading the refusal', () => {
 
   it('stops the flow on a cancelled start or save, and only then', () => {
     expect(classifySessionStartFailure(cancelled())).toEqual({ kind: 'cancelled', message: SERVER });
-    expect(classifySessionStartFailure(new KYCApiError('x', 500))).toEqual({ kind: 'ignore' });
+    expect(classifySessionStartFailure(new VerificationApiError('x', 500))).toEqual({ kind: 'ignore' });
     expect(progressSaveStopsFlow(cancelled())).toBe(true);
-    expect(progressSaveStopsFlow(new KYCApiError('x', 409, 'handoff_session_used'))).toBe(false);
+    expect(progressSaveStopsFlow(new VerificationApiError('x', 409, 'handoff_session_used'))).toBe(false);
   });
 });
 
 describe('the submission', () => {
   it('maps to its own error code, never a retry', () => {
     for (const context of ['verify', 'upload'] as const) {
-      const e = mapToKycError(cancelled(), context);
+      const e = mapToVerificationError(cancelled(), context);
       expect(e.code).toBe('session_cancelled');
       expect(e.message).toBe(SERVER);
     }
-    expect(mapToKycError(cancelled('session_cancelled'), 'verify').message).not.toMatch(/try again/i);
+    expect(mapToVerificationError(cancelled('session_cancelled'), 'verify').message).not.toMatch(/try again/i);
   });
 
   it('offers no Go back', () => {
@@ -64,10 +64,10 @@ describe('the submission', () => {
 
 describe('the flow state', () => {
   it('keeps the first message and survives a reset', () => {
-    let s = kycReducer(initialKYCState, { type: 'SET_SESSION_CANCELLED', payload: { message: 'first' } });
-    s = kycReducer(s, { type: 'SET_SESSION_CANCELLED', payload: { message: 'second' } });
+    let s = verificationReducer(initialVerificationState, { type: 'SET_SESSION_CANCELLED', payload: { message: 'first' } });
+    s = verificationReducer(s, { type: 'SET_SESSION_CANCELLED', payload: { message: 'second' } });
     expect(s.sessionCancelled).toEqual({ message: 'first' });
-    expect(kycReducer(s, { type: 'RESET' }).sessionCancelled).toEqual({ message: 'first' });
+    expect(verificationReducer(s, { type: 'RESET' }).sessionCancelled).toEqual({ message: 'first' });
   });
 });
 

@@ -16,11 +16,9 @@ describe('the brand face is immune to org typography', () => {
     expect(BRAND_FONT_STACK).not.toContain('--font');
   });
 
-  it('matches the dashboard sidebar lockup, not the heading face', () => {
-    // The sidebar's "Trust" sets no font-family, so it inherits the dashboard
-    // BODY font (Karla). Space Grotesk is the heading face and would be a
-    // near-miss nobody notices until the two are seen side by side.
-    expect(BRAND_FONT_STACK).toContain('Karla');
+  it('is set in the brand font', () => {
+    // Bricolage Grotesque, the face the console and the Toden logo use.
+    expect(BRAND_FONT_STACK).toContain('Bricolage Grotesque');
     expect(BRAND_FONT_STACK).toContain('system-ui');
   });
 
@@ -33,9 +31,8 @@ describe('the brand face is immune to org typography', () => {
     expect(BRAND_FONT_STACK).not.toContain('Playfair');
   });
 
-  it('spells the product name in full', () => {
-    // "Myaza" alone is the parent company; the platform is Myaza Trust.
-    expect(PRODUCT_NAME).toBe('Myaza Trust');
+  it('names the product Toden', () => {
+    expect(PRODUCT_NAME).toBe('Toden');
   });
 });
 
@@ -58,15 +55,15 @@ describe('brandMarkColor — the footer mark stays OURS and stays visible', () =
     // Attribution, not advertising. A saturated mark clashes on an org whose
     // palette is yellow or green, and draws the eye to the least important
     // element on screen. The logo icon still carries the brand.
-    const NEUTRALS = ['#070330', '#F6F5FE'];
-    for (const bg of ['#FFFFFF', '#040218', '#fcf7f2', '#FF6B00', '#0EA5E9', '#1a0f00']) {
+    const NEUTRALS = ['#080A12', '#F6F5FE'];
+    for (const bg of ['#FFFFFF', '#080A12', '#fcf7f2', '#FF6B00', '#0EA5E9', '#1a0f00']) {
       expect(NEUTRALS).toContain(brandMarkColor(bg));
     }
   });
 
   it('stays legible on the SDK defaults', () => {
     expect(cr(brandMarkColor('#FFFFFF'), '#FFFFFF')).toBeGreaterThanOrEqual(4.5);
-    expect(cr(brandMarkColor('#040218'), '#040218')).toBeGreaterThanOrEqual(4.5);
+    expect(cr(brandMarkColor('#080A12'), '#080A12')).toBeGreaterThanOrEqual(4.5);
   });
 
   it('stays legible on a saturated brand background', () => {
@@ -104,7 +101,7 @@ describe('the background the mark resolves against', () => {
     appearance?: { backgroundColor?: string; dark?: { backgroundColor?: string } },
   ) =>
     isDark
-      ? (appearance?.dark?.backgroundColor ?? appearance?.backgroundColor ?? '#040218')
+      ? (appearance?.dark?.backgroundColor ?? appearance?.backgroundColor ?? '#080A12')
       : (appearance?.backgroundColor ?? '#FFFFFF');
 
   it('uses the DARK palette background on a dark flow', () => {
@@ -118,12 +115,12 @@ describe('the background the mark resolves against', () => {
 
   it('uses the light background on a light flow', () => {
     const appearance = { backgroundColor: '#fcf7f2', dark: { backgroundColor: '#1a0f00' } };
-    expect(brandMarkColor(resolve(false, appearance))).toBe('#070330');
+    expect(brandMarkColor(resolve(false, appearance))).toBe('#080A12');
   });
 
   it('falls back to the SDK surface when the org set nothing', () => {
     expect(brandMarkColor(resolve(true))).toBe('#F6F5FE');
-    expect(brandMarkColor(resolve(false))).toBe('#070330');
+    expect(brandMarkColor(resolve(false))).toBe('#080A12');
   });
 
   it('falls back to the base colour when only a light palette was set', () => {

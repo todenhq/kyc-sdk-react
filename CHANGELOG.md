@@ -1,5 +1,35 @@
 # Changelog
 
+## 3.8.0
+
+The entry point is now `Verification`, and the flow carries the Toden brand. The package name is unchanged.
+
+**Deploy note for Toden:** this version calls the verification API under `/api/v1`. Production and Sandbox both serve it.
+
+### New names
+
+- The entry points are `Verification`, `useVerification`, `HostedVerification` and `VerificationConfig`.
+- `KYC`-prefixed names are now `Verification`-prefixed: `VerificationError`, `VerificationSubmission`, `VerificationResult`, `VerificationStep`, `VerificationAppearance`, `VerificationProvider`.
+- CSS hooks follow: `verification-root` and `--verification-success`.
+
+Every earlier name still works as a deprecated alias (`MyazaKYC`, `useMyazaKYC`, `MyazaKYCHosted`, `KYCError` and the rest). Existing code needs no change.
+
+Error objects keep their earlier `name` strings (`KYCError`, `KYCApiError`), so code that matches on them is unaffected.
+
+### Brand
+
+- The flow says Toden where it said Myaza: the footer logo, the consent notice (which now links to toden.co/legal) and the default wording.
+- New default colours: a neutral grey scale in place of the purple-tinted one. Colours set through `appearance` or a workflow are unchanged.
+- Headings, and text at 16px and up, are set in Bricolage Grotesque. Smaller text and anything typed into a field is Geist; the SDK names that family and your page supplies it, with the system font as the fallback. An organisation's own font still replaces both.
+
+### API address
+
+The SDK calls the verification API under `/api/v1` (for example `/api/v1/verify`). The earlier `/api/kyc` addresses keep working on the server, so older versions of the SDK are unaffected. If you proxy or allowlist SDK traffic by path, add `/api/v1`.
+
+### Fixes
+
+- The dark header uses the same surface colour as the cards. It was a pale purple band.
+
 ## 3.7.0
 
 "Continue on your phone" is now tied to the verification this device started.

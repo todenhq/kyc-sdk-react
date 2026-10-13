@@ -4,7 +4,7 @@ import { IMAGE_MAX_BYTES, PDF_MAX_BYTES, UPLOAD_HINT, uploadSizeError } from './
 import { describeInMonorepo, sharedVectors } from '../__tests__/monorepo';
 import { DEFAULT_TEXTS } from '../i18n/catalogue';
 
-// ─── The shared vectors (kyc-sdk-flutter/test/upload_limits_vectors.json) ────
+// ─── The shared vectors (sdk-flutter/test/upload_limits_vectors.json) ────
 //
 // The size rule and the hint under every drop zone are data the three SDKs
 // must agree on; one file holds them and each mirror's test reads it.
@@ -16,7 +16,7 @@ interface Vectors {
   cases: Array<{ name: string; mime: string | null; bytes: number | null; error: string | null }>;
 }
 
-const vectors = sharedVectors<Vectors>('kyc-sdk-flutter/test/upload_limits_vectors.json', {
+const vectors = sharedVectors<Vectors>('sdk-flutter/test/upload_limits_vectors.json', {
   hint: '',
   imageMaxBytes: 0,
   pdfMaxBytes: 0,

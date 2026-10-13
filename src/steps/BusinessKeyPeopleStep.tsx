@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StepHeader } from '../components/StepHeader';
 import { Button } from '../components/ui/button';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import {
   MAX_KEY_PEOPLE_ROWS,
   invalidKeyPersonRows,
@@ -41,8 +41,8 @@ type SheetState = { mode: 'add' | 'edit'; section: SectionKey; index?: number } 
  * escalate them at submit.
  */
 export function BusinessKeyPeopleStep() {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
   const rows = state.businessApplication.keyPeople;
   const uboUnidentifiable = state.businessApplication.uboUnidentifiable;

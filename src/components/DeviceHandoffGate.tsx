@@ -19,7 +19,7 @@ import { Button } from './ui/button';
 import { PoweredBy } from './PoweredBy';
 import { BrandLogoChip } from './BrandLogoChip';
 import { VisuallyHidden } from './VisuallyHidden';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { useBranding } from '../hooks/useBranding';
 import { themeRootOrDocument, useThemeRoot } from '../lib/sdk-frame-context';
 import { useDeviceHandoff } from '../hooks/useDeviceHandoff';
@@ -57,7 +57,7 @@ interface DeviceHandoffGateProps {
   noHandoff?: boolean;
 }
 
-// Minimal theme toggle, mirroring KYCModal's (kept local — the modal's isn't
+// Minimal theme toggle, mirroring VerificationModal's (kept local — the modal's isn't
 // exported and the gate renders outside it).
 function ThemeToggle() {
   const [, rerender] = useReducer((x: number) => x + 1, 0);
@@ -112,7 +112,7 @@ export default function DeviceHandoffGate({
   mobileOnly,
   noHandoff,
 }: DeviceHandoffGateProps) {
-  const config = useKYCConfig();
+  const config = useVerificationConfig();
   // A mobile-only workflow with handoff switched off has nothing to hand off
   // to — don't mint a session just to render a notice.
   const handoff = useDeviceHandoff(config.api, snapshot, !noHandoff, {
@@ -132,7 +132,7 @@ export default function DeviceHandoffGate({
   useBrandFonts(config.appearance);
 
   // Apply the configured initial theme ('system' follows the device),
-  // matching KYCModal.
+  // matching VerificationModal.
   const configuredThemeRoot = useThemeRoot();
   useEffect(
     () => applyConfiguredTheme(config.appearance?.theme, configuredThemeRoot),
@@ -216,7 +216,7 @@ export default function DeviceHandoffGate({
   return (
     <Dialog open onOpenChange={(o) => { if (!o && !dismissBlocked) closeGate(); }}>
       <DialogContent
-        className="kyc-root"
+        className="verification-root"
         style={themeVars}
         onPointerDownOutside={(e) => { if (dismissBlocked) e.preventDefault(); }}
         onEscapeKeyDown={(e) => { if (dismissBlocked) e.preventDefault(); }}
@@ -262,8 +262,8 @@ export default function DeviceHandoffGate({
             />
           </div>
 
-          {/* This gate is a SEPARATE Dialog from KYCModal, so it needs its own
-              attribution — it is often the FIRST Myaza surface a desktop user
+          {/* This gate is a SEPARATE Dialog from VerificationModal, so it needs its own
+              attribution — it is often the FIRST Toden surface a desktop user
               sees, and the one asking them to scan a QR with their phone. */}
           <PoweredBy />
         </div>
@@ -318,8 +318,8 @@ function GateBody({
   if (phase === 'submitted') {
     return (
       <div className="flex flex-col items-center gap-6 py-8 animate-fade-in">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--kyc-success)]/10">
-          <svg className="h-10 w-10 text-[var(--kyc-success)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--verification-success)]/10">
+          <svg className="h-10 w-10 text-[var(--verification-success)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 12l5 5L20 6" strokeDasharray="100" strokeDashoffset="100" className="animate-checkmark" />
           </svg>
         </div>

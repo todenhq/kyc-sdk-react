@@ -132,15 +132,15 @@ export type TerminalTone = 'success' | 'declined' | 'neutral';
 
 const TONE: Record<TerminalTone, { ring: string; color: string; path: string }> = {
 	success: {
-		ring: 'bg-[var(--kyc-success)]/10',
-		color: 'text-[var(--kyc-success)]',
+		ring: 'bg-[var(--verification-success)]/10',
+		color: 'text-[var(--verification-success)]',
 		path: 'M4 12l5 5L20 6',
 	},
 	// A cross, drawn with the same stroke and the same animation, so the screen
 	// reads as one design rather than a different screen for bad news.
 	declined: {
-		ring: 'bg-[var(--kyc-error)]/10',
-		color: 'text-[var(--kyc-error)]',
+		ring: 'bg-[var(--verification-error)]/10',
+		color: 'text-[var(--verification-error)]',
 		path: 'M6 6l12 12M18 6L6 18',
 	},
 	neutral: { ring: 'bg-muted', color: 'text-muted-foreground', path: 'M12 8v5M12 16.5v.5' },

@@ -5,23 +5,23 @@ import { fontVars, radiusVars, sanitizeFontFamily } from './theme-tokens';
 describe('radiusVars', () => {
   it('moves the whole ladder, not just --radius', () => {
     // THE TRAP, and it shipped broken once. globals.css overrides every
-    // `rounded-*` utility inside `.kyc-root` with a LITERAL, to keep a host
+    // `rounded-*` utility inside `.verification-root` with a LITERAL, to keep a host
     // app's @theme out. So setting `--radius` — or even `--radius-xl` — changed
     // nothing on screen: the utility never read either. The rules now read
-    // `--kyc-radius-*`, a namespace only this SDK sets.
+    // `--verification-radius-*`, a namespace only this SDK sets.
     const vars = radiusVars(4);
     expect(vars['--radius']).toBe('4px');
-    expect(vars['--kyc-radius-xl']).toBe('4px'); // the base rung buttons/inputs use
-    expect(vars['--kyc-radius-lg']).toBeDefined();
-    expect(vars['--kyc-radius-2xl']).toBeDefined();
+    expect(vars['--verification-radius-xl']).toBe('4px'); // the base rung buttons/inputs use
+    expect(vars['--verification-radius-lg']).toBeDefined();
+    expect(vars['--verification-radius-2xl']).toBeDefined();
   });
 
   it('keeps the rungs in proportion so relationships survive', () => {
     // A card (2xl) must stay rounder than an input (xl), at every setting.
     const vars = radiusVars(24); // 2× the 12px default
-    expect(vars['--kyc-radius-xl']).toBe('24px');
-    expect(vars['--kyc-radius-2xl']).toBe('32px'); // 16 × 2
-    expect(vars['--kyc-radius-lg']).toBe('16px'); // 8 × 2
+    expect(vars['--verification-radius-xl']).toBe('24px');
+    expect(vars['--verification-radius-2xl']).toBe('32px'); // 16 × 2
+    expect(vars['--verification-radius-lg']).toBe('16px'); // 8 × 2
   });
 
   it('squares everything off at 0', () => {
@@ -31,11 +31,11 @@ describe('radiusVars', () => {
     }
   });
 
-  it('NEVER emits --kyc-radius-full', () => {
+  it('NEVER emits --verification-radius-full', () => {
     // It renders avatars, badges, the camera oval and the liveness ring.
     // Scaling it turns circles into squircles — a bug wearing a brand costume.
     for (const r of [0, 4, 12, 32]) {
-      expect(radiusVars(r)['--kyc-radius-full']).toBeUndefined();
+      expect(radiusVars(r)['--verification-radius-full']).toBeUndefined();
     }
   });
 
@@ -81,6 +81,13 @@ describe('fontVars', () => {
     expect(vars['--font-heading']).toBe('Inter, system-ui, sans-serif');
   });
 
+  it('sets large body text to the body font, never the heading font', () => {
+    // Text at 16px and up reads --font-copy. With an org font it must follow
+    // their BODY font, or their paragraphs and buttons would take the heading face.
+    expect(fontVars('Inter', 'Playfair Display')['--font-copy']).toBe('Inter, system-ui, sans-serif');
+    expect(fontVars(undefined, 'Playfair Display')['--font-copy']).toBeUndefined();
+  });
+
   it('keeps headings separate when both are given', () => {
     const vars = fontVars('Inter', 'Playfair Display');
     expect(vars['--font-body']).toContain('Inter');
@@ -101,7 +108,7 @@ describe('buildThemeVars integration', () => {
       fontFamily: 'Inter',
     }) as Record<string, string>;
     expect(vars['--primary']).toBe('#FF0000');
-    expect(vars['--kyc-radius-xl']).toBe('4px');
+    expect(vars['--verification-radius-xl']).toBe('4px');
     expect(vars['--font-sans']).toContain('Inter');
   });
 

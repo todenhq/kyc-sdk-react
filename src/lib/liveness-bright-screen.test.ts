@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import type { KYCStep } from '../types/config';
+import type { VerificationStep } from '../types/config';
 import {
   livenessBrightScreenOn,
   restoreDarkAfterForcedLight,
   shouldForceLightTheme,
 } from './liveness-bright-screen';
 
-const base = { enabled: true, open: true, step: 'liveness' as KYCStep, cameraShown: true };
+const base = { enabled: true, open: true, step: 'liveness' as VerificationStep, cameraShown: true };
 
 describe('livenessBrightScreenOn', () => {
   it('is on when absent (every workflow published before the switch)', () => {
@@ -30,7 +30,7 @@ describe('shouldForceLightTheme', () => {
   });
 
   it('never touches any other step', () => {
-    const others: KYCStep[] = ['consent', 'id-type', 'document-capture', 'id-input', 'submitted', 'questionnaire'];
+    const others: VerificationStep[] = ['consent', 'id-type', 'document-capture', 'id-input', 'submitted', 'questionnaire'];
     for (const step of others) {
       expect(shouldForceLightTheme({ ...base, step })).toBe(false);
     }

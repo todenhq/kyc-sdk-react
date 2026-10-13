@@ -3,14 +3,14 @@
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { collectWebDeviceMetadata } from './utils/device-metadata';
 import { Loader2 } from './components/icons';
-import { KYCProvider, useKYCContext } from './context/KYCContext';
+import { VerificationProvider, useVerificationContext } from './context/VerificationContext';
 
 // Bearer prefix a hosted mount authenticates with (mirrors kyc-core's
-// HANDOFF_TOKEN_PREFIX and MyazaKYCHosted). A key starting with this IS a
+// HANDOFF_TOKEN_PREFIX and HostedVerification). A key starting with this IS a
 // session, so such a mount must never start another.
 const HANDOFF_TOKEN_PREFIX = 'hs_';
-import { KYCConfigProvider, useKYCConfig, type ServerSdkConfig } from './context/KYCConfigContext';
-import { KYCModal } from './components/KYCModal';
+import { VerificationConfigProvider, useVerificationConfig, type ServerSdkConfig } from './context/VerificationConfigContext';
+import { VerificationModal } from './components/VerificationModal';
 import { Button } from './components/ui/button';
 import { SdkFrame } from './lib/sdk-frame';
 import { buildThemeVars } from './lib/theme';
@@ -23,8 +23,8 @@ import { isDesktopDevice } from './lib/device';
 import { confirmMobileDevice, type DeviceClassResult } from './lib/device-class';
 import { useSessionProgress } from './hooks/useSessionProgress';
 import { resolveBaseUrl } from './lib/resolve-url';
-import { createKYCApi, KYCApiError, type WorkflowResolutionResponse, type HandoffSessionSnapshot } from './services/api';
-import { KYCError } from './types/verification';
+import { createVerificationApi, VerificationApiError, type WorkflowResolutionResponse, type HandoffSessionSnapshot } from './services/api';
+import { VerificationError } from './types/verification';
 import { listIdTypeDefinitions } from './utils/id-definitions';
 import { previewSelectionForSupportingDocuments } from './lib/supporting-documents-preview';
 import { resetIntegritySignals } from './lib/integrity-signals';
@@ -40,7 +40,7 @@ import type { StartSessionResponse } from './services/api';
 import { classifySessionStartFailure } from './lib/session-cancelled';
 import { resetStepLog } from './lib/step-log';
 import { resetSilentCaptures } from './lib/silent-capture-store';
-import type { MyazaKYCConfig, MyazaKYCProps, UseMyazaKYCReturn, KYCStep, AnyCountry } from './types/config';
+import type { VerificationConfig, VerificationProps, UseVerificationReturn, VerificationStep, AnyCountry } from './types/config';
 import type { SubjectType, WorkflowBusinessConfig } from './types/business';
 import { handoffCaptureNeeded } from './lib/handoff-capture';
 import { resumedApplicationFrom } from './lib/resumed-application';
@@ -54,9 +54,9 @@ const DeviceHandoffGate = lazy(() => import('./components/DeviceHandoffGate'));
  * that step, seeding prerequisite state (an ID type of the right kind) so
  * mid-flow steps render sensibly. Renders nothing; inert unless the prop is set.
  */
-function PreviewStepDriver({ step }: { step: KYCStep | null | undefined }) {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig(); // effective country/idTypes (post country-select)
+function PreviewStepDriver({ step }: { step: VerificationStep | null | undefined }) {
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig(); // effective country/idTypes (post country-select)
   const stateRef = useRef({ state, config });
   stateRef.current = { state, config };
 
@@ -132,10 +132,10 @@ function PreviewStepDriver({ step }: { step: KYCStep | null | undefined }) {
 }
 
 // ---------------------------------------------------------------------------
-// Inner component (has access to KYCContext)
+// Inner component (has access to VerificationContext)
 // ---------------------------------------------------------------------------
 
-type KYCInnerProps = MyazaKYCProps<AnyCountry> & {
+type VerificationInnerProps = VerificationProps<AnyCountry> & {
   /**
    * Pre-resolved server config, provided by WorkflowGate (flow mode) so the
    * provider skips the /config fetch — the flow resolution already carried
@@ -151,7 +151,7 @@ type KYCInnerProps = MyazaKYCProps<AnyCountry> & {
   applicantWorkflowId?: string;
 };
 
-function KYCInner({
+function VerificationInner({
   devUrl,
   apiKey,
   workflowId,
@@ -213,9 +213,9 @@ function KYCInner({
   addressCollection,
   nfc,
   ...triggerProps
-}: KYCInnerProps) {
-  const { state, dispatch } = useKYCContext();
-  const prevStepRef = useRef<KYCStep>(state.currentStep);
+}: VerificationInnerProps) {
+  const { state, dispatch } = useVerificationContext();
+  const prevStepRef = useRef<VerificationStep>(state.currentStep);
 
   // Device-handoff gate (continue-on-phone). Shown before the flow on desktop
   // when enabled; the gate owns its own session + polling and never touches the
@@ -302,11 +302,11 @@ function KYCInner({
     }
   }, [state.currentStep, onStepChange]);
 
-  // (Step journey recording lives in KYCProvider — the seam every mount
+  // (Step journey recording lives in VerificationProvider — the seam every mount
   // variant shares, hosted pages included.)
 
   // Fire onError when a technical error is set. `state.error` is a typed
-  // KYCError (still an Error), so consumers can narrow on `error.code`.
+  // VerificationError (still an Error), so consumers can narrow on `error.code`.
   useEffect(() => {
     if (state.error) {
       safeReportError(onError, state.error);
@@ -354,7 +354,7 @@ function KYCInner({
 
   // One client for the session calls, built from the same inputs the config
   // provider uses — this component renders that provider, so it sits above it.
-  const sessionApiRef = useRef(createKYCApi(resolveBaseUrl(apiKey, devUrl), apiKey));
+  const sessionApiRef = useRef(createVerificationApi(resolveBaseUrl(apiKey, devUrl), apiKey));
 
   // Start (or resume) the server-side session for this attempt.
   //
@@ -424,7 +424,7 @@ function KYCInner({
             // The server could not read the flow as sent. Starting matters more
             // than recording it: the attempt starts as it always has, and the
             // phone's session is then created on its own.
-            if (err instanceof KYCApiError && err.statusCode === 400) {
+            if (err instanceof VerificationApiError && err.statusCode === 400) {
               return sessionApiRef.current.startSession(input);
             }
             throw err;
@@ -542,7 +542,7 @@ function KYCInner({
   }, [dispatch, onClose]);
 
   return (
-    <KYCConfigProvider
+    <VerificationConfigProvider
       devUrl={devUrl}
       apiKey={apiKey}
       workflowId={workflowId}
@@ -624,8 +624,8 @@ function KYCInner({
         </Suspense>
       )}
 
-      <KYCModal open={state.isOpen} onClose={handleClose} showThemeToggle={showThemeToggle} disableClose={disableClose} fullScreen={fullScreen} />
-    </KYCConfigProvider>
+      <VerificationModal open={state.isOpen} onClose={handleClose} showThemeToggle={showThemeToggle} disableClose={disableClose} fullScreen={fullScreen} />
+    </VerificationConfigProvider>
   );
 }
 
@@ -636,8 +636,8 @@ function KYCInner({
 // Map a flow-resolution failure to a user-facing message + typed code. Every
 // failure is blocking: running with silently different config (ignoring the
 // flow) would be worse than stopping. A page reload retries.
-function describeFlowError(err: unknown): { message: string; statusCode?: number; code: KYCError['code'] } {
-  if (err instanceof KYCApiError) {
+function describeFlowError(err: unknown): { message: string; statusCode?: number; code: VerificationError['code'] } {
+  if (err instanceof VerificationApiError) {
     if (err.statusCode === 404) {
       return {
         message: 'This verification flow does not exist, is not published, or does not belong to this API key.',
@@ -665,17 +665,17 @@ type WorkflowGateState =
   | { phase: 'error'; override: ServerSdkConfig };
 
 /**
- * Wraps KYCInner when a `workflowId` prop is set: fetches the published flow,
+ * Wraps VerificationInner when a `workflowId` prop is set: fetches the published flow,
  * merges its config over the props (flow wins), and hands the resolution's
  * idTypes/branding to the provider as a pre-resolved server config (so /config
  * is never fetched — one round trip). Failures render the normal SDK shell
  * with a fatal server-config error, so the trigger opens the modal's blocking
  * error screen instead of a silently different flow.
  */
-function WorkflowGate(props: KYCInnerProps) {
+function WorkflowGate(props: VerificationInnerProps) {
   const { apiKey, devUrl, workflowId, defaultOpen, appearance, onError } = props;
   const api = useMemo(
-    () => createKYCApi(resolveBaseUrl(apiKey, devUrl), apiKey),
+    () => createVerificationApi(resolveBaseUrl(apiKey, devUrl), apiKey),
     [apiKey, devUrl],
   );
   const [state, setState] = useState<WorkflowGateState>({ phase: 'loading' });
@@ -701,7 +701,7 @@ function WorkflowGate(props: KYCInnerProps) {
         const reportKey = `${workflowId}`;
         if (reportedRef.current !== reportKey) {
           reportedRef.current = reportKey;
-          safeReportError(onError, new KYCError(code, message));
+          safeReportError(onError, new VerificationError(code, message));
         }
       });
     return () => {
@@ -735,7 +735,7 @@ function WorkflowGate(props: KYCInnerProps) {
     // Country may be absent in flow mode; the blocking error screen renders
     // before anything country-dependent, so any placeholder is safe.
     return (
-      <KYCInner
+      <VerificationInner
         {...props}
         country={props.country ?? 'NG'}
         serverConfigOverride={state.override}
@@ -748,9 +748,9 @@ function WorkflowGate(props: KYCInnerProps) {
   const merged = overlayApplicantWorkflow(
     state.flow.applicantWorkflow,
     mergeWorkflowConfig(state.flow.config, props as unknown as Record<string, unknown>),
-  ) as unknown as KYCInnerProps;
+  ) as unknown as VerificationInnerProps;
   return (
-    <KYCInner
+    <VerificationInner
       {...merged}
       serverConfigOverride={{
         status: 'ready',
@@ -767,44 +767,44 @@ function WorkflowGate(props: KYCInnerProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Public component  <MyazaKYC />
+// Public component  <Verification />
 // ---------------------------------------------------------------------------
 
-export function MyazaKYC<C extends AnyCountry>(props: MyazaKYCProps<C>) {
+export function Verification<C extends AnyCountry>(props: VerificationProps<C>) {
   // Fail loud at integration time (same contract as an invalid key prefix):
   // without a flow there is nothing to derive the country from. Business (KYB)
   // configs carry their registry country on the business block instead.
   const businessCountry = props.subjectType === 'business' ? props.business?.country : undefined;
   if (!props.workflowId && !props.country && !businessCountry) {
-    throw new KYCError('unknown', 'MyazaKYC requires a `country` prop unless a `workflowId` is provided.');
+    throw new VerificationError('unknown', 'Verification requires a `country` prop unless a `workflowId` is provided.');
   }
   const inner = {
     ...props,
     // Prop-configured business mounts (builder preview) have no top-level
     // country — the business block's registry country is the effective one.
     country: props.country ?? businessCountry,
-  } as unknown as KYCInnerProps;
+  } as unknown as VerificationInnerProps;
   return (
     // Shadow-DOM style isolation: the SDK carries its own stylesheet and the
     // host app's CSS cannot reach in (nor the SDK's out). `styleIsolation={
     // false}` restores the light-DOM mount, which needs the global
     // `@myazahq/kyc-sdk-react/styles.css` import — the hosted page's mode.
     <SdkFrame isolate={props.styleIsolation !== false}>
-      <KYCProvider>
-        {props.workflowId ? <WorkflowGate {...inner} /> : <KYCInner {...inner} />}
-      </KYCProvider>
+      <VerificationProvider>
+        {props.workflowId ? <WorkflowGate {...inner} /> : <VerificationInner {...inner} />}
+      </VerificationProvider>
     </SdkFrame>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Public hook  useMyazaKYC()
+// Public hook  useVerification()
 // ---------------------------------------------------------------------------
 
-export function useMyazaKYC<C extends AnyCountry>(config: MyazaKYCConfig<C>): UseMyazaKYCReturn {
-  const { state, dispatch } = useKYCContext();
+export function useVerification<C extends AnyCountry>(config: VerificationConfig<C>): UseVerificationReturn {
+  const { state, dispatch } = useVerificationContext();
 
-  const prevStepRef = useRef<KYCStep>(state.currentStep);
+  const prevStepRef = useRef<VerificationStep>(state.currentStep);
 
   // Apply the voice-guidance config (enabled + language) for spoken prompts.
   useEffect(() => {

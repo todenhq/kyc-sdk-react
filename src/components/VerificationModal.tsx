@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from './ui/dialog';
-import { KYCHeader } from './KYCHeader';
+import { VerificationHeader } from './VerificationHeader';
 import { SandboxBanner } from './SandboxBanner';
 import { StepHeaderSlotContext } from './step-header-slot';
 import { CaptureLightContext } from './capture-light';
@@ -26,8 +26,8 @@ import { Button } from './ui/button';
 import { SessionCancelledScreen, useReportCancellation } from './SessionCancelledScreen';
 import { useText } from '../i18n';
 import { cn } from '../lib/utils';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { hasActiveQuestionnaire } from '../lib/questionnaire';
 import { hasProofOfAddressStep, hasAddressCollectionStep, poaCountryAccepted } from '../lib/post-capture';
 import { hasEmailVerificationStep, hasPhoneVerificationStep } from '../lib/contact-steps';
@@ -45,10 +45,10 @@ import { AddressSearchStep } from '../steps/address/AddressSearchStep';
 import { AddressEntranceStep } from '../steps/address/AddressEntranceStep';
 import { AddressReviewStep } from '../steps/address/AddressReviewStep';
 import { addressFlowOptions, addressVendorsStubbed } from '../steps/address/flow-steps';
-import type { KYCStep } from '../types/config';
+import type { VerificationStep } from '../types/config';
 import { PoweredBy } from './PoweredBy';
 import { VisuallyHidden } from './VisuallyHidden';
-import { KYCErrorBoundary } from './KYCErrorBoundary';
+import { VerificationErrorBoundary } from './VerificationErrorBoundary';
 
 import { ApplicantRoleStep } from '../steps/ApplicantRoleStep';
 import { BusinessDetailsStep } from '../steps/BusinessDetailsStep';
@@ -67,7 +67,7 @@ import { PreviewCapturePlaceholder } from '../steps/PreviewCapturePlaceholder';
 import { SubmittedStep } from '../steps/SubmittedStep';
 import { CompletedStep } from '../steps/CompletedStep';
 
-interface KYCModalProps {
+interface VerificationModalProps {
   open: boolean;
   onClose: () => void;
   showThemeToggle?: boolean;
@@ -124,10 +124,10 @@ function CurrentStep({
   stepOrder,
 }: {
   plan: ReturnType<typeof multiIdPlan>;
-  step: KYCStep;
-  stepOrder: readonly KYCStep[];
+  step: VerificationStep;
+  stepOrder: readonly VerificationStep[];
 }) {
-  const config = useKYCConfig();
+  const config = useVerificationConfig();
 
   switch (step) {
     case 'consent':
@@ -189,11 +189,11 @@ function CurrentStep({
   }
 }
 
-const CAPTURE_STEPS: KYCStep[] = ['document-capture', 'liveness'];
+const CAPTURE_STEPS: VerificationStep[] = ['document-capture', 'liveness'];
 
-export function KYCModal({ open, onClose, showThemeToggle, disableClose, fullScreen }: KYCModalProps) {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+export function VerificationModal({ open, onClose, showThemeToggle, disableClose, fullScreen }: VerificationModalProps) {
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
 
   // Multi-ID flows: the applicant picks each slot's ID from what the admin
@@ -362,7 +362,7 @@ export function KYCModal({ open, onClose, showThemeToggle, disableClose, fullScr
   const [titleSlot, setTitleSlot] = useState<HTMLDivElement | null>(null);
   // 'none' omits progress from the header entirely: it turns showProgress off,
   // so both the step row and the bar drop out and the header keeps its bottom
-  // border (the bar is what normally replaces it). KYCHeader needs no change.
+  // border (the bar is what normally replaces it). VerificationHeader needs no change.
   // A live document camera takes the whole surface (see immersive-capture.ts).
   // Reset on step change so a step that unmounts mid-capture — a back gesture,
   // an error boundary — can never strand the chrome hidden.
@@ -406,14 +406,14 @@ export function KYCModal({ open, onClose, showThemeToggle, disableClose, fullScr
         // height, which is why it only ever looked wrong on desktop.
         //
         // twMerge lets these win over the base classes.
-        className="kyc-root flex flex-col overflow-hidden"
+        className="verification-root flex flex-col overflow-hidden"
         style={themeVars}
         onPointerDownOutside={(e) => { if (dismissBlocked) e.preventDefault(); }}
         onEscapeKeyDown={(e) => { if (dismissBlocked) e.preventDefault(); }}
       >
         <VisuallyHidden>
           <DialogTitle>Identity Verification</DialogTitle>
-          <DialogDescription>Verify your identity with Myaza</DialogDescription>
+          <DialogDescription>Verify your identity with Toden</DialogDescription>
         </VisuallyHidden>
 
         {/* min-h-0 so the scrolling child can actually shrink: a flex item
@@ -421,7 +421,7 @@ export function KYCModal({ open, onClose, showThemeToggle, disableClose, fullScr
             content, which silently disables the child's overflow. */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[inherit]">
           {!immersive && <SandboxBanner />}
-          {!immersive && <KYCHeader
+          {!immersive && <VerificationHeader
             // Hidden while the selfie holds the flow light, so it cannot be
             // switched back to dark mid-step.
             showThemeToggle={forceLight ? false : showThemeToggle}
@@ -437,7 +437,7 @@ export function KYCModal({ open, onClose, showThemeToggle, disableClose, fullScr
             titleSlotRef={setTitleSlot}
           />}
 
-          <KYCErrorBoundary>
+          <VerificationErrorBoundary>
             {/* flex flex-col so a step that opts in (flex-1 + min-h-0, e.g. the
                 country picker) can fill this area and own its scroll; content
                 steps stay content-height and this container scrolls them. */}
@@ -469,7 +469,7 @@ export function KYCModal({ open, onClose, showThemeToggle, disableClose, fullScr
                 </>
               )}
             </div>
-          </KYCErrorBoundary>
+          </VerificationErrorBoundary>
 
           {/* Vendor attribution. Sits OUTSIDE the scrolling body as a shrink-0
               sibling, so it stays pinned while a long step scrolls under it.

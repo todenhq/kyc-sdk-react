@@ -1,5 +1,5 @@
 import type { AddressCollectionConfig } from '../../types/config';
-import type { KYCState } from '../../context/types';
+import type { VerificationState } from '../../context/types';
 import { defaultText } from '../../i18n/translate';
 import type { TextFn } from '../../i18n/types';
 
@@ -64,7 +64,7 @@ export function addressFieldModes(
   return modes;
 }
 
-type Address = NonNullable<KYCState['address']>;
+type Address = NonNullable<VerificationState['address']>;
 
 /** Which map-prefill part fills each field while untouched (the sheet's own
  *  `shown` rule). Property name/number and unit have no prefill — the

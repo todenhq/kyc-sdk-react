@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { StepHeader } from '../components/StepHeader';
 import { Button } from '../components/ui/button';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import {
   nextBusinessStep,
   prevBusinessStep,
@@ -22,8 +22,8 @@ import { useText } from '../i18n';
  * `[{ type, mediaId, fileName }]` and ride the business /verify submission.
  */
 export function BusinessDocumentsStep() {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
   const slots = resolveBusinessDocumentTypes(config.business, t);
   const uploads = state.businessApplication.documents;

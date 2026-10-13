@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { KYCProvider, useKYCContext } from '../context/KYCContext';
-import { KYCConfigProvider, type ServerSdkConfig } from '../context/KYCConfigContext';
-import { KYCModal } from '../components/KYCModal';
-import type { AddressCollectionConfig, AnyCountry, KYCAppearance, KYCSuccessContent } from '../types/config';
-import type { CompletedSessionSummary, KYCApi } from '../services/api';
+import { VerificationProvider, useVerificationContext } from '../context/VerificationContext';
+import { VerificationConfigProvider, type ServerSdkConfig } from '../context/VerificationConfigContext';
+import { VerificationModal } from '../components/VerificationModal';
+import type { AddressCollectionConfig, AnyCountry, VerificationAppearance, VerificationSuccessContent } from '../types/config';
+import type { CompletedSessionSummary, VerificationApi } from '../services/api';
 
 // The hosted page for a session that is ALREADY submitted.
 //
@@ -36,7 +36,7 @@ function stillWaiting(summary: CompletedSessionSummary): boolean {
  * dispatched, so the terminal screen is what paints first.
  */
 function MarkOpen() {
-  const { dispatch } = useKYCContext();
+  const { dispatch } = useVerificationContext();
   useEffect(() => {
     dispatch({ type: 'OPEN_MODAL' });
   }, [dispatch]);
@@ -51,7 +51,7 @@ export function HostedCompleted({
   onClose,
 }: {
   token: string;
-  api: KYCApi;
+  api: VerificationApi;
   summary: CompletedSessionSummary;
   /**
    * Mounted inside a host application (the dashboard's "Continue
@@ -101,8 +101,8 @@ export function HostedCompleted({
   };
 
   return (
-    <KYCProvider initialStep="submitted">
-      <KYCConfigProvider
+    <VerificationProvider initialStep="submitted">
+      <VerificationConfigProvider
         apiKey={`hs_${token}`}
         apiOverride={api}
         serverConfigOverride={serverConfigOverride}
@@ -111,8 +111,8 @@ export function HostedCompleted({
         completedSummary={summary}
         // Business snapshots carry their country on the business block.
         country={(snap.country ?? snap.business?.country) as AnyCountry}
-        appearance={snap.appearance as KYCAppearance | undefined}
-        success={snap.success as KYCSuccessContent | undefined}
+        appearance={snap.appearance as VerificationAppearance | undefined}
+        success={snap.success as VerificationSuccessContent | undefined}
         texts={snap.texts}
         userData={snap.userData}
         // The scope is what tells the returning screen WHAT was verified: without
@@ -128,14 +128,14 @@ export function HostedCompleted({
         assetsBasePath={snap.assetsBasePath}
       >
         <MarkOpen />
-        <KYCModal
+        <VerificationModal
           open
           onClose={embedded ? () => onClose?.() : () => undefined}
           showThemeToggle={snap.showThemeToggle}
           disableClose={!embedded}
           fullScreen={snap.fullScreen}
         />
-      </KYCConfigProvider>
-    </KYCProvider>
+      </VerificationConfigProvider>
+    </VerificationProvider>
   );
 }

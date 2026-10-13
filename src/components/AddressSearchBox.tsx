@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 import { DropdownSurface } from './DropdownSurface';
 import { eventPathIncludes } from '../lib/event-path';
 import { useDropdownAnchor } from '../lib/use-dropdown-anchor';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import type { AddressSearchHit } from '../services/api';
 import { useText } from '../i18n';
 
@@ -20,7 +20,7 @@ import { useText } from '../i18n';
 // person meant. Dragging the pin always works; this is a shortcut, never a
 // gate, so every failure degrades to "place the pin by hand".
 //
-// The results panel rides the house dropdown mechanics (MyazaSelect's):
+// The results panel rides the house dropdown mechanics (UiSelect's):
 // portaled out of the dialog, fixed to viewport coordinates, so it floats
 // over everything instead of being clipped by the step body's overflow.
 
@@ -31,7 +31,7 @@ export function AddressSearchBox({
   country?: string | null;
   onPick: (hit: AddressSearchHit) => void;
 }) {
-  const config = useKYCConfig();
+  const config = useVerificationConfig();
   const t = useText();
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);

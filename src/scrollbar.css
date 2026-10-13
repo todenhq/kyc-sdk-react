@@ -6,10 +6,10 @@
    SCOPED, never global. This sheet is adopted into the SdkFrame shadow roots,
    but it also ships as dist/styles.css for `styleIsolation={false}` mounts and
    the hosted page, where a bare `::-webkit-scrollbar` would restyle the
-   integrator's whole page. Every rule is anchored to `.kyc-root` (the modal
-   root and every Radix portal surface) or `[data-kyc-frame]` (the shadow
+   integrator's whole page. Every rule is anchored to `.verification-root` (the modal
+   root and every Radix portal surface) or `[data-verification-frame]` (the shadow
    frames, which is where the anchored dropdown menus land: they render outside
-   `.kyc-root` with the theme tokens merged inline). scrollbar-css.test.ts fails
+   `.verification-root` with the theme tokens merged inline). scrollbar-css.test.ts fails
    on an unscoped selector. Known gap: in a light-DOM mount those anchored menus
    portal to the body with neither hook, so they keep the browser's own bar.
 
@@ -30,9 +30,9 @@
 
 @layer base {
   @supports not selector(::-webkit-scrollbar) {
-    .kyc-root,
-    .kyc-root *,
-    [data-kyc-frame] * {
+    .verification-root,
+    .verification-root *,
+    [data-verification-frame] * {
       scrollbar-width: thin;
       scrollbar-color: #8f8ea2 transparent;
       scrollbar-color: color-mix(in srgb, var(--foreground) 45%, transparent) transparent;
@@ -42,32 +42,32 @@
   /* 10px keeps the footprint small where scrollbars take layout space. The 2px
      transparent border insets the thumb to a 6px pill; the grab area stays the
      full 10px. */
-  .kyc-root::-webkit-scrollbar,
-  .kyc-root *::-webkit-scrollbar,
-  [data-kyc-frame] *::-webkit-scrollbar {
+  .verification-root::-webkit-scrollbar,
+  .verification-root *::-webkit-scrollbar,
+  [data-verification-frame] *::-webkit-scrollbar {
     width: 10px;
     height: 10px;
     background: transparent;
   }
 
-  .kyc-root::-webkit-scrollbar-track,
-  .kyc-root *::-webkit-scrollbar-track,
-  [data-kyc-frame] *::-webkit-scrollbar-track,
-  .kyc-root::-webkit-scrollbar-corner,
-  .kyc-root *::-webkit-scrollbar-corner,
-  [data-kyc-frame] *::-webkit-scrollbar-corner {
+  .verification-root::-webkit-scrollbar-track,
+  .verification-root *::-webkit-scrollbar-track,
+  [data-verification-frame] *::-webkit-scrollbar-track,
+  .verification-root::-webkit-scrollbar-corner,
+  .verification-root *::-webkit-scrollbar-corner,
+  [data-verification-frame] *::-webkit-scrollbar-corner {
     background: transparent;
   }
 
-  .kyc-root::-webkit-scrollbar-button,
-  .kyc-root *::-webkit-scrollbar-button,
-  [data-kyc-frame] *::-webkit-scrollbar-button {
+  .verification-root::-webkit-scrollbar-button,
+  .verification-root *::-webkit-scrollbar-button,
+  [data-verification-frame] *::-webkit-scrollbar-button {
     display: none;
   }
 
-  .kyc-root::-webkit-scrollbar-thumb,
-  .kyc-root *::-webkit-scrollbar-thumb,
-  [data-kyc-frame] *::-webkit-scrollbar-thumb {
+  .verification-root::-webkit-scrollbar-thumb,
+  .verification-root *::-webkit-scrollbar-thumb,
+  [data-verification-frame] *::-webkit-scrollbar-thumb {
     background-color: #8f8ea2;
     background-color: color-mix(in srgb, var(--foreground) 45%, transparent);
     background-clip: padding-box;
@@ -77,30 +77,30 @@
 
   /* A floor on thumb length, so a long country list still leaves something
      big enough to grab. */
-  .kyc-root::-webkit-scrollbar-thumb:vertical,
-  .kyc-root *::-webkit-scrollbar-thumb:vertical,
-  [data-kyc-frame] *::-webkit-scrollbar-thumb:vertical {
+  .verification-root::-webkit-scrollbar-thumb:vertical,
+  .verification-root *::-webkit-scrollbar-thumb:vertical,
+  [data-verification-frame] *::-webkit-scrollbar-thumb:vertical {
     min-height: 32px;
   }
-  .kyc-root::-webkit-scrollbar-thumb:horizontal,
-  .kyc-root *::-webkit-scrollbar-thumb:horizontal,
-  [data-kyc-frame] *::-webkit-scrollbar-thumb:horizontal {
+  .verification-root::-webkit-scrollbar-thumb:horizontal,
+  .verification-root *::-webkit-scrollbar-thumb:horizontal,
+  [data-verification-frame] *::-webkit-scrollbar-thumb:horizontal {
     min-width: 32px;
   }
 
   /* Hover thickens the pill from 6px to 8px; the scrollbar box keeps its size,
      so nothing around it moves. */
-  .kyc-root::-webkit-scrollbar-thumb:hover,
-  .kyc-root *::-webkit-scrollbar-thumb:hover,
-  [data-kyc-frame] *::-webkit-scrollbar-thumb:hover {
+  .verification-root::-webkit-scrollbar-thumb:hover,
+  .verification-root *::-webkit-scrollbar-thumb:hover,
+  [data-verification-frame] *::-webkit-scrollbar-thumb:hover {
     background-color: #6f6e88;
     background-color: color-mix(in srgb, var(--foreground) 65%, transparent);
     border-width: 1px;
   }
 
-  .kyc-root::-webkit-scrollbar-thumb:active,
-  .kyc-root *::-webkit-scrollbar-thumb:active,
-  [data-kyc-frame] *::-webkit-scrollbar-thumb:active {
+  .verification-root::-webkit-scrollbar-thumb:active,
+  .verification-root *::-webkit-scrollbar-thumb:active,
+  [data-verification-frame] *::-webkit-scrollbar-thumb:active {
     background-color: var(--primary);
     border-width: 1px;
   }

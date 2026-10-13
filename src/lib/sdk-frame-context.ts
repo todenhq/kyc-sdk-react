@@ -25,7 +25,7 @@ export function usePortalHost(): HTMLElement | null {
 /**
  * The element carrying the SDK's `.dark` class. Descendant selectors cannot
  * cross a shadow boundary, so `.dark` on the host page's documentElement can
- * never match `.dark .kyc-root` inside the shadow tree — the class has to live
+ * never match `.dark .verification-root` inside the shadow tree — the class has to live
  * on an in-shadow ancestor instead. As a side effect, the SDK's theme toggle
  * stops mutating the integrator's <html> class list, which could previously
  * flip a class-strategy host app into dark mode.

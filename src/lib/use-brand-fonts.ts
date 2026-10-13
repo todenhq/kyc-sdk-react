@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { KYCAppearance } from '../types/config';
+import type { VerificationAppearance } from '../types/config';
 import { ensureGoogleFont } from './google-fonts';
 
 /**
@@ -12,7 +12,7 @@ import { ensureGoogleFont } from './google-fonts';
  * Deliberately NOT cleaned up on unmount: the stylesheet is shared, cheap, and
  * cached, and removing it would unstyle a second SDK instance still on screen.
  */
-export function useBrandFonts(appearance?: KYCAppearance): void {
+export function useBrandFonts(appearance?: VerificationAppearance): void {
   const body = appearance?.fontFamily;
   const heading = appearance?.headingFontFamily;
 

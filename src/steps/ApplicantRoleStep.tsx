@@ -14,8 +14,8 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { cn } from '../lib/utils';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { CountryFlag } from '../components/CountryFlag';
 import {
   APPLICANT_ROLE_LABELS,
@@ -61,8 +61,8 @@ function RadioDot({ selected }: { selected: boolean }) {
  * the plain role + name form.
  */
 export function ApplicantRoleStep() {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
   const { applicantRole, applicantName, applicantKeyPersonIndex, keyPeople } =
     state.businessApplication;

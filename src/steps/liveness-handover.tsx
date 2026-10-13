@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from 'react';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { configScope } from '../lib/scope';
 import { describeWaiting } from '../lib/result-copy';
 import { useText } from '../i18n';
@@ -35,7 +35,7 @@ export function useSelfieAutoAdvance(opts: { enabled: boolean; ready: boolean; o
 }
 
 export function LivenessHandover() {
-  const config = useKYCConfig();
+  const config = useVerificationConfig();
   const t = useText();
   const copy = describeWaiting(
     {

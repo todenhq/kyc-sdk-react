@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { effectiveTrustAttribution, myazaProviderName, needsMyazaDisclosure } from './trust-attribution';
+import { effectiveTrustAttribution, myazaProviderName, needsProcessorDisclosure } from './trust-attribution';
 import { DEFAULT_TEXTS } from '../i18n/catalogue';
 import { CUSTOMISABLE_KEYS } from '../i18n/customisable';
 
@@ -19,11 +19,11 @@ describe('trust attribution authority', () => {
   });
 });
 
-describe('naming Myaza on the consent screen', () => {
+describe('naming Toden on the consent screen', () => {
   it('happens once the org replaces the footer logo, and never otherwise', () => {
-    expect(needsMyazaDisclosure({ mode: 'custom', logo: 'https://x/logo.png' })).toBe(true);
-    expect(needsMyazaDisclosure({ mode: 'myaza' })).toBe(false);
-    expect(needsMyazaDisclosure(undefined)).toBe(false);
+    expect(needsProcessorDisclosure({ mode: 'custom', logo: 'https://x/logo.png' })).toBe(true);
+    expect(needsProcessorDisclosure({ mode: 'myaza' })).toBe(false);
+    expect(needsProcessorDisclosure(undefined)).toBe(false);
   });
 
   it("names the organisation, preferring the server's name over a sample preview name", () => {
@@ -33,11 +33,11 @@ describe('naming Myaza on the consent screen', () => {
     expect(myazaProviderName({ mode: 'custom', logo: 'x' }, undefined, undefined)).toBe('');
   });
 
-  it('is fixed wording in one paragraph that names Myaza and its terms', () => {
+  it('is fixed wording in one paragraph that names Toden and its terms', () => {
     for (const key of ['welcome.legal.providedFor', 'welcome.legal.myaza', 'welcome.legal.myaza.business']) {
       expect(CUSTOMISABLE_KEYS.has(key)).toBe(false);
     }
-    expect(DEFAULT_TEXTS['welcome.legal.providedFor']).toBe('Verification is processed by Myaza Trust for {org}.');
-    expect(DEFAULT_TEXTS['welcome.legal.myaza']).toMatch(/Myaza Trust’s \{terms\} and \{privacy\}/);
+    expect(DEFAULT_TEXTS['welcome.legal.providedFor']).toBe('Verification is processed by Toden for {org}.');
+    expect(DEFAULT_TEXTS['welcome.legal.myaza']).toMatch(/Toden’s \{terms\} and \{privacy\}/);
   });
 });

@@ -11,8 +11,8 @@ import { Button } from '../components/ui/button';
 import { CameraPermissionPrimer } from '../components/CameraPermissionPrimer';
 import { ReadyPrimer } from '../components/ReadyPrimer';
 import { READY_LIVENESS, READY_LIVENESS_PASSIVE } from '../components/ready-primer-content';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { multiIdEvidenceStep } from '../lib/multi-id';
 import { stepAfterCapture } from '../lib/post-capture';
 import { stepBeforeLiveness } from '../lib/contact-steps';
@@ -26,8 +26,8 @@ import { primeSpeech } from '../liveness/speech';
 import { recordLivenessSignals, recordRecorderFailure } from '../lib/integrity-signals';
 import { markRecordingStart } from '../liveness/flash-timeline';
 import { withRetry } from '../lib/retry';
-import { mapToKycError, safeReportError } from '../lib/errors';
-import { KYCError } from '../types/verification';
+import { mapToVerificationError, safeReportError } from '../lib/errors';
+import { VerificationError } from '../types/verification';
 import {
   LIVENESS_VIDEO_BITRATE,
   createVideoRecorder,
@@ -63,11 +63,11 @@ const SCAN_HOLD_MS = 800;
 // ---------------------------------------------------------------------------
 
 export function LivenessStep() {
-  const { state: kycState, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state: verificationState, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
   const portalHost = usePortalHost();
-  const [preview, setPreview] = useState<string | null>(kycState.selfieImage);
+  const [preview, setPreview] = useState<string | null>(verificationState.selfieImage);
   // The fresh capture measured soft. A notice on the review, never a gate:
   // Continue stays available whatever it says (see lib/selfie-sharpness).
   const [selfieSoft, setSelfieSoft] = useState(false);
@@ -84,7 +84,7 @@ export function LivenessStep() {
   // durable record (session progress deliberately drops the preview bytes), so
   // its presence means "already captured" exactly as it does for documents —
   // the step opens on review, never on a fresh gesture run.
-  const restoredSelfie = !preview && Boolean(kycState.mediaIds.selfie);
+  const restoredSelfie = !preview && Boolean(verificationState.mediaIds.selfie);
   // The step was OPENED with its selfie already taken: the person came back
   // to it, or resumed a session past it. It then says so and offers Continue;
   // it never hands forward by itself and never runs the check again.
@@ -376,10 +376,10 @@ export function LivenessStep() {
     } catch (err) {
       setRetryInfo(null);
       setIsUploading(false);
-      const kycError = mapToKycError(err, 'upload');
-      setUploadError(kycError.message);
-      dispatch({ type: 'SET_SELFIE_UPLOAD', payload: { status: 'failed', message: kycError.message } });
-      safeReportError(config.onError, kycError);
+      const verificationError = mapToVerificationError(err, 'upload');
+      setUploadError(verificationError.message);
+      dispatch({ type: 'SET_SELFIE_UPLOAD', payload: { status: 'failed', message: verificationError.message } });
+      safeReportError(config.onError, verificationError);
     }
   }
 
@@ -387,7 +387,7 @@ export function LivenessStep() {
   // interrupted upload (it failed, or the user left mid-flight): resume it once
   // on mount. Idempotent — with a mediaId there is nothing to do.
   useEffect(() => {
-    if (preview && !kycState.mediaIds.selfie && !isUploading) {
+    if (preview && !verificationState.mediaIds.selfie && !isUploading) {
       void uploadSelfie(preview);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -401,7 +401,7 @@ export function LivenessStep() {
       permissionReportedRef.current = true;
       safeReportError(
         config.onError,
-        new KYCError(
+        new VerificationError(
           'camera_permission_denied',
           'Camera access is required for the liveness check. Please allow camera access and try again.',
         ),
@@ -447,7 +447,7 @@ export function LivenessStep() {
     camera.stop();
     // Proof of Address / questionnaire (when configured) sit between capture
     // and the final submission; otherwise submit straight away.
-    const next = stepAfterCapture(config, verifiedIdsFromState(kycState, config));
+    const next = stepAfterCapture(config, verifiedIdsFromState(verificationState, config));
     if (next === 'submitted') {
       dispatch({ type: 'SUBMIT_VERIFICATION' });
     } else {
@@ -465,13 +465,13 @@ export function LivenessStep() {
 
   const handleBack = () => {
     camera.stop();
-    const hasDocCapture = kycState.selectedIdType
-      ? config.getIdTypeDefinition(kycState.selectedIdType)?.requiresDocumentCapture ?? false
+    const hasDocCapture = verificationState.selectedIdType
+      ? config.getIdTypeDefinition(verificationState.selectedIdType)?.requiresDocumentCapture ?? false
       : false;
     // Multi-ID: every slot is committed by now, so the evidence steps hold
     // nothing — step back INTO the last verification instead (popping it and
     // restoring its capture), or the applicant lands on an empty screen.
-    const lastSlot = kycState.multiIdSlots[kycState.multiIdSlots.length - 1];
+    const lastSlot = verificationState.multiIdSlots[verificationState.multiIdSlots.length - 1];
     if (lastSlot) {
       dispatch({
         type: 'UNCOMMIT_MULTI_ID_SLOT',

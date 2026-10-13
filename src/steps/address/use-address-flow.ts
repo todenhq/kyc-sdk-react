@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useKYCConfig } from '../../context/KYCConfigContext';
-import { useKYCContext } from '../../context/KYCContext';
+import { useVerificationConfig } from '../../context/VerificationConfigContext';
+import { useVerificationContext } from '../../context/VerificationContext';
 import { configScope } from '../../lib/scope';
 import { isBusinessFlow } from '../../lib/business';
 import { defaultMapView } from '../../lib/map-tiles';
@@ -12,7 +12,7 @@ import { deviceFixFields, uploadAddressPhoto } from '../address-helpers';
 import { addressFlowOptions, addressFlowSteps, addressVendorsStubbed, nextAddressStep, prevAddressStep } from './flow-steps';
 import { usePinActions } from './use-pin-actions';
 import { geoDefaultCountry } from './country-adoption';
-import type { KYCStep } from '../../types/config';
+import type { VerificationStep } from '../../types/config';
 import { useText } from '../../i18n';
 
 // The address flow's shared brain: every address step mounts this hook and
@@ -22,8 +22,8 @@ import { useText } from '../../i18n';
 const REVERSE_DEBOUNCE_MS = 700;
 
 export function useAddressFlow() {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
   const address = config.addressCollection;
   const [uploading, setUploading] = useState(false);
@@ -50,7 +50,7 @@ export function useAddressFlow() {
         hasStreetViewFrame: Boolean(mapsFrameUrl),
       });
   const { photoMode, streetViewOffered, searchAvailable } = flow;
-  const steps = isBusiness ? (['address-collection'] as KYCStep[]) : addressFlowSteps(flow);
+  const steps = isBusiness ? (['address-collection'] as VerificationStep[]) : addressFlowSteps(flow);
 
   // ADDRESS SCOPE: NO seeded country, ever (user decision 2026-09-03). The
   // flow's country exists only once EVIDENCE supplies it — the IP geo
@@ -123,14 +123,14 @@ export function useAddressFlow() {
   };
 
   /** The step after `current` within the address flow, else the flow exit. */
-  const goNext = (current: KYCStep) => {
+  const goNext = (current: VerificationStep) => {
     const next = nextAddressStep(steps, current);
     if (next) dispatch({ type: 'SET_STEP', payload: next });
     else exitForward();
   };
 
   /** The step before `current`, else back out of the address flow entirely. */
-  const goBack = (current: KYCStep) => {
+  const goBack = (current: VerificationStep) => {
     const prev = prevAddressStep(steps, current);
     if (prev) {
       dispatch({ type: 'SET_STEP', payload: prev });

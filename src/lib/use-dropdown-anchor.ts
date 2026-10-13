@@ -28,7 +28,7 @@ import { usePortalHost } from './sdk-frame-context';
  *
  *   • Pointer events. Radix Dialog sets `pointer-events: none` on the body
  *     while open, so the menu re-enables them on itself (see `style` below).
- *   • Theme variables. Those live on `.kyc-root`, which is no longer an
+ *   • Theme variables. Those live on `.verification-root`, which is no longer an
  *     ancestor, so they are merged into the menu's own style.
  *   • Scrolling. The dialog's scroll lock preventDefaults wheel and touchmove
  *     everywhere outside its content, which left the list movable only by
@@ -146,7 +146,7 @@ export function useDropdownAnchor(
   useLayoutEffect(() => {
     if (!open) return;
     // The SDK's shadow portal frame when isolated, else the BODY — never the
-    // nearest .kyc-root.
+    // nearest .verification-root.
     //
     // Portaling inside the dialog meant the dialog's own overflow bounded the
     // menu: it could never float over the flow, only scroll or clip within it.
@@ -183,7 +183,7 @@ export function useDropdownAnchor(
   return {
     host,
     style: {
-      // The menu now renders on the BODY, outside .kyc-root, so it no longer
+      // The menu now renders on the BODY, outside .verification-root, so it no longer
       // inherits the theme variables that element carries. Merging them in
       // here keeps every menu themed without each caller remembering to, and
       // without a menu ever rendering in the host page's colours.

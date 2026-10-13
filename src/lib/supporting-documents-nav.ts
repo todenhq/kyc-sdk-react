@@ -1,4 +1,4 @@
-import type { KYCStep } from '../types/config';
+import type { VerificationStep } from '../types/config';
 
 // Where the supporting-documents step's Back goes.
 //
@@ -20,7 +20,7 @@ export function stepBeforeSupportingDocuments(
     getIdTypeDefinition?: (idType: string, country?: string) => { requiresDocumentCapture?: boolean } | null;
   },
   state: { selectedIdType?: string | null },
-): KYCStep {
+): VerificationStep {
   if (config.enableSelfie !== false) return 'liveness';
   // No selfie: back into whichever evidence screen this ID uses — the same
   // rule the PoA step's own Back applies.

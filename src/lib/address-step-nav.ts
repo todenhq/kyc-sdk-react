@@ -1,4 +1,4 @@
-import type { KYCStep, ProofOfAddressConfig, QuestionnaireConfig } from '../types/config';
+import type { VerificationStep, ProofOfAddressConfig, QuestionnaireConfig } from '../types/config';
 import type { SubjectType, WorkflowBusinessConfig } from '../types/business';
 import { hasSupportingDocumentsStep } from './supporting-documents';
 import { hasProofOfAddressStep } from './post-capture';
@@ -26,7 +26,7 @@ export interface AddressNavConfig {
 }
 
 /** The step after address collection, or 'submit' when the flow ends here. */
-export function addressNextStep(config: AddressNavConfig): KYCStep | 'submit' {
+export function addressNextStep(config: AddressNavConfig): VerificationStep | 'submit' {
   if (isBusinessFlow(config)) {
     const next = nextBusinessStep('address-collection', config);
     return next === 'submitted' ? 'submit' : next;
@@ -40,7 +40,7 @@ export function addressBackStep(
   selectedIdRequiresCapture: boolean | undefined,
   /** `"CC/idType"` composites this attempt committed — [] on flows with no ID. */
   verifiedIds: string[] = [],
-): KYCStep {
+): VerificationStep {
   if (isBusinessFlow(config)) return prevBusinessStep('address-collection', config);
   // Supporting documents sit between the address document and the pin, so the
   // address section backs into them before Proof of Address.

@@ -1,12 +1,12 @@
 // ---------------------------------------------------------------------------
-// Flow step ordering + progress accounting (extracted from KYCModal per the
+// Flow step ordering + progress accounting (extracted from VerificationModal per the
 // 200-line rule). Individual flows: consent → (country-select) → id-type →
 // capture → (liveness) → (poa) → (questionnaire) → submitted. Business (KYB)
 // flows: consent → business-details → (business-documents) →
 // (business-key-people) → (applicant capture leg) → (questionnaire) → submitted.
 // ---------------------------------------------------------------------------
 
-import type { KYCStep } from '../types/config';
+import type { VerificationStep } from '../types/config';
 import type { WorkflowBusinessConfig } from '../types/business';
 import { businessSectionSteps, hasApplicantVerification } from './business-application';
 import { applyResubmitSteps, type ResubmitConfig } from './resubmit';
@@ -67,19 +67,19 @@ export interface StepOrderOptions {
 
 // Contact-verification OTP steps sit right after consent (both flows) — a
 // cheap pre-filter before capture/registry spend; email before phone.
-function contactSteps(o: StepOrderOptions): KYCStep[] {
+function contactSteps(o: StepOrderOptions): VerificationStep[] {
   return [
-    ...(o.hasEmailVerification ? (['email-verification'] as KYCStep[]) : []),
-    ...(o.hasPhoneVerification ? (['phone-verification'] as KYCStep[]) : []),
+    ...(o.hasEmailVerification ? (['email-verification'] as VerificationStep[]) : []),
+    ...(o.hasPhoneVerification ? (['phone-verification'] as VerificationStep[]) : []),
   ];
 }
 
-export function buildStepOrder(o: StepOrderOptions): KYCStep[] {
+export function buildStepOrder(o: StepOrderOptions): VerificationStep[] {
   return applyResubmitSteps(fullStepOrder(o), o.resubmit);
 }
 
 /** The flow's opening screen: consent, unless the workflow switched it off. */
-function openingSteps(o: StepOrderOptions): KYCStep[] {
+function openingSteps(o: StepOrderOptions): VerificationStep[] {
   return o.hasConsent === false ? [] : ['consent'];
 }
 
@@ -102,7 +102,7 @@ function openingSteps(o: StepOrderOptions): KYCStep[] {
  * Skips only ever move FORWARD, and a step outside this flow is returned
  * untouched rather than guessed at.
  */
-export function resolveNarrowedStep(step: KYCStep, o: StepOrderOptions): KYCStep {
+export function resolveNarrowedStep(step: VerificationStep, o: StepOrderOptions): VerificationStep {
   const narrowed = buildStepOrder(o);
   if (narrowed.includes(step)) return step;
   // A consent-less flow (`consentStep: false`): the reducer still opens on
@@ -121,14 +121,14 @@ export function resolveNarrowedStep(step: KYCStep, o: StepOrderOptions): KYCStep
 }
 
 /** The flow as configured, before any reviewer narrowing. */
-function fullStepOrder(o: StepOrderOptions): KYCStep[] {
+function fullStepOrder(o: StepOrderOptions): VerificationStep[] {
   // Business (KYB) flow — the application section, then (when the workflow
   // requires applicant verification) the ordinary individual capture leg.
   if (o.isBusiness) {
     // The questionnaire sits INSIDE the business section (before key people) —
     // its questions are about the company, so it stays with the company form
     // rather than trailing the applicant's own capture leg.
-    const steps: KYCStep[] = [
+    const steps: VerificationStep[] = [
       ...openingSteps(o),
       ...contactSteps(o),
       ...businessSectionSteps(o.business, o.hasQuestionnaire, o.hasAddressCollection),
@@ -142,7 +142,7 @@ function fullStepOrder(o: StepOrderOptions): KYCStep[] {
   }
   // Scoped flows: the scope's headline section IS the flow.
   if (o.scope === 'address') {
-    const steps: KYCStep[] = [...openingSteps(o), ...contactSteps(o)];
+    const steps: VerificationStep[] = [...openingSteps(o), ...contactSteps(o)];
     if (o.hasPoa) steps.push('proof-of-address');
     // The scope verifies an address, and there are two ways to do it: the pin
     // and the document. A flow that asks only for the document never opens a
@@ -160,7 +160,7 @@ function fullStepOrder(o: StepOrderOptions): KYCStep[] {
     return steps;
   }
   if (o.scope === 'biometric-authentication' || o.scope === 'biometric-enrollment') {
-    const steps: KYCStep[] = [...openingSteps(o), ...contactSteps(o), 'liveness'];
+    const steps: VerificationStep[] = [...openingSteps(o), ...contactSteps(o), 'liveness'];
     if (o.hasQuestionnaire) steps.push('questionnaire');
     steps.push('submitted');
     return steps;
@@ -171,7 +171,7 @@ function fullStepOrder(o: StepOrderOptions): KYCStep[] {
   if (o.scope === 'contact') {
     return [...openingSteps(o), ...contactSteps(o), 'submitted'];
   }
-  const middle: KYCStep[] = [o.hasDocCapture ? 'document-capture' : 'id-input'];
+  const middle: VerificationStep[] = [o.hasDocCapture ? 'document-capture' : 'id-input'];
   if (o.hasLiveness) middle.push('liveness');
   // Paperwork the org files comes BEFORE the address evidence the
   // verification is judged on (user decision 2026-09-22).
@@ -187,7 +187,7 @@ function fullStepOrder(o: StepOrderOptions): KYCStep[] {
   return [
     ...openingSteps(o),
     ...contactSteps(o),
-    ...(o.hasCountrySelect ? (['country-select'] as KYCStep[]) : []),
+    ...(o.hasCountrySelect ? (['country-select'] as VerificationStep[]) : []),
     'id-type',
     ...middle,
     'submitted',
@@ -216,7 +216,7 @@ export interface StepPosition {
 
 const NO_PROGRESS: StepPosition = { index: -1, total: 0 };
 
-export function getStepPosition(step: KYCStep, o: StepOrderOptions): StepPosition {
+export function getStepPosition(step: VerificationStep, o: StepOrderOptions): StepPosition {
   if (step === 'submitted') return NO_PROGRESS;
   const steps = buildStepOrder(o).filter((s) => s !== 'submitted');
   // The preview-only nfc step sits right after document capture in the mobile

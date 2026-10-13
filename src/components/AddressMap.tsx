@@ -6,7 +6,7 @@ import { addressVendorsStubbed } from '../steps/address/flow-steps';
 import { GoogleMapPicker } from './GoogleMapPicker';
 import { FramedMapPicker } from './FramedMapPicker';
 import { MapPinPicker } from './MapPinPicker';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { cn } from '../lib/utils';
 import type { LatLng } from '../lib/map-tiles';
 
@@ -41,7 +41,7 @@ interface AddressMapProps {
 // Everything surface-specific (hosted key, frame URL, preview, theming) comes
 // from the config context, so the step passes only the map's actual inputs.
 export function AddressMap({ value, onChange, defaultCenter, defaultZoom, className, interactive = true }: AddressMapProps) {
-  const config = useKYCConfig();
+  const config = useVerificationConfig();
   const googleKey = config.serverConfig?.googleMapsBrowserKey;
   const frameUrl = config.serverConfig?.mapsFrameUrl;
   // Preview AND sandbox render the static stand-in (user decision

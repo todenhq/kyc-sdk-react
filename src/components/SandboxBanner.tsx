@@ -3,7 +3,7 @@
 import React from 'react';
 import { FlaskConical } from './icons';
 
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import { useText } from '../i18n';
 
 /**
@@ -25,7 +25,7 @@ import { useText } from '../i18n';
  * there — a dev key with a real ID does make real calls.
  */
 export function SandboxBanner() {
-  const { serverConfig } = useKYCConfig();
+  const { serverConfig } = useVerificationConfig();
   const t = useText();
   const env = serverConfig.environment;
   if (env !== 'SANDBOX' && env !== 'DEVELOPMENT') return null;

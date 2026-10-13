@@ -11,8 +11,8 @@ import { eventPathIncludes } from '../../lib/event-path';
 import { inferredCountry } from '../../lib/inferred-country';
 import { groupCountriesByRegion, regionCountryName } from '../../lib/regions';
 import { poaOfferedCountries } from '../../lib/poa-country-gate';
-import { useKYCConfig } from '../../context/KYCConfigContext';
-import { useKYCContext } from '../../context/KYCContext';
+import { useVerificationConfig } from '../../context/VerificationConfigContext';
+import { useVerificationContext } from '../../context/VerificationContext';
 import { configScope } from '../../lib/scope';
 import type { AnyCountry } from '../../types/config';
 import { useText } from '../../i18n';
@@ -29,13 +29,13 @@ import { useText } from '../../i18n';
  * searchable country dropdown — keep the two in lockstep): portaled to the
  * dialog root via the shared anchor, search pinned, region groups, the
  * IP-derived country pinned on top tagged "Your location". The FIELD is the
- * house shape too — a label above, the h-12 trigger of MyazaSelect — so it
+ * house shape too — a label above, the h-12 trigger of UiSelect — so it
  * reads as one form beside the Document type field under it (user decision
  * 2026-09-05: the label sits outside the input, never as an eyebrow inside).
  */
 export function AddressCountryControl() {
-  const config = useKYCConfig();
-  const { state, dispatch } = useKYCContext();
+  const config = useVerificationConfig();
+  const { state, dispatch } = useVerificationContext();
   const t = useText();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');

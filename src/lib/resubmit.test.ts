@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { applyResubmitSteps, isResubmission, keepsIdEvidence, keptIdType, resubmitNote } from './resubmit';
-import type { KYCStep } from '../types/config';
+import type { VerificationStep } from '../types/config';
 
-const FULL: KYCStep[] = [
+const FULL: VerificationStep[] = [
   'consent',
   'email-verification',
   'id-type',
@@ -39,7 +39,7 @@ describe('applyResubmitSteps', () => {
       'submitted',
     ]);
     // …and once NIN is chosen the flow reshapes, still narrowed to the ID.
-    const numberOnly: KYCStep[] = ['consent', 'id-type', 'id-input', 'liveness', 'submitted'];
+    const numberOnly: VerificationStep[] = ['consent', 'id-type', 'id-input', 'liveness', 'submitted'];
     expect(applyResubmitSteps(numberOnly, { steps: ['id-input'] })).toEqual([
       'consent',
       'id-type',
@@ -86,7 +86,7 @@ describe('applyResubmitSteps', () => {
   });
 
   it('keeps a KYB redo submittable through business-details, not the ID picker', () => {
-    const kyb: KYCStep[] = [
+    const kyb: VerificationStep[] = [
       'consent',
       'business-details',
       'business-documents',

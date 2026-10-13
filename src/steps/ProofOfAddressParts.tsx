@@ -64,7 +64,7 @@ export function PoaUploadedRow({
       {pickedFile ? (
         <UploadedFileThumb file={pickedFile} label={typeLabel} />
       ) : (
-        <CircleCheck className="h-5 w-5 shrink-0 text-[var(--kyc-success,#0DA211)]" />
+        <CircleCheck className="h-5 w-5 shrink-0 text-[var(--verification-success,#0DA211)]" />
       )}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{fileName || t('proofOfAddress.uploaded')}</p>

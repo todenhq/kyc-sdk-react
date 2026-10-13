@@ -91,21 +91,21 @@ export const WELCOME_TEXTS: TextGroup = {
     // When the org's own logo replaces Myaza's in the footer, the notice names
     // Myaza as the provider (it still processes the applicant's data) and the
     // terms as Myaza's, all in the one paragraph. Never customisable.
-    { key: 'welcome.legal.providedFor', label: 'Legal notice: processed by Myaza Trust for', default: 'Verification is processed by Myaza Trust for {org}.', placeholders: ['org'] },
-    { key: 'welcome.legal.providedByMyaza', label: 'Legal notice: processed by Myaza Trust', default: 'Verification is processed by Myaza Trust.' },
+    { key: 'welcome.legal.providedFor', label: 'Legal notice: processed by Toden for', default: 'Verification is processed by Toden for {org}.', placeholders: ['org'] },
+    { key: 'welcome.legal.providedByMyaza', label: 'Legal notice: processed by Toden', default: 'Verification is processed by Toden.' },
     {
       key: 'welcome.legal.myaza',
-      label: 'Legal notice: Myaza terms',
+      label: 'Legal notice: Toden terms',
       default:
-        'By tapping Continue, you agree to Myaza Trust’s {terms} and {privacy}, and consent to your personal data being processed to verify your identity.',
+        'By tapping Continue, you agree to Toden’s {terms} and {privacy}, and consent to your personal data being processed to verify your identity.',
       multiline: true,
       placeholders: ['terms', 'privacy'],
     },
     {
       key: 'welcome.legal.myaza.business',
-      label: 'Legal notice: Myaza terms, business',
+      label: 'Legal notice: Toden terms, business',
       default:
-        'By tapping Continue, you agree to Myaza Trust’s {terms} and {privacy}, and consent to your business and personal data being processed to verify your identity.',
+        'By tapping Continue, you agree to Toden’s {terms} and {privacy}, and consent to your business and personal data being processed to verify your identity.',
       multiline: true,
       placeholders: ['terms', 'privacy'],
     },

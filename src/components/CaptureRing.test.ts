@@ -118,7 +118,7 @@ describe('CaptureRing', () => {
     // Around the window the line is green from its first pixel, as on Flutter:
     // it is the frame filling in, and the frame's own colour (the brand tint,
     // red on a warning) is the track underneath, which is what changes.
-    expect(windowRing).toContain('stroke="var(--kyc-success)"');
+    expect(windowRing).toContain('stroke="var(--verification-success)"');
     expect(windowRing).toContain('stroke={track}');
     expect(live).toContain("'var(--destructive)'");
     // Paced by the same two functions as the circle: one rule, not two.

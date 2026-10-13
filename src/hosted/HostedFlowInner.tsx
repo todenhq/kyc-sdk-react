@@ -1,8 +1,8 @@
 'use client';
 
 import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { useKYCContext } from '../context/KYCContext';
-import { KYCModal } from '../components/KYCModal';
+import { useVerificationContext } from '../context/VerificationContext';
+import { VerificationModal } from '../components/VerificationModal';
 import { isDesktopDevice } from '../lib/device';
 import { confirmMobileDevice } from '../lib/device-class';
 import { primeFaceMesh } from '../liveness/face-mesh';
@@ -36,11 +36,11 @@ export function HostedFlowInner({
   showThemeToggle?: boolean;
   fullScreen?: boolean;
   /** Mounted inside a host application: the modal is closable, and closing
-   *  hands control back to the host (see MyazaKYCHosted.embedded). */
+   *  hands control back to the host (see HostedVerification.embedded). */
   embedded?: boolean;
   onClose?: () => void;
 }) {
-  const { state, dispatch } = useKYCContext();
+  const { state, dispatch } = useVerificationContext();
   // A DESKTOP hosted-link visitor is offered the "continue on your phone" gate
   // first (the gate mints a CHILD handoff session for the phone and polls it).
   // A phone visitor — the common hosted case — or a no-camera flow goes straight
@@ -97,7 +97,7 @@ export function HostedFlowInner({
           />
         </Suspense>
       )}
-      <KYCModal
+      <VerificationModal
         open={state.isOpen}
         onClose={embedded ? () => onClose?.() : () => undefined}
         showThemeToggle={showThemeToggle}

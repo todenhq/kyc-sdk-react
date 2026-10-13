@@ -5,7 +5,7 @@
 // 15 MB (user decision 2026-09-06). The server's own cap is higher, so refusing
 // here gives an immediate, specific message instead of a slow 413. A THREE-WAY
 // MIRROR with RN `config/uploadLimits.ts` and Flutter `config/upload_limits.dart`,
-// pinned to `kyc-sdk-flutter/test/upload_limits_vectors.json`.
+// pinned to `sdk-flutter/test/upload_limits_vectors.json`.
 
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const PDF_MAX_BYTES = 15 * 1024 * 1024;

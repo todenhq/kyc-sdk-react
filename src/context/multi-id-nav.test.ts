@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { kycReducer, initialKYCState } from './KYCContext';
-import type { KYCState } from './types';
+import { verificationReducer, initialVerificationState } from './VerificationContext';
+import type { VerificationState } from './types';
 import { multiIdWireSlots } from '../lib/multi-id';
 
 // Walking a multi-ID run FORWARD is only half of it. Committing a slot used to
@@ -8,8 +8,8 @@ import { multiIdWireSlots } from '../lib/multi-id';
 // back — so an applicant who picked the wrong ID, or wanted a different
 // country, was stuck. These pin the round trip.
 
-const capturedSlot = (over: Partial<KYCState> = {}): KYCState => ({
-  ...initialKYCState,
+const capturedSlot = (over: Partial<VerificationState> = {}): VerificationState => ({
+  ...initialVerificationState,
   selectedCountry: 'NG',
   selectedIdType: 'nin',
   idNumber: '12345678901',
@@ -20,7 +20,7 @@ const capturedSlot = (over: Partial<KYCState> = {}): KYCState => ({
 
 describe('multi-ID back navigation', () => {
   it('restores what was captured when stepping back into a committed slot', () => {
-    const committed = kycReducer(capturedSlot(), {
+    const committed = verificationReducer(capturedSlot(), {
       type: 'COMMIT_MULTI_ID_SLOT',
       payload: { nextStep: 'id-type' },
     });
@@ -29,7 +29,7 @@ describe('multi-ID back navigation', () => {
     expect(committed.idNumber).toBe('');
     expect(committed.documentFrontImage).toBeNull();
 
-    const back = kycReducer(committed, {
+    const back = verificationReducer(committed, {
       type: 'UNCOMMIT_MULTI_ID_SLOT',
       payload: { step: 'id-input' },
     });
@@ -48,17 +48,17 @@ describe('multi-ID back navigation', () => {
 
   it('is a no-op with nothing committed', () => {
     const state = capturedSlot();
-    expect(kycReducer(state, { type: 'UNCOMMIT_MULTI_ID_SLOT', payload: { step: 'id-type' } })).toBe(
+    expect(verificationReducer(state, { type: 'UNCOMMIT_MULTI_ID_SLOT', payload: { step: 'id-type' } })).toBe(
       state,
     );
   });
 
   it('CHANGING COUNTRY restarts the run — its slots hold the old country\'s IDs', () => {
-    const committed = kycReducer(capturedSlot(), {
+    const committed = verificationReducer(capturedSlot(), {
       type: 'COMMIT_MULTI_ID_SLOT',
       payload: { nextStep: 'id-type' },
     });
-    const switched = kycReducer(committed, { type: 'SET_COUNTRY', payload: 'GH' });
+    const switched = verificationReducer(committed, { type: 'SET_COUNTRY', payload: 'GH' });
     // Carrying an NG BVN into a Ghana run would offer the applicant an ID no
     // register there can verify.
     expect(switched.multiIdSlots).toEqual([]);
@@ -67,18 +67,18 @@ describe('multi-ID back navigation', () => {
   });
 
   it('re-picking the SAME country keeps the run intact', () => {
-    const committed = kycReducer(capturedSlot(), {
+    const committed = verificationReducer(capturedSlot(), {
       type: 'COMMIT_MULTI_ID_SLOT',
       payload: { nextStep: 'id-type' },
     });
-    const same = kycReducer(committed, { type: 'SET_COUNTRY', payload: 'NG' });
+    const same = verificationReducer(committed, { type: 'SET_COUNTRY', payload: 'NG' });
     expect(same.multiIdSlots).toHaveLength(1);
   });
 });
 
 describe('multiIdWireSlots', () => {
   it('strips the local previews the slots carry for the back journey', () => {
-    const committed = kycReducer(capturedSlot(), {
+    const committed = verificationReducer(capturedSlot(), {
       type: 'COMMIT_MULTI_ID_SLOT',
       payload: { nextStep: 'id-type' },
     });

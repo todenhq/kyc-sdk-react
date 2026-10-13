@@ -4,7 +4,7 @@ import type { IdTypesByCountry } from '../types/config';
 // for the five curated countries. NOT exhaustive: the server grants generic
 // document types (passport / drivers-license / national-id) in ANY ISO country
 // and supplies their metadata in its idTypes payload. Always resolve a pair
-// through `utils/id-definitions.ts` (`useKYCConfig().getIdTypeDefinition`),
+// through `utils/id-definitions.ts` (`useVerificationConfig().getIdTypeDefinition`),
 // which prefers these entries and synthesizes the rest from server rows.
 export const ID_TYPES: IdTypesByCountry = {
   NG: [

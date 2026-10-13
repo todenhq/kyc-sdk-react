@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   awaitSelfieUpload,
   IDLE_SELFIE_UPLOAD,
+  selfieUploadExpected,
   selfieUploadSettled,
   type SelfieUploadSnapshot,
 } from './selfie-upload-wait';
@@ -81,5 +82,19 @@ describe('awaitSelfieUpload', () => {
       expect(result.message).not.toContain('—');
     }
     expect(store.listeners.size).toBe(0);
+  });
+});
+
+describe('selfieUploadExpected', () => {
+  const idle = { selfieUpload: IDLE_SELFIE_UPLOAD, selfieMediaId: undefined };
+  it('a flow with no liveness step and nothing uploading has no selfie to wait for', () => {
+    expect(selfieUploadExpected(idle, false)).toBe(false);
+  });
+  it('a flow with a liveness step waits, even before the upload has started', () => {
+    expect(selfieUploadExpected(idle, true)).toBe(true);
+  });
+  it('an upload already started or failed counts whatever the step order says', () => {
+    expect(selfieUploadExpected({ selfieUpload: { status: 'uploading', message: null }, selfieMediaId: undefined }, false)).toBe(true);
+    expect(selfieUploadExpected({ selfieUpload: { status: 'failed', message: 'x' }, selfieMediaId: undefined }, false)).toBe(true);
   });
 });

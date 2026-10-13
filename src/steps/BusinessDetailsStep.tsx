@@ -14,8 +14,8 @@ import { BusinessProductPicker } from '../components/BusinessProductPicker';
 import { BusinessContactEmailField } from '../components/BusinessContactEmailField';
 import { BusinessCompanyInfoFields } from '../components/BusinessCompanyInfoFields';
 import type { BusinessCheckState } from '../context/types';
-import { useKYCContext } from '../context/KYCContext';
-import { useKYCConfig } from '../context/KYCConfigContext';
+import { useVerificationContext } from '../context/VerificationContext';
+import { useVerificationConfig } from '../context/VerificationConfigContext';
 import {
   businessCountriesFor,
   businessProductsForCountry,
@@ -38,8 +38,8 @@ import { useText } from '../i18n';
  * business name. No camera, no liveness — the server runs a registry lookup.
  */
 export function BusinessDetailsStep() {
-  const { state, dispatch } = useKYCContext();
-  const config = useKYCConfig();
+  const { state, dispatch } = useVerificationContext();
+  const config = useVerificationConfig();
   const t = useText();
 
   const business = config.business;

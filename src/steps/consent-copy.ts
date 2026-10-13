@@ -27,7 +27,7 @@ import {
   hasBusinessDocumentsStep,
   hasKeyPeopleCollection,
 } from '../lib/business-application';
-import type { KYCConfigValue } from '../context/KYCConfigContext';
+import type { VerificationConfigValue } from '../context/VerificationConfigContext';
 
 export interface ProcessStep {
   icon: React.ComponentType<{ className?: string }>;
@@ -76,7 +76,7 @@ export function consentDescription(c: CopyCase & { legacy?: string | null }, t: 
  * The process list, reflecting the actually-enabled features so it matches
  * the real flow.
  */
-export function consentProcessSteps(config: KYCConfigValue, c: CopyCase, t: TextFn = defaultText): ProcessStep[] {
+export function consentProcessSteps(config: VerificationConfigValue, c: CopyCase, t: TextFn = defaultText): ProcessStep[] {
   const { isBusiness, scope } = c;
   const step = (icon: ProcessStep['icon'], key: string): ProcessStep => ({ icon, label: t(key) });
   // The address scope's bullets are NOT a fixed pair: it verifies an address by

@@ -69,7 +69,7 @@ export function AddressPhotoUpload({ required, uploaded, uploading, onPick, onRe
           ) : (
             // A restored session holds the uploaded mediaId but not the bytes.
             <div className="flex h-[300px] w-full flex-col items-center justify-center gap-2 bg-muted/30 sm:h-[340px]">
-              <CircleCheck className="h-8 w-8 text-[var(--kyc-success,#0DA211)]" />
+              <CircleCheck className="h-8 w-8 text-[var(--verification-success,#0DA211)]" />
               <p className="text-sm font-semibold">{t('address.photo.added')}</p>
             </div>
           )}

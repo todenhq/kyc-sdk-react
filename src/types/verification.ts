@@ -2,7 +2,7 @@
 // Submission callback payload (returned to onSubmit)
 // ---------------------------------------------------------------------------
 
-export interface KYCSubmission {
+export interface VerificationSubmission {
   verificationId: string;
   status: 'pending';
   metadata: Record<string, string>;
@@ -16,11 +16,11 @@ export interface KYCSubmission {
 /**
  * The verdict, on a flow that waits for it in the app (a biometric
  * re-authentication on `resultDelivery: 'both'`, the default, or 'app').
- * `status` is the same vocabulary `GET /api/kyc/status/:id` serves; `reason`
+ * `status` is the same vocabulary `GET /api/v1/status/:id` serves; `reason`
  * and `reasonCode` are the server's own, null on success. Never result data:
  * scores and biodata stay behind the secret key.
  */
-export interface KYCResult {
+export interface VerificationResult {
   verificationId: string;
   status: import('../services/api').SessionStatus;
   reason: string | null;
@@ -39,7 +39,7 @@ export interface KYCResult {
  * - `network_error`            — connection failure / timeout (after retries)
  * - `invalid_api_key`          — server returned 401
  * - `insufficient_credits`     — server returned 402 (see `details`)
- * - `upload_failed`            — `POST /api/kyc/upload` failed (after retries)
+ * - `upload_failed`            — `POST /api/v1/upload` failed (after retries)
  * - `camera_permission_denied` — the user denied (or the OS/browser blocks)
  *                                camera access; capture cannot proceed
  * - `feature_disabled`         — server returned 403 (ID type or a verification
@@ -49,7 +49,7 @@ export interface KYCResult {
  * > Voice guidance is text-to-speech *output* — it never records audio, so
  * > there is no microphone-permission error code.
  */
-export type KYCErrorCode =
+export type VerificationErrorCode =
   | 'network_error'
   | 'invalid_api_key'
   | 'insufficient_credits'
@@ -62,7 +62,7 @@ export type KYCErrorCode =
   | 'session_cancelled'
   | 'unknown';
 
-export interface KYCErrorDetails {
+export interface VerificationErrorDetails {
   required?: number;
   balance?: number;
   currency?: string;
@@ -72,19 +72,19 @@ export interface KYCErrorDetails {
  * The error instance passed to `onError`. It is a real `Error` (so existing
  * `onError: (error: Error) => void` handlers keep working) that additionally
  * carries a typed `code` and optional `details`. Narrow with `instanceof
- * KYCError` (or read `error.code`) to branch on the category.
+ * VerificationError` (or read `error.code`) to branch on the category.
  */
-export class KYCError extends Error {
-  readonly code: KYCErrorCode;
-  readonly details?: KYCErrorDetails;
+export class VerificationError extends Error {
+  readonly code: VerificationErrorCode;
+  readonly details?: VerificationErrorDetails;
 
-  constructor(code: KYCErrorCode, message: string, details?: KYCErrorDetails) {
+  constructor(code: VerificationErrorCode, message: string, details?: VerificationErrorDetails) {
     super(message);
-    this.name = 'KYCError';
+    this.name = 'KYCError'; // the earlier name, kept: callers may match on it;
     this.code = code;
     this.details = details;
     // Restore the prototype chain for `instanceof` after transpilation to ES5.
-    Object.setPrototypeOf(this, KYCError.prototype);
+    Object.setPrototypeOf(this, VerificationError.prototype);
   }
 }
 

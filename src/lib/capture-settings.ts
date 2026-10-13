@@ -182,5 +182,5 @@ export function logCaptureSize(label: string, data: Blob | string): void {
     bytes = data.size;
   }
   // eslint-disable-next-line no-console
-  console.log(`[MyazaKYC] ${label}: ${(bytes / 1024).toFixed(1)} KB`);
+  console.log(`[Verification] ${label}: ${(bytes / 1024).toFixed(1)} KB`);
 }
